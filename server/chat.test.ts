@@ -13,6 +13,23 @@ vi.mock("./_core/llm", () => ({
   })
 }));
 
+// Mock the db module
+vi.mock("./db", () => ({
+  saveConversation: vi.fn().mockResolvedValue(undefined),
+  getConversationsByUser: vi.fn().mockResolvedValue([]),
+  getSampleComplaints: vi.fn().mockResolvedValue([
+    { id: 1, text: "تم اكتشاف مخالفات مالية", category: "financial_corruption", expectedRiskScore: 85 },
+    { id: 2, text: "موظف يمنح عقودًا لشركة يملكها قريبه", category: "conflict_of_interest", expectedRiskScore: 75 }
+  ])
+}));
+
+type CookieCall = {
+  name: string;
+  options: Record<string, unknown>;
+};
+
+type AuthenticatedUser = NonNullable<TrpcContext["user"]>;
+
 function createPublicContext(): TrpcContext {
   return {
     user: null,
@@ -24,6 +41,37 @@ function createPublicContext(): TrpcContext {
       clearCookie: vi.fn(),
     } as unknown as TrpcContext["res"],
   };
+}
+
+function createAuthContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] } {
+  const clearedCookies: CookieCall[] = [];
+
+  const user: AuthenticatedUser = {
+    id: 1,
+    openId: "sample-user",
+    email: "sample@example.com",
+    name: "OSAI Staff Member",
+    loginMethod: "manus",
+    role: "user",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastSignedIn: new Date(),
+  };
+
+  const ctx: TrpcContext = {
+    user,
+    req: {
+      protocol: "https",
+      headers: {},
+    } as TrpcContext["req"],
+    res: {
+      clearCookie: (name: string, options: Record<string, unknown>) => {
+        clearedCookies.push({ name, options });
+      },
+    } as TrpcContext["res"],
+  };
+
+  return { ctx, clearedCookies };
 }
 
 describe("chat.send", () => {
@@ -100,5 +148,98 @@ describe("chat.health", () => {
     expect(result.status).toBe("healthy");
     expect(result.service).toBe("Ruzn-Lite");
     expect(result.version).toBe("1.0");
+  });
+});
+
+describe("chat.getSamples", () => {
+  it("returns sample complaints for Arabic", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.chat.getSamples({ language: "arabic" });
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result[0]).toHaveProperty("text");
+    expect(result[0]).toHaveProperty("category");
+    expect(result[0]).toHaveProperty("expectedRiskScore");
+  });
+
+  it("returns sample complaints for English", async () => {
+    const ctx = createPublicContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.chat.getSamples({ language: "english" });
+
+    expect(Array.isArray(result)).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+  });
+});
+
+describe("chat.exportPdf (protected)", () => {
+  it("generates PDF export data for authenticated user", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.chat.exportPdf({
+      messages: [
+        { role: "user", content: "Test complaint" },
+        { role: "assistant", content: "Test response with 75/100 risk score" }
+      ],
+      feature: "complaints",
+      language: "arabic"
+    });
+
+    expect(result.userName).toBe("OSAI Staff Member");
+    expect(result.feature).toBe("complaints");
+    expect(result.language).toBe("arabic");
+    expect(result.title).toBe("تقرير محادثة رُزن");
+    expect(result.messages).toHaveLength(2);
+  });
+
+  it("generates English PDF export data", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.chat.exportPdf({
+      messages: [
+        { role: "user", content: "Test query" },
+        { role: "assistant", content: "Test response" }
+      ],
+      feature: "legislative",
+      language: "english"
+    });
+
+    expect(result.title).toBe("Ruzn Conversation Report");
+    expect(result.subtitle).toBe("State Audit Institution");
+  });
+});
+
+describe("chat.saveConversation (protected)", () => {
+  it("saves conversation for authenticated user", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.chat.saveConversation({
+      messages: [
+        { role: "user", content: "Test message" },
+        { role: "assistant", content: "Test response" }
+      ],
+      feature: "complaints",
+      language: "arabic"
+    });
+
+    expect(result.success).toBe(true);
+  });
+});
+
+describe("chat.getHistory (protected)", () => {
+  it("returns conversation history for authenticated user", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.chat.getHistory();
+
+    expect(Array.isArray(result)).toBe(true);
   });
 });

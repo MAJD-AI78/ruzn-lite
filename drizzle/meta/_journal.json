@@ -8,6 +8,13 @@
       "when": 1766873678868,
       "tag": "0000_bumpy_sunspot",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1766874593110,
+      "tag": "0001_funny_captain_britain",
+      "breakpoints": true
     }
   ]
 }

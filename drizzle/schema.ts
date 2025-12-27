@@ -25,4 +25,28 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+// Conversations table for storing chat history
+export const conversations = mysqlTable("conversations", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(),
+  messages: text("messages").notNull(), // JSON string of messages array
+  feature: mysqlEnum("feature", ["complaints", "legislative"]).notNull(),
+  language: mysqlEnum("language", ["arabic", "english"]).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type Conversation = typeof conversations.$inferSelect;
+export type InsertConversation = typeof conversations.$inferInsert;
+
+// Sample complaints table for demo
+export const sampleComplaints = mysqlTable("sample_complaints", {
+  id: int("id").autoincrement().primaryKey(),
+  textArabic: text("textArabic").notNull(),
+  textEnglish: text("textEnglish").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  expectedRiskScore: int("expectedRiskScore").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type SampleComplaint = typeof sampleComplaints.$inferSelect;
+export type InsertSampleComplaint = typeof sampleComplaints.$inferInsert;

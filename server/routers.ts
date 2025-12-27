@@ -1,9 +1,10 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
 import { z } from "zod";
+import { saveConversation, getConversationsByUser, getSampleComplaints } from "./db";
 
 // System prompts for Ruzn-Lite OSAI
 const SYSTEM_PROMPTS = {
@@ -150,7 +151,77 @@ export const appRouter = router({
       status: 'healthy',
       service: 'Ruzn-Lite',
       version: '1.0'
-    }))
+    })),
+
+    // Save conversation to database (for logged-in users)
+    saveConversation: protectedProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.enum(['user', 'assistant']),
+          content: z.string()
+        })),
+        feature: z.enum(['complaints', 'legislative']),
+        language: z.enum(['arabic', 'english'])
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { messages, feature, language } = input;
+        const userId = ctx.user.id;
+        
+        await saveConversation({
+          userId,
+          messages: JSON.stringify(messages),
+          feature,
+          language
+        });
+        
+        return { success: true };
+      }),
+
+    // Get user's conversation history
+    getHistory: protectedProcedure.query(async ({ ctx }) => {
+      const conversations = await getConversationsByUser(ctx.user.id);
+      return conversations;
+    }),
+
+    // Generate PDF export data
+    exportPdf: protectedProcedure
+      .input(z.object({
+        messages: z.array(z.object({
+          role: z.enum(['user', 'assistant']),
+          content: z.string()
+        })),
+        feature: z.enum(['complaints', 'legislative']),
+        language: z.enum(['arabic', 'english'])
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { messages, feature, language } = input;
+        const userName = ctx.user.name || 'OSAI Staff';
+        const timestamp = new Date().toISOString();
+        
+        // Return structured data for client-side PDF generation
+        return {
+          userName,
+          timestamp,
+          feature,
+          language,
+          messages,
+          title: language === 'arabic' ? 'تقرير محادثة رُزن' : 'Ruzn Conversation Report',
+          subtitle: language === 'arabic' 
+            ? 'ديوان الرقابة المالية والإدارية للدولة' 
+            : 'State Audit Institution'
+        };
+      }),
+
+    // Get sample complaints for demo
+    getSamples: publicProcedure
+      .input(z.object({
+        language: z.enum(['arabic', 'english']).optional().default('arabic'),
+        category: z.string().optional()
+      }))
+      .query(async ({ input }) => {
+        const samples = await getSampleComplaints(input.language, input.category);
+        return samples;
+      })
   })
 });
 

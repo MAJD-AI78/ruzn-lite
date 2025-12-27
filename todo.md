@@ -25,3 +25,24 @@
 - [x] System prompts for Arabic and English
 - [x] System prompts for Complaints and Legislative modes
 - [x] Health check endpoint
+
+
+## New Features (Phase 2)
+
+### Conversation Export
+- [x] PDF export button in chat interface
+- [x] Generate PDF with Ruzn branding and header
+- [x] Include timestamp, user info, and full conversation
+- [x] Support Arabic RTL in PDF output
+
+### User Authentication & Tracking
+- [x] Login required to access chat features
+- [x] Display logged-in user name in header
+- [x] Track user sessions in database
+- [x] Log conversation history per user
+
+### Sample Complaint Database
+- [x] Create 15-20 anonymized sample complaints
+- [x] Add "Load Sample" button in UI
+- [x] Categorize samples across all 6 OSAI categories
+- [x] Include Arabic and English samples

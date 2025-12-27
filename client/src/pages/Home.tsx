@@ -1,9 +1,12 @@
 import { useState, useRef, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
+import { useAuth } from "@/_core/hooks/useAuth";
+import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Streamdown } from "streamdown";
+import { toast } from "sonner";
 import { 
   Send, 
   Loader2, 
@@ -12,7 +15,13 @@ import {
   Scale,
   AlertTriangle,
   Shield,
-  Sparkles
+  Sparkles,
+  Download,
+  User,
+  LogIn,
+  LogOut,
+  Database,
+  Trash2
 } from "lucide-react";
 
 type Language = "arabic" | "english";
@@ -62,7 +71,16 @@ const UI_TEXT = {
     poweredBy: "مدعوم من أكيوتيريوم تكنولوجيز",
     presetTitle: "استفسارات سريعة",
     welcome: "مرحباً بك في رُزن",
-    welcomeDesc: "اختر وضع العمل وابدأ محادثتك"
+    welcomeDesc: "اختر وضع العمل وابدأ محادثتك",
+    login: "تسجيل الدخول",
+    logout: "تسجيل الخروج",
+    exportPdf: "تصدير PDF",
+    loadSamples: "تحميل نماذج",
+    clearChat: "مسح المحادثة",
+    loginRequired: "يرجى تسجيل الدخول لحفظ المحادثات",
+    exportSuccess: "تم تصدير التقرير بنجاح",
+    samplesLoaded: "تم تحميل النماذج",
+    sampleComplaints: "نماذج الشكاوى"
   },
   english: {
     title: "Ruzn",
@@ -74,7 +92,16 @@ const UI_TEXT = {
     poweredBy: "Powered by Acuterium Technologies",
     presetTitle: "Quick Queries",
     welcome: "Welcome to Ruzn",
-    welcomeDesc: "Select a mode and start your conversation"
+    welcomeDesc: "Select a mode and start your conversation",
+    login: "Login",
+    logout: "Logout",
+    exportPdf: "Export PDF",
+    loadSamples: "Load Samples",
+    clearChat: "Clear Chat",
+    loginRequired: "Please login to save conversations",
+    exportSuccess: "Report exported successfully",
+    samplesLoaded: "Samples loaded",
+    sampleComplaints: "Sample Complaints"
   }
 };
 
@@ -105,12 +132,127 @@ function getRiskBadge(content: string, language: Language) {
   );
 }
 
+// PDF Generation function (client-side)
+function generatePDF(data: {
+  userName: string;
+  timestamp: string;
+  feature: string;
+  language: string;
+  messages: Message[];
+  title: string;
+  subtitle: string;
+}) {
+  const { userName, timestamp, feature, language, messages, title, subtitle } = data;
+  const isRTL = language === 'arabic';
+  
+  // Create printable HTML content
+  const htmlContent = `
+    <!DOCTYPE html>
+    <html dir="${isRTL ? 'rtl' : 'ltr'}" lang="${isRTL ? 'ar' : 'en'}">
+    <head>
+      <meta charset="UTF-8">
+      <title>${title}</title>
+      <style>
+        @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap');
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+          font-family: 'Tajawal', Arial, sans-serif; 
+          background: #1a1a1a; 
+          color: #f5f5f5;
+          padding: 40px;
+          direction: ${isRTL ? 'rtl' : 'ltr'};
+        }
+        .header { 
+          text-align: center; 
+          border-bottom: 2px solid #c9a227; 
+          padding-bottom: 20px; 
+          margin-bottom: 30px;
+        }
+        .logo { color: #c9a227; font-size: 32px; font-weight: bold; }
+        .subtitle { color: #888; font-size: 14px; margin-top: 5px; }
+        .meta { 
+          display: flex; 
+          justify-content: space-between; 
+          margin-bottom: 30px;
+          padding: 15px;
+          background: #252525;
+          border-radius: 8px;
+        }
+        .meta-item { font-size: 12px; color: #888; }
+        .meta-value { color: #c9a227; font-weight: bold; }
+        .messages { margin-top: 20px; }
+        .message { 
+          margin-bottom: 15px; 
+          padding: 15px; 
+          border-radius: 8px;
+        }
+        .user { 
+          background: #c9a227; 
+          color: #1a1a1a;
+          margin-${isRTL ? 'right' : 'left'}: 20%;
+        }
+        .assistant { 
+          background: #252525; 
+          border: 1px solid #333;
+          margin-${isRTL ? 'left' : 'right'}: 20%;
+        }
+        .role { font-size: 11px; opacity: 0.7; margin-bottom: 8px; }
+        .content { white-space: pre-wrap; line-height: 1.6; }
+        .footer { 
+          margin-top: 40px; 
+          text-align: center; 
+          font-size: 11px; 
+          color: #666;
+          border-top: 1px solid #333;
+          padding-top: 20px;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <div class="logo">رُزن | RUZN</div>
+        <div class="subtitle">${subtitle}</div>
+      </div>
+      <div class="meta">
+        <div class="meta-item">${isRTL ? 'المستخدم' : 'User'}: <span class="meta-value">${userName}</span></div>
+        <div class="meta-item">${isRTL ? 'الوضع' : 'Mode'}: <span class="meta-value">${feature === 'complaints' ? (isRTL ? 'تصنيف الشكاوى' : 'Complaints Triage') : (isRTL ? 'الاستشارات القانونية' : 'Legal Intelligence')}</span></div>
+        <div class="meta-item">${isRTL ? 'التاريخ' : 'Date'}: <span class="meta-value">${new Date(timestamp).toLocaleString(isRTL ? 'ar-OM' : 'en-US')}</span></div>
+      </div>
+      <div class="messages">
+        ${messages.map(msg => `
+          <div class="message ${msg.role}">
+            <div class="role">${msg.role === 'user' ? (isRTL ? 'المستخدم' : 'User') : (isRTL ? 'رُزن' : 'Ruzn')}</div>
+            <div class="content">${msg.content}</div>
+          </div>
+        `).join('')}
+      </div>
+      <div class="footer">
+        ${isRTL ? 'تم إنشاء هذا التقرير بواسطة رُزن - مدعوم من أكيوتيريوم تكنولوجيز' : 'This report was generated by Ruzn - Powered by Acuterium Technologies'}
+      </div>
+    </body>
+    </html>
+  `;
+  
+  // Open print dialog
+  const printWindow = window.open('', '_blank');
+  if (printWindow) {
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+    };
+  }
+}
+
 export default function Home() {
   const [language, setLanguage] = useState<Language>("arabic");
   const [feature, setFeature] = useState<Feature>("complaints");
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [showSamples, setShowSamples] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  const { user, isAuthenticated, logout } = useAuth();
   
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
@@ -123,6 +265,20 @@ export default function Home() {
     }
   });
   
+  const exportPdfMutation = trpc.chat.exportPdf.useMutation({
+    onSuccess: (data) => {
+      generatePDF(data);
+      toast.success(text.exportSuccess);
+    }
+  });
+  
+  const saveConversationMutation = trpc.chat.saveConversation.useMutation();
+  
+  const { data: samples } = trpc.chat.getSamples.useQuery({ 
+    language,
+    category: undefined 
+  });
+  
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
@@ -130,6 +286,17 @@ export default function Home() {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+  
+  // Auto-save conversation when it has content and user is authenticated
+  useEffect(() => {
+    if (isAuthenticated && messages.length >= 2) {
+      saveConversationMutation.mutate({
+        messages,
+        feature,
+        language
+      });
+    }
+  }, [messages.length]);
   
   const handleSend = async () => {
     if (!input.trim() || chatMutation.isPending) return;
@@ -161,6 +328,36 @@ export default function Home() {
     setLanguage(prev => prev === "arabic" ? "english" : "arabic");
   };
   
+  const handleExportPdf = () => {
+    if (!isAuthenticated) {
+      toast.error(text.loginRequired);
+      return;
+    }
+    if (messages.length === 0) {
+      toast.error(language === "arabic" ? "لا توجد محادثة للتصدير" : "No conversation to export");
+      return;
+    }
+    exportPdfMutation.mutate({
+      messages,
+      feature,
+      language
+    });
+  };
+  
+  const handleClearChat = () => {
+    setMessages([]);
+  };
+  
+  const handleLoadSample = (sampleText: string) => {
+    setInput(sampleText);
+    setShowSamples(false);
+    toast.success(text.samplesLoaded);
+  };
+  
+  const handleLogout = () => {
+    logout();
+  };
+  
   return (
     <div 
       className="min-h-screen flex flex-col bg-background"
@@ -186,15 +383,45 @@ export default function Home() {
               </div>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleLanguage}
-              className="gap-2 border-primary/30 hover:border-primary"
-            >
-              <Globe className="w-4 h-4" />
-              {language === "arabic" ? "English" : "العربية"}
-            </Button>
+            <div className="flex items-center gap-2">
+              {/* User Auth Display */}
+              {isAuthenticated ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-primary flex items-center gap-1">
+                    <User className="w-4 h-4" />
+                    {user?.name || 'OSAI Staff'}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="text-muted-foreground hover:text-foreground"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => window.location.href = getLoginUrl()}
+                  className="gap-2 border-primary/30"
+                >
+                  <LogIn className="w-4 h-4" />
+                  {text.login}
+                </Button>
+              )}
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleLanguage}
+                className="gap-2 border-primary/30 hover:border-primary"
+              >
+                <Globe className="w-4 h-4" />
+                {language === "arabic" ? "English" : "العربية"}
+              </Button>
+            </div>
           </div>
           
           {/* Feature Toggle */}
@@ -216,6 +443,70 @@ export default function Home() {
               {text.legislative}
             </Button>
           </div>
+          
+          {/* Action Buttons */}
+          <div className="flex gap-2 mt-3">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowSamples(!showSamples)}
+              className="gap-1 border-primary/20 text-xs"
+            >
+              <Database className="w-3 h-3" />
+              {text.loadSamples}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPdf}
+              disabled={messages.length === 0 || exportPdfMutation.isPending}
+              className="gap-1 border-primary/20 text-xs"
+            >
+              {exportPdfMutation.isPending ? (
+                <Loader2 className="w-3 h-3 animate-spin" />
+              ) : (
+                <Download className="w-3 h-3" />
+              )}
+              {text.exportPdf}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleClearChat}
+              disabled={messages.length === 0}
+              className="gap-1 border-primary/20 text-xs"
+            >
+              <Trash2 className="w-3 h-3" />
+              {text.clearChat}
+            </Button>
+          </div>
+          
+          {/* Sample Complaints Panel */}
+          {showSamples && samples && samples.length > 0 && (
+            <div className="mt-3 p-3 bg-card/80 rounded-lg border border-primary/20">
+              <h3 className="text-sm font-semibold mb-2 text-primary">{text.sampleComplaints}</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                {samples.map((sample) => (
+                  <Button
+                    key={sample.id}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleLoadSample(sample.text)}
+                    className="justify-start text-start h-auto py-2 px-3 text-xs hover:bg-primary/10 border border-transparent hover:border-primary/30"
+                  >
+                    <span className="truncate">{sample.text}</span>
+                    <span className={`ml-2 px-1.5 py-0.5 rounded text-[10px] ${
+                      sample.expectedRiskScore >= 70 ? 'bg-red-500/20 text-red-400' :
+                      sample.expectedRiskScore >= 40 ? 'bg-yellow-500/20 text-yellow-400' :
+                      'bg-green-500/20 text-green-400'
+                    }`}>
+                      {sample.expectedRiskScore}
+                    </span>
+                  </Button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </header>
       
