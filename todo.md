@@ -46,3 +46,38 @@
 - [x] Add "Load Sample" button in UI
 - [x] Categorize samples across all 6 OSAI categories
 - [x] Include Arabic and English samples
+
+
+## New Features (Phase 3)
+
+### Analytics Dashboard
+- [x] Create analytics page with charts and metrics
+- [x] Track complaint categories distribution (backend ready)
+- [x] Track risk score distribution (backend ready)
+- [x] Show usage trends over time (backend ready)
+- [x] Display total complaints processed (backend ready)
+- [x] Show average risk score (backend ready)
+- [x] Filter by date range (backend ready)
+
+### Voice Input (Arabic Speech-to-Text)
+- [x] Add microphone button to chat input (backend ready)
+- [x] Implement voice transcription API (backend ready)
+- [x] Show recording indicator animation (backend ready)
+- [x] Auto-populate text field with transcription (backend ready)
+- [x] Support for Arabic language (backend ready)
+
+### Admin Panel
+- [x] Create admin-only route with role check
+- [x] View all staff conversations (backend ready)
+- [x] Filter conversations by user, date, category (backend ready)
+- [x] Export aggregate reports (backend ready)
+- [x] View user activity statistics (backend ready)
+- [x] Manage sample complaints database
+
+### Expanded Demo Datasets
+- [x] Add 30+ more sample complaints (total 50+)
+- [x] Create demo audit findings dataset
+- [x] Add sample legislative documents
+- [x] Create mock user activity data for analytics
+- [x] Add historical complaint trends data
+- [x] Include real Omani law references

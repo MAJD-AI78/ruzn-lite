@@ -20,7 +20,16 @@ vi.mock("./db", () => ({
   getSampleComplaints: vi.fn().mockResolvedValue([
     { id: 1, text: "تم اكتشاف مخالفات مالية", category: "financial_corruption", expectedRiskScore: 85 },
     { id: 2, text: "موظف يمنح عقودًا لشركة يملكها قريبه", category: "conflict_of_interest", expectedRiskScore: 75 }
-  ])
+  ]),
+  logAnalyticsEvent: vi.fn().mockResolvedValue(undefined),
+  getAnalyticsStats: vi.fn().mockResolvedValue({
+    totalComplaints: 100,
+    avgRiskScore: 65,
+    categoryDistribution: { financial_corruption: 30, conflict_of_interest: 20 },
+    riskDistribution: { high: 20, medium: 50, low: 30 }
+  }),
+  getAllConversations: vi.fn().mockResolvedValue([]),
+  getAllUsers: vi.fn().mockResolvedValue([])
 }));
 
 type CookieCall = {
@@ -147,7 +156,7 @@ describe("chat.health", () => {
 
     expect(result.status).toBe("healthy");
     expect(result.service).toBe("Ruzn-Lite");
-    expect(result.version).toBe("1.0");
+    expect(result.version).toBe("2.0");
   });
 });
 

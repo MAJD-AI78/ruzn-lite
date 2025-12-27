@@ -21,8 +21,13 @@ import {
   LogIn,
   LogOut,
   Database,
-  Trash2
+  Trash2,
+  BarChart3,
+  Settings,
+  Mic,
+  MicOff
 } from "lucide-react";
+import { Link } from "wouter";
 
 type Language = "arabic" | "english";
 type Feature = "complaints" | "legislative";
@@ -80,7 +85,11 @@ const UI_TEXT = {
     loginRequired: "يرجى تسجيل الدخول لحفظ المحادثات",
     exportSuccess: "تم تصدير التقرير بنجاح",
     samplesLoaded: "تم تحميل النماذج",
-    sampleComplaints: "نماذج الشكاوى"
+    sampleComplaints: "نماذج الشكاوى",
+    analytics: "التحليلات",
+    admin: "لوحة المشرف",
+    voiceInput: "إدخال صوتي",
+    recording: "جاري التسجيل..."
   },
   english: {
     title: "Ruzn",
@@ -101,7 +110,11 @@ const UI_TEXT = {
     loginRequired: "Please login to save conversations",
     exportSuccess: "Report exported successfully",
     samplesLoaded: "Samples loaded",
-    sampleComplaints: "Sample Complaints"
+    sampleComplaints: "Sample Complaints",
+    analytics: "Analytics",
+    admin: "Admin Panel",
+    voiceInput: "Voice Input",
+    recording: "Recording..."
   }
 };
 
@@ -479,6 +492,31 @@ export default function Home() {
               <Trash2 className="w-3 h-3" />
               {text.clearChat}
             </Button>
+            
+            {/* Navigation Links */}
+            <div className="flex-1" />
+            <Link href="/analytics">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 border-primary/20 text-xs"
+              >
+                <BarChart3 className="w-3 h-3" />
+                {text.analytics}
+              </Button>
+            </Link>
+            {user?.role === 'admin' && (
+              <Link href="/admin">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1 border-primary/20 text-xs"
+                >
+                  <Settings className="w-3 h-3" />
+                  {text.admin}
+                </Button>
+              </Link>
+            )}
           </div>
           
           {/* Sample Complaints Panel */}

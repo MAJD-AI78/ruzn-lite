@@ -3,8 +3,13 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { invokeLLM } from "./_core/llm";
+import { transcribeAudio } from "./_core/voiceTranscription";
 import { z } from "zod";
-import { saveConversation, getConversationsByUser, getSampleComplaints } from "./db";
+import { 
+  saveConversation, getConversationsByUser, getSampleComplaints,
+  getAnalyticsSummary, logAnalyticsEvent, getAllConversations,
+  getAuditFindings, getLegislativeDocuments, getAllUsers
+} from "./db";
 
 // System prompts for Ruzn-Lite OSAI
 const SYSTEM_PROMPTS = {
@@ -109,7 +114,7 @@ export const appRouter = router({
           content: z.string()
         })).optional().default([])
       }))
-      .mutation(async ({ input }) => {
+      .mutation(async ({ input, ctx }) => {
         const { message, language, feature, history } = input;
         
         // Get appropriate system prompt
@@ -130,11 +135,60 @@ export const appRouter = router({
         
         try {
           const response = await invokeLLM({ messages });
-          const assistantMessage = response.choices[0]?.message?.content || '';
+          const rawContent = response.choices[0]?.message?.content;
+          const assistantMessage = typeof rawContent === 'string' ? rawContent : '';
+          
+          // Log analytics event
+          const userId = ctx.user?.id;
+          let riskScore: number | undefined;
+          let category: string | undefined;
+          
+          // Extract risk score and category from response if complaints mode
+          if (feature === 'complaints') {
+            const riskMatch = assistantMessage.match(/(\d{1,3})\/100/);
+            if (riskMatch) {
+              riskScore = parseInt(riskMatch[1]);
+            }
+            
+            // Detect category
+            const categoryMap: Record<string, string> = {
+              'فساد مالي': 'financial_corruption',
+              'Financial Corruption': 'financial_corruption',
+              'تضارب المصالح': 'conflict_of_interest',
+              'Conflict of Interest': 'conflict_of_interest',
+              'إساءة استخدام السلطة': 'abuse_of_power',
+              'Abuse of Power': 'abuse_of_power',
+              'مخالفة قانون المناقصات': 'tender_violation',
+              'Tender Law Violation': 'tender_violation',
+              'إهمال إداري': 'administrative_negligence',
+              'Administrative Negligence': 'administrative_negligence',
+              'شكوى عامة': 'general',
+              'General Complaint': 'general'
+            };
+            
+            for (const [key, value] of Object.entries(categoryMap)) {
+              if (typeof assistantMessage === 'string' && assistantMessage.includes(key)) {
+                category = value;
+                break;
+              }
+            }
+          }
+          
+          await logAnalyticsEvent({
+            userId,
+            eventType: feature === 'complaints' ? 'complaint_analyzed' : 'legislative_query',
+            feature,
+            language,
+            category,
+            riskScore,
+            metadata: JSON.stringify({ messageLength: message.length })
+          });
           
           return {
             response: assistantMessage,
-            status: 'success' as const
+            status: 'success' as const,
+            riskScore,
+            category
           };
         } catch (error) {
           console.error('LLM Error:', error);
@@ -150,7 +204,7 @@ export const appRouter = router({
     health: publicProcedure.query(() => ({
       status: 'healthy',
       service: 'Ruzn-Lite',
-      version: '1.0'
+      version: '2.0'
     })),
 
     // Save conversation to database (for logged-in users)
@@ -161,17 +215,21 @@ export const appRouter = router({
           content: z.string()
         })),
         feature: z.enum(['complaints', 'legislative']),
-        language: z.enum(['arabic', 'english'])
+        language: z.enum(['arabic', 'english']),
+        riskScore: z.number().optional(),
+        category: z.string().optional()
       }))
       .mutation(async ({ ctx, input }) => {
-        const { messages, feature, language } = input;
+        const { messages, feature, language, riskScore, category } = input;
         const userId = ctx.user.id;
         
         await saveConversation({
           userId,
           messages: JSON.stringify(messages),
           feature,
-          language
+          language,
+          riskScore,
+          category
         });
         
         return { success: true };
@@ -198,6 +256,15 @@ export const appRouter = router({
         const userName = ctx.user.name || 'OSAI Staff';
         const timestamp = new Date().toISOString();
         
+        // Log PDF export event
+        await logAnalyticsEvent({
+          userId: ctx.user.id,
+          eventType: 'pdf_export',
+          feature,
+          language,
+          metadata: JSON.stringify({ messageCount: messages.length })
+        });
+        
         // Return structured data for client-side PDF generation
         return {
           userName,
@@ -221,6 +288,134 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const samples = await getSampleComplaints(input.language, input.category);
         return samples;
+      }),
+
+    // Voice transcription endpoint
+    transcribe: protectedProcedure
+      .input(z.object({
+        audioUrl: z.string().url(),
+        language: z.enum(['arabic', 'english']).optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { audioUrl, language } = input;
+        
+        try {
+          const result = await transcribeAudio({
+            audioUrl,
+            language: language === 'arabic' ? 'ar' : 'en',
+            prompt: language === 'arabic' 
+              ? 'شكوى مقدمة لديوان الرقابة المالية والإدارية للدولة'
+              : 'Complaint submitted to the State Audit Institution'
+          });
+          
+          // Check if result has text (success case)
+          if ('text' in result && result.text) {
+            // Log voice input event
+            await logAnalyticsEvent({
+              userId: ctx.user.id,
+              eventType: 'voice_input',
+              feature: 'complaints',
+              language: language || 'arabic',
+              metadata: JSON.stringify({ duration: result.segments?.length || 0 })
+            });
+            
+            return {
+              text: result.text,
+              language: result.language || language || 'arabic',
+              status: 'success' as const
+            };
+          }
+          
+          // Error case
+          return {
+            text: '',
+            language: language || 'arabic',
+            status: 'error' as const
+          };
+        } catch (error) {
+          console.error('Transcription Error:', error);
+          return {
+            text: '',
+            language: language || 'arabic',
+            status: 'error' as const
+          };
+        }
+      })
+  }),
+
+  // Analytics Router
+  analytics: router({
+    getSummary: protectedProcedure
+      .input(z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const summary = await getAnalyticsSummary(input?.startDate, input?.endDate);
+        return summary;
+      }),
+
+    getAuditFindings: publicProcedure
+      .input(z.object({
+        language: z.enum(['arabic', 'english']).optional().default('arabic'),
+        severity: z.string().optional(),
+        ministry: z.string().optional()
+      }))
+      .query(async ({ input }) => {
+        const findings = await getAuditFindings(input.language, input.severity, input.ministry);
+        return findings;
+      }),
+
+    getLegislativeDocs: publicProcedure
+      .input(z.object({
+        language: z.enum(['arabic', 'english']).optional().default('arabic'),
+        documentType: z.string().optional()
+      }))
+      .query(async ({ input }) => {
+        const docs = await getLegislativeDocuments(input.language, input.documentType);
+        return docs;
+      })
+  }),
+
+  // Admin Router (for supervisors)
+  admin: router({
+    getAllConversations: protectedProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(500).optional().default(100)
+      }))
+      .query(async ({ ctx, input }) => {
+        // Check if user is admin
+        if (ctx.user.role !== 'admin') {
+          return { conversations: [], error: 'Unauthorized' };
+        }
+        
+        const conversations = await getAllConversations(input.limit);
+        return { conversations };
+      }),
+
+    getAllUsers: protectedProcedure.query(async ({ ctx }) => {
+      // Check if user is admin
+      if (ctx.user.role !== 'admin') {
+        return { users: [], error: 'Unauthorized' };
+      }
+      
+      const users = await getAllUsers();
+      return { users };
+    }),
+
+    getAnalytics: protectedProcedure
+      .input(z.object({
+        startDate: z.date().optional(),
+        endDate: z.date().optional()
+      }).optional())
+      .query(async ({ ctx, input }) => {
+        // Check if user is admin
+        if (ctx.user.role !== 'admin') {
+          return { analytics: null, error: 'Unauthorized' };
+        }
+        
+        const analytics = await getAnalyticsSummary(input?.startDate, input?.endDate);
+        return { analytics };
       })
   })
 });

@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -32,21 +32,97 @@ export const conversations = mysqlTable("conversations", {
   messages: text("messages").notNull(), // JSON string of messages array
   feature: mysqlEnum("feature", ["complaints", "legislative"]).notNull(),
   language: mysqlEnum("language", ["arabic", "english"]).notNull(),
+  riskScore: int("riskScore"), // Extracted risk score for analytics
+  category: varchar("category", { length: 100 }), // Extracted category for analytics
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
 
-// Sample complaints table for demo
+// Sample complaints table for demo (expanded)
 export const sampleComplaints = mysqlTable("sample_complaints", {
   id: int("id").autoincrement().primaryKey(),
   textArabic: text("textArabic").notNull(),
   textEnglish: text("textEnglish").notNull(),
   category: varchar("category", { length: 100 }).notNull(),
   expectedRiskScore: int("expectedRiskScore").notNull(),
+  ministry: varchar("ministry", { length: 200 }), // Which ministry/entity
+  keywords: text("keywords"), // JSON array of keywords
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 
 export type SampleComplaint = typeof sampleComplaints.$inferSelect;
 export type InsertSampleComplaint = typeof sampleComplaints.$inferInsert;
+
+// Audit findings table for demo
+export const auditFindings = mysqlTable("audit_findings", {
+  id: int("id").autoincrement().primaryKey(),
+  titleArabic: text("titleArabic").notNull(),
+  titleEnglish: text("titleEnglish").notNull(),
+  descriptionArabic: text("descriptionArabic").notNull(),
+  descriptionEnglish: text("descriptionEnglish").notNull(),
+  category: varchar("category", { length: 100 }).notNull(),
+  severity: mysqlEnum("severity", ["critical", "high", "medium", "low"]).notNull(),
+  ministry: varchar("ministry", { length: 200 }).notNull(),
+  year: int("year").notNull(),
+  amountOMR: int("amountOMR"), // Amount in Omani Rials if applicable
+  status: mysqlEnum("status", ["open", "in_progress", "resolved", "closed"]).default("open").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AuditFinding = typeof auditFindings.$inferSelect;
+export type InsertAuditFinding = typeof auditFindings.$inferInsert;
+
+// Legislative documents table for legal intelligence
+export const legislativeDocuments = mysqlTable("legislative_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  titleArabic: text("titleArabic").notNull(),
+  titleEnglish: text("titleEnglish").notNull(),
+  documentType: mysqlEnum("documentType", ["royal_decree", "ministerial_decision", "law", "regulation", "circular"]).notNull(),
+  documentNumber: varchar("documentNumber", { length: 100 }).notNull(),
+  year: int("year").notNull(),
+  summaryArabic: text("summaryArabic"),
+  summaryEnglish: text("summaryEnglish"),
+  keyProvisions: text("keyProvisions"), // JSON array of key provisions
+  relatedTo: text("relatedTo"), // JSON array of related document IDs
+  isActive: int("isActive").default(1).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LegislativeDocument = typeof legislativeDocuments.$inferSelect;
+export type InsertLegislativeDocument = typeof legislativeDocuments.$inferInsert;
+
+// Analytics events table for tracking usage
+export const analyticsEvents = mysqlTable("analytics_events", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  eventType: mysqlEnum("eventType", ["chat_message", "complaint_analyzed", "legislative_query", "pdf_export", "voice_input"]).notNull(),
+  feature: mysqlEnum("feature", ["complaints", "legislative"]).notNull(),
+  language: mysqlEnum("language", ["arabic", "english"]).notNull(),
+  category: varchar("category", { length: 100 }),
+  riskScore: int("riskScore"),
+  metadata: text("metadata"), // JSON for additional data
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnalyticsEvent = typeof analyticsEvents.$inferSelect;
+export type InsertAnalyticsEvent = typeof analyticsEvents.$inferInsert;
+
+// Demo trends data for analytics charts
+export const demoTrends = mysqlTable("demo_trends", {
+  id: int("id").autoincrement().primaryKey(),
+  date: timestamp("date").notNull(),
+  totalComplaints: int("totalComplaints").notNull(),
+  financialCorruption: int("financialCorruption").default(0).notNull(),
+  conflictOfInterest: int("conflictOfInterest").default(0).notNull(),
+  abuseOfPower: int("abuseOfPower").default(0).notNull(),
+  tenderViolation: int("tenderViolation").default(0).notNull(),
+  adminNeglect: int("adminNeglect").default(0).notNull(),
+  generalComplaint: int("generalComplaint").default(0).notNull(),
+  avgRiskScore: int("avgRiskScore").default(0).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DemoTrend = typeof demoTrends.$inferSelect;
+export type InsertDemoTrend = typeof demoTrends.$inferInsert;
