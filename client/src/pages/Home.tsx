@@ -25,7 +25,11 @@ import {
   BarChart3,
   Settings,
   Mic,
-  MicOff
+  MicOff,
+  Clock,
+  CheckCircle,
+  FileText,
+  TrendingUp
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -293,6 +297,9 @@ export default function Home() {
     language,
     category: undefined 
   });
+  
+  // Dashboard stats query
+  const { data: dashboardStats } = trpc.dashboard.getStats.useQuery();
   
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -623,6 +630,69 @@ export default function Home() {
           )}
         </div>
       </header>
+      
+      {/* Dashboard Widgets */}
+      {dashboardStats && (
+        <div className="container max-w-5xl mx-auto px-4 py-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <FileText className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'شكاوى اليوم' : "Today's Complaints"}
+                  </p>
+                  <p className="text-xl font-bold text-foreground">{dashboardStats.todayComplaints || 0}</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/10">
+                  <Clock className="w-5 h-5 text-yellow-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'قيد المراجعة' : 'Pending Review'}
+                  </p>
+                  <p className="text-xl font-bold text-foreground">{dashboardStats.pendingReviews || 0}</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-500/10">
+                  <AlertTriangle className="w-5 h-5 text-red-400" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'عالي الخطورة' : 'High Risk'}
+                  </p>
+                  <p className="text-xl font-bold text-foreground">{dashboardStats.highRiskAwaiting || 0}</p>
+                </div>
+              </div>
+            </Card>
+            
+            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'وقت الاستجابة' : 'Avg Response'}
+                  </p>
+                  <p className="text-xl font-bold text-foreground">{dashboardStats.avgResponseTime?.toFixed(0) || 0}h</p>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      )}
       
       {/* Main Chat Area */}
       <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 flex flex-col">

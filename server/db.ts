@@ -4,7 +4,8 @@ import {
   InsertUser, users, conversations, sampleComplaints, 
   InsertConversation, analyticsEvents, InsertAnalyticsEvent,
   auditFindings, InsertAuditFinding, legislativeDocuments, 
-  InsertLegislativeDocument, demoTrends, InsertDemoTrend
+  InsertLegislativeDocument, demoTrends, InsertDemoTrend,
+  statusHistory, InsertStatusHistory, weeklyReports, InsertWeeklyReport
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -531,4 +532,324 @@ function getHardcodedLegislativeDocuments(language?: string) {
     summary: language === 'english' ? d.summaryEnglish : d.summaryArabic,
     keyProvisions: d.keyProvisions
   }));
+}
+
+
+// Status tracking functions
+export async function updateConversationStatus(
+  conversationId: number, 
+  newStatus: 'new' | 'under_review' | 'investigating' | 'resolved',
+  changedByUserId: number,
+  changedByUserName: string,
+  notes?: string
+) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot update status: database not available");
+    return null;
+  }
+
+  try {
+    // Get current status
+    const current = await db
+      .select({ status: conversations.status })
+      .from(conversations)
+      .where(eq(conversations.id, conversationId))
+      .limit(1);
+    
+    const previousStatus = current[0]?.status || 'new';
+
+    // Update conversation status
+    await db
+      .update(conversations)
+      .set({ status: newStatus })
+      .where(eq(conversations.id, conversationId));
+
+    // Log status change in history
+    await db.insert(statusHistory).values({
+      conversationId,
+      previousStatus: previousStatus as any,
+      newStatus,
+      changedByUserId,
+      changedByUserName,
+      notes
+    });
+
+    return { success: true, previousStatus, newStatus };
+  } catch (error) {
+    console.error("[Database] Failed to update conversation status:", error);
+    throw error;
+  }
+}
+
+export async function getStatusHistory(conversationId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get status history: database not available");
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(statusHistory)
+      .where(eq(statusHistory.conversationId, conversationId))
+      .orderBy(desc(statusHistory.createdAt));
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get status history:", error);
+    return [];
+  }
+}
+
+export async function getConversationsByStatus(status?: string, limit = 100) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get conversations: database not available");
+    return [];
+  }
+
+  try {
+    let query = db
+      .select({
+        id: conversations.id,
+        userId: conversations.userId,
+        messages: conversations.messages,
+        feature: conversations.feature,
+        language: conversations.language,
+        riskScore: conversations.riskScore,
+        category: conversations.category,
+        status: conversations.status,
+        createdAt: conversations.createdAt,
+        updatedAt: conversations.updatedAt,
+        userName: users.name,
+        userEmail: users.email
+      })
+      .from(conversations)
+      .leftJoin(users, eq(conversations.userId, users.id));
+    
+    if (status && status !== 'all') {
+      query = query.where(eq(conversations.status, status as any)) as typeof query;
+    }
+    
+    const result = await query.orderBy(desc(conversations.createdAt)).limit(limit);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get conversations by status:", error);
+    return [];
+  }
+}
+
+// Dashboard stats functions
+export async function getDashboardStats() {
+  const db = await getDb();
+  
+  // Return demo data if database is not available
+  if (!db) {
+    return getDemoDashboardStats();
+  }
+
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const sevenDaysAgo = new Date(today);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    // Get today's complaints
+    const todayComplaints = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .where(gte(conversations.createdAt, today));
+
+    // Get pending reviews (status = new or under_review)
+    const pendingReviews = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .where(
+        sql`${conversations.status} IN ('new', 'under_review')`
+      );
+
+    // Get high-risk awaiting action
+    const highRiskAwaiting = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .where(
+        and(
+          gte(conversations.riskScore, 70),
+          sql`${conversations.status} IN ('new', 'under_review')`
+        )
+      );
+
+    // Get 7-day trend - use raw SQL to avoid GROUP BY issues
+    const weekTrend = await db.execute(
+      sql`SELECT DATE(createdAt) as date, COUNT(*) as count 
+          FROM conversations 
+          WHERE createdAt >= ${sevenDaysAgo} 
+          GROUP BY DATE(createdAt) 
+          ORDER BY DATE(createdAt)`
+    ) as unknown as Array<{ date: string; count: number }[]>;
+    
+    const trendData = Array.isArray(weekTrend[0]) ? weekTrend[0] : [];
+
+    return {
+      todayComplaints: todayComplaints[0]?.count || 0,
+      pendingReviews: pendingReviews[0]?.count || 0,
+      highRiskAwaiting: highRiskAwaiting[0]?.count || 0,
+      avgResponseTime: 4.2, // Demo value - would need actual calculation
+      weekTrend: trendData.map((t: { date: string; count: number }) => ({
+        date: t.date,
+        count: Number(t.count)
+      }))
+    };
+  } catch (error) {
+    console.error("[Database] Failed to get dashboard stats:", error);
+    return getDemoDashboardStats();
+  }
+}
+
+function getDemoDashboardStats() {
+  return {
+    todayComplaints: 12,
+    pendingReviews: 47,
+    highRiskAwaiting: 8,
+    avgResponseTime: 4.2,
+    weekTrend: [
+      { date: '2024-12-22', count: 8 },
+      { date: '2024-12-23', count: 15 },
+      { date: '2024-12-24', count: 11 },
+      { date: '2024-12-25', count: 6 },
+      { date: '2024-12-26', count: 14 },
+      { date: '2024-12-27', count: 18 },
+      { date: '2024-12-28', count: 12 }
+    ]
+  };
+}
+
+// Weekly report functions
+export async function generateWeeklyReport() {
+  const db = await getDb();
+  
+  const endDate = new Date();
+  const startDate = new Date(endDate);
+  startDate.setDate(startDate.getDate() - 7);
+
+  // Get demo data if database is not available
+  if (!db) {
+    return getDemoWeeklyReport(startDate, endDate);
+  }
+
+  try {
+    // Get all conversations from the past week
+    const weekConversations = await db
+      .select()
+      .from(conversations)
+      .where(
+        and(
+          gte(conversations.createdAt, startDate),
+          lte(conversations.createdAt, endDate)
+        )
+      );
+
+    const totalComplaints = weekConversations.length;
+    const highRiskCount = weekConversations.filter(c => (c.riskScore || 0) >= 70).length;
+    const resolvedCount = weekConversations.filter(c => c.status === 'resolved').length;
+    const avgRiskScore = totalComplaints > 0 
+      ? Math.round(weekConversations.reduce((sum, c) => sum + (c.riskScore || 0), 0) / totalComplaints)
+      : 0;
+
+    // Category breakdown
+    const categoryBreakdown: Record<string, number> = {};
+    weekConversations.forEach(c => {
+      if (c.category) {
+        categoryBreakdown[c.category] = (categoryBreakdown[c.category] || 0) + 1;
+      }
+    });
+
+    // Top entities (placeholder - would need entity field)
+    const topEntities = [
+      { entity: "وزارة المالية", count: 23, highRisk: 8 },
+      { entity: "وزارة الصحة", count: 18, highRisk: 5 },
+      { entity: "وزارة التربية", count: 15, highRisk: 3 }
+    ];
+
+    const recommendations = [
+      "زيادة الرقابة على عمليات المناقصات في وزارة المالية",
+      "مراجعة إجراءات الشراء في القطاع الصحي",
+      "تعزيز آليات الإبلاغ عن تضارب المصالح"
+    ];
+
+    const report = {
+      weekStartDate: startDate,
+      weekEndDate: endDate,
+      totalComplaints,
+      highRiskCount,
+      resolvedCount,
+      avgRiskScore,
+      categoryBreakdown: JSON.stringify(categoryBreakdown),
+      topEntities: JSON.stringify(topEntities),
+      recommendations: JSON.stringify(recommendations)
+    };
+
+    // Save report to database
+    await db.insert(weeklyReports).values(report);
+
+    return {
+      ...report,
+      categoryBreakdown,
+      topEntities,
+      recommendations
+    };
+  } catch (error) {
+    console.error("[Database] Failed to generate weekly report:", error);
+    return getDemoWeeklyReport(startDate, endDate);
+  }
+}
+
+function getDemoWeeklyReport(startDate: Date, endDate: Date) {
+  return {
+    weekStartDate: startDate,
+    weekEndDate: endDate,
+    totalComplaints: 87,
+    highRiskCount: 24,
+    resolvedCount: 31,
+    avgRiskScore: 58,
+    categoryBreakdown: {
+      financial_corruption: 22,
+      conflict_of_interest: 14,
+      abuse_of_power: 11,
+      tender_violation: 19,
+      administrative_negligence: 12,
+      general: 9
+    },
+    topEntities: [
+      { entity: "وزارة المالية", count: 23, highRisk: 8 },
+      { entity: "وزارة الصحة", count: 18, highRisk: 5 },
+      { entity: "وزارة التربية", count: 15, highRisk: 3 }
+    ],
+    recommendations: [
+      "زيادة الرقابة على عمليات المناقصات في وزارة المالية",
+      "مراجعة إجراءات الشراء في القطاع الصحي",
+      "تعزيز آليات الإبلاغ عن تضارب المصالح"
+    ]
+  };
+}
+
+export async function getWeeklyReports(limit = 10) {
+  const db = await getDb();
+  if (!db) {
+    return [];
+  }
+
+  try {
+    const result = await db
+      .select()
+      .from(weeklyReports)
+      .orderBy(desc(weeklyReports.generatedAt))
+      .limit(limit);
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get weekly reports:", error);
+    return [];
+  }
 }

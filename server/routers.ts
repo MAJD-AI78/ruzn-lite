@@ -8,7 +8,9 @@ import { z } from "zod";
 import { 
   saveConversation, getConversationsByUser, getSampleComplaints,
   getAnalyticsSummary, logAnalyticsEvent, getAllConversations,
-  getAuditFindings, getLegislativeDocuments, getAllUsers
+  getAuditFindings, getLegislativeDocuments, getAllUsers,
+  updateConversationStatus, getStatusHistory, getConversationsByStatus,
+  getDashboardStats, generateWeeklyReport, getWeeklyReports
 } from "./db";
 
 // System prompts for Ruzn-Lite OSAI
@@ -443,7 +445,87 @@ export const appRouter = router({
         
         const analytics = await getAnalyticsSummary(input?.startDate, input?.endDate);
         return { analytics };
+      }),
+
+    // Update conversation status
+    updateStatus: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        newStatus: z.enum(['new', 'under_review', 'investigating', 'resolved']),
+        notes: z.string().optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          return { success: false, error: 'Unauthorized' };
+        }
+        
+        const result = await updateConversationStatus(
+          input.conversationId,
+          input.newStatus,
+          ctx.user.id,
+          ctx.user.name || 'Admin',
+          input.notes
+        );
+        return result;
+      }),
+
+    // Get status history for a conversation
+    getStatusHistory: protectedProcedure
+      .input(z.object({ conversationId: z.number() }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          return { history: [], error: 'Unauthorized' };
+        }
+        
+        const history = await getStatusHistory(input.conversationId);
+        return { history };
+      }),
+
+    // Get conversations filtered by status
+    getConversationsByStatus: protectedProcedure
+      .input(z.object({
+        status: z.string().optional(),
+        limit: z.number().min(1).max(500).optional().default(100)
+      }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          return { conversations: [], error: 'Unauthorized' };
+        }
+        
+        const conversations = await getConversationsByStatus(input.status, input.limit);
+        return { conversations };
+      }),
+
+    // Generate weekly report
+    generateWeeklyReport: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          return { report: null, error: 'Unauthorized' };
+        }
+        
+        const report = await generateWeeklyReport();
+        return { report };
+      }),
+
+    // Get past weekly reports
+    getWeeklyReports: protectedProcedure
+      .input(z.object({ limit: z.number().min(1).max(50).optional().default(10) }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          return { reports: [], error: 'Unauthorized' };
+        }
+        
+        const reports = await getWeeklyReports(input.limit);
+        return { reports };
       })
+  }),
+
+  // Dashboard Router (for home page widgets)
+  dashboard: router({
+    getStats: publicProcedure.query(async () => {
+      const stats = await getDashboardStats();
+      return stats;
+    })
   })
 });
 

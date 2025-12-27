@@ -106,3 +106,48 @@
 - [x] Send notification to supervisors via notifyOwner
 - [x] Include complaint summary and risk details
 - [x] Log notification events in console
+
+
+## New Features (Phase 5) - POC Demo Integration
+
+### Analysis of Uploaded POC Demo (ruzn-lite_poc_osai_demo.html)
+The uploaded HTML file is a **comprehensive offline complaints management POC** with:
+- **4-Tab Interface**: Intake, Triage Queue, Entity Map, Schemas
+- **Complaint Intake Form**: Channel, complainant type, entity, governorate, topic, amount, text
+- **Auto-Triage System**: Keyword-based classification (procurement, conflict, bribery, funds, fraud, delay)
+- **Risk Scoring Algorithm**: 0-100 scale based on keywords + amount + sensitivity
+- **Entity Intelligence Map**: Aggregated view of complaints by entity with risk concentration
+- **Minister Dashboard**: Daily brief with KPIs, hotspots, and actions
+- **Schema Definitions**: Structured JSON schemas for complaints and reports
+- **Status Tracking**: New → Investigating → Closed workflow
+- **Export Functions**: JSON and CSV export capabilities
+
+### Integration Plan
+**Where to Place**: Create a new "Operations" page (`/operations`) incorporating all POC features
+
+### Complaint Status Tracking
+- [x] Add status field to conversations table (New, Under Review, Investigating, Resolved)
+- [x] Create status history table to track all status changes
+- [x] Add status dropdown in Admin Panel conversation list
+- [x] Log status changes with timestamp and user who made the change
+- [x] Display status history in conversation detail modal
+
+### Dashboard Widgets (Home Page)
+- [x] Add quick-stat cards showing today's complaints count
+- [x] Show pending reviews count
+- [x] Display average response time
+- [x] Show high-risk complaints awaiting action
+- [x] Add mini trend chart for weekly complaints
+
+### Scheduled Reports
+- [x] Create weekly report generation function
+- [x] Include complaint trends, category breakdown, risk distribution
+- [ ] Auto-email to department heads every Sunday (requires scheduled task)
+- [x] Store generated reports in database for history
+
+### Operations Page (from POC Demo)
+- [ ] Create /operations route with 4-tab interface
+- [ ] Implement complaint intake form with all fields
+- [ ] Build triage queue with filtering (All/High/Med/Low)
+- [ ] Add entity intelligence map with aggregated stats
+- [ ] Create minister dashboard view with KPIs

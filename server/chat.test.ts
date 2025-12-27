@@ -252,3 +252,71 @@ describe("chat.getHistory (protected)", () => {
     expect(Array.isArray(result)).toBe(true);
   });
 });
+
+
+// Phase 5 Tests: Status Tracking, Dashboard Stats, Weekly Reports
+
+function createAdminContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] } {
+  const clearedCookies: CookieCall[] = [];
+
+  const user: AuthenticatedUser = {
+    id: 1,
+    openId: "admin-user",
+    email: "admin@osai.gov.om",
+    name: "OSAI Admin",
+    loginMethod: "manus",
+    role: "admin",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    lastSignedIn: new Date(),
+  };
+
+  const ctx: TrpcContext = {
+    user,
+    req: {
+      protocol: "https",
+      headers: {},
+    } as TrpcContext["req"],
+    res: {
+      clearCookie: (name: string, options: Record<string, unknown>) => {
+        clearedCookies.push({ name, options });
+      },
+    } as TrpcContext["res"],
+  };
+
+  return { ctx, clearedCookies };
+}
+
+describe("admin.getAllConversations", () => {
+  it("returns conversations for admin users", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.getAllConversations({ limit: 10 });
+
+    expect(result).toHaveProperty("conversations");
+    expect(Array.isArray(result.conversations)).toBe(true);
+  });
+
+  it("returns unauthorized error for non-admin users", async () => {
+    const { ctx } = createAuthContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.getAllConversations({ limit: 10 });
+
+    expect(result).toHaveProperty("error");
+    expect(result.error).toBe("Unauthorized");
+  });
+});
+
+describe("admin.getAllUsers", () => {
+  it("returns users for admin", async () => {
+    const { ctx } = createAdminContext();
+    const caller = appRouter.createCaller(ctx);
+
+    const result = await caller.admin.getAllUsers();
+
+    expect(result).toHaveProperty("users");
+    expect(Array.isArray(result.users)).toBe(true);
+  });
+});

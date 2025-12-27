@@ -34,11 +34,48 @@ export const conversations = mysqlTable("conversations", {
   language: mysqlEnum("language", ["arabic", "english"]).notNull(),
   riskScore: int("riskScore"), // Extracted risk score for analytics
   category: varchar("category", { length: 100 }), // Extracted category for analytics
+  status: mysqlEnum("status", ["new", "under_review", "investigating", "resolved"]).default("new").notNull(),
+  assignedTo: int("assignedTo"), // User ID of assigned reviewer
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Conversation = typeof conversations.$inferSelect;
 export type InsertConversation = typeof conversations.$inferInsert;
+
+// Status history table for tracking all status changes
+export const statusHistory = mysqlTable("status_history", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId").notNull(),
+  previousStatus: mysqlEnum("previousStatus", ["new", "under_review", "investigating", "resolved"]),
+  newStatus: mysqlEnum("newStatus", ["new", "under_review", "investigating", "resolved"]).notNull(),
+  changedByUserId: int("changedByUserId").notNull(),
+  changedByUserName: varchar("changedByUserName", { length: 200 }),
+  notes: text("notes"), // Optional notes for the status change
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type StatusHistory = typeof statusHistory.$inferSelect;
+export type InsertStatusHistory = typeof statusHistory.$inferInsert;
+
+// Weekly reports table for scheduled reports
+export const weeklyReports = mysqlTable("weekly_reports", {
+  id: int("id").autoincrement().primaryKey(),
+  weekStartDate: timestamp("weekStartDate").notNull(),
+  weekEndDate: timestamp("weekEndDate").notNull(),
+  totalComplaints: int("totalComplaints").notNull(),
+  highRiskCount: int("highRiskCount").notNull(),
+  resolvedCount: int("resolvedCount").notNull(),
+  avgRiskScore: int("avgRiskScore").notNull(),
+  categoryBreakdown: text("categoryBreakdown").notNull(), // JSON
+  topEntities: text("topEntities").notNull(), // JSON
+  recommendations: text("recommendations"), // JSON array
+  generatedAt: timestamp("generatedAt").defaultNow().notNull(),
+  emailedTo: text("emailedTo"), // JSON array of email addresses
+});
+
+export type WeeklyReport = typeof weeklyReports.$inferSelect;
+export type InsertWeeklyReport = typeof weeklyReports.$inferInsert;
 
 // Sample complaints table for demo (expanded)
 export const sampleComplaints = mysqlTable("sample_complaints", {

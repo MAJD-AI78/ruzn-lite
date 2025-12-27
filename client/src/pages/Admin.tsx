@@ -24,8 +24,19 @@ import {
   Eye,
   AlertTriangle,
   X,
-  FileText
+  FileText,
+  CheckCircle,
+  PlayCircle,
+  PauseCircle,
+  Calendar
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 type Language = "arabic" | "english";
 
@@ -41,6 +52,7 @@ interface Conversation {
   feature: string;
   category?: string | null;
   riskScore?: number | null;
+  status?: string;
   createdAt: string;
   messageCount?: number;
   messages?: Message[];
@@ -75,6 +87,15 @@ const UI_TEXT = {
     category: "التصنيف",
     date: "التاريخ",
     messages: "الرسائل",
+    statuses: {
+      new: "جديد",
+      under_review: "قيد المراجعة",
+      investigating: "تحت التحقيق",
+      resolved: "تم الحل"
+    },
+    changeStatus: "تغيير الحالة",
+    weeklyReport: "التقرير الأسبوعي",
+    generateReport: "إنشاء تقرير",
     categories: {
       financial_corruption: "فساد مالي",
       conflict_of_interest: "تضارب المصالح",
@@ -112,6 +133,15 @@ const UI_TEXT = {
     category: "Category",
     date: "Date",
     messages: "Messages",
+    statuses: {
+      new: "New",
+      under_review: "Under Review",
+      investigating: "Investigating",
+      resolved: "Resolved"
+    },
+    changeStatus: "Change Status",
+    weeklyReport: "Weekly Report",
+    generateReport: "Generate Report",
     categories: {
       financial_corruption: "Financial Corruption",
       conflict_of_interest: "Conflict of Interest",
@@ -134,8 +164,55 @@ export default function Admin() {
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
   
-  const { data: conversationsData, isLoading: loadingConversations } = trpc.admin.getAllConversations.useQuery({ limit: 100 });
+  const { data: conversationsData, isLoading: loadingConversations, refetch: refetchConversations } = trpc.admin.getAllConversations.useQuery({ limit: 100 });
   const { data: usersData, isLoading: loadingUsers } = trpc.admin.getAllUsers.useQuery();
+  
+  const updateStatusMutation = trpc.admin.updateStatus.useMutation({
+    onSuccess: () => {
+      refetchConversations();
+    }
+  });
+  
+  const generateReportMutation = trpc.admin.generateWeeklyReport.useMutation({
+    onSuccess: (data) => {
+      if (data.report) {
+        // Generate HTML report from the data
+        const reportHtml = `
+          <!DOCTYPE html>
+          <html dir="rtl" lang="ar">
+          <head>
+            <meta charset="UTF-8">
+            <title>Weekly Report - ${new Date().toLocaleDateString('ar-OM')}</title>
+            <style>
+              body { font-family: 'Segoe UI', Tahoma, sans-serif; padding: 40px; background: #1a1a1a; color: #fff; }
+              h1 { color: #c9a227; }
+              .stat { background: #2a2a2a; padding: 20px; border-radius: 8px; margin: 10px 0; }
+              .stat-value { font-size: 32px; color: #c9a227; font-weight: bold; }
+            </style>
+          </head>
+          <body>
+            <h1>التقرير الأسبوعي - رُزن</h1>
+            <div class="stat"><span class="stat-value">${data.report.totalComplaints}</span> إجمالي الشكاوى</div>
+            <div class="stat"><span class="stat-value">${data.report.highRiskCount}</span> شكاوى عالية الخطورة</div>
+            <div class="stat"><span class="stat-value">${data.report.resolvedCount}</span> تم حلها</div>
+            <div class="stat"><span class="stat-value">${data.report.avgRiskScore?.toFixed(1) || 0}</span> متوسط درجة الخطورة</div>
+          </body>
+          </html>
+        `;
+        const blob = new Blob([reportHtml], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `weekly-report-${new Date().toISOString().split('T')[0]}.html`;
+        a.click();
+        URL.revokeObjectURL(url);
+      }
+    }
+  });
+  
+  const handleStatusChange = (conversationId: number, newStatus: string) => {
+    updateStatusMutation.mutate({ conversationId, newStatus: newStatus as 'new' | 'under_review' | 'investigating' | 'resolved' });
+  };
   
   // Mock data for demo with full messages
   const mockConversations: Conversation[] = [
@@ -452,6 +529,21 @@ export default function Admin() {
             <Users className="w-4 h-4 mr-2" />
             {text.users}
           </Button>
+          
+          {/* Weekly Report Button */}
+          <Button
+            variant="outline"
+            onClick={() => generateReportMutation.mutate()}
+            disabled={generateReportMutation.isPending}
+            className="border-primary/30 ml-auto"
+          >
+            {generateReportMutation.isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Calendar className="w-4 h-4 mr-2" />
+            )}
+            {text.generateReport}
+          </Button>
         </div>
         
         {/* Search */}
@@ -505,6 +597,32 @@ export default function Admin() {
                     </div>
                     
                     <div className="flex items-center gap-4">
+                      {/* Status Dropdown */}
+                      <Select
+                        value={conv.status || 'new'}
+                        onValueChange={(value) => {
+                          handleStatusChange(conv.id, value);
+                        }}
+                      >
+                        <SelectTrigger 
+                          className={`w-32 h-8 text-xs ${
+                            conv.status === 'resolved' ? 'bg-green-500/20 border-green-500/30' :
+                            conv.status === 'investigating' ? 'bg-yellow-500/20 border-yellow-500/30' :
+                            conv.status === 'under_review' ? 'bg-blue-500/20 border-blue-500/30' :
+                            'bg-muted border-muted-foreground/30'
+                          }`}
+                          onClick={(e) => e.stopPropagation()}
+                        >
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="new">{text.statuses.new}</SelectItem>
+                          <SelectItem value="under_review">{text.statuses.under_review}</SelectItem>
+                          <SelectItem value="investigating">{text.statuses.investigating}</SelectItem>
+                          <SelectItem value="resolved">{text.statuses.resolved}</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      
                       {conv.riskScore !== null && conv.riskScore !== undefined && (
                         <span className={`px-3 py-1 rounded-full text-sm font-medium ${
                           conv.riskScore >= 70 ? "bg-red-500/20 text-red-400" :
