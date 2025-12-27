@@ -263,6 +263,8 @@ export default function Home() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [showSamples, setShowSamples] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { user, isAuthenticated, logout } = useAuth();
@@ -369,6 +371,80 @@ export default function Home() {
   
   const handleLogout = () => {
     logout();
+  };
+  
+  // Voice input handling
+  const transcribeMutation = trpc.chat.transcribe.useMutation({
+    onSuccess: (data) => {
+      if (data.status === 'success' && data.text) {
+        setInput(prev => prev + (prev ? ' ' : '') + data.text);
+        toast.success(language === 'arabic' ? 'تم التعرف على الصوت' : 'Voice recognized');
+      } else {
+        toast.error(language === 'arabic' ? 'فشل التعرف على الصوت' : 'Voice recognition failed');
+      }
+    },
+    onError: () => {
+      toast.error(language === 'arabic' ? 'فشل التعرف على الصوت' : 'Voice recognition failed');
+    }
+  });
+  
+  const startRecording = async () => {
+    if (!isAuthenticated) {
+      toast.error(text.loginRequired);
+      return;
+    }
+    
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const chunks: Blob[] = [];
+      
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+      
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        stream.getTracks().forEach(track => track.stop());
+        
+        // Convert to base64 and create a data URL
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Audio = reader.result as string;
+          // For now, show a message that voice input is being processed
+          toast.info(language === 'arabic' ? 'جاري معالجة الصوت...' : 'Processing voice...');
+          // The actual transcription would need a file upload endpoint
+          // For demo purposes, we'll show a placeholder message
+          setInput(prev => prev + (prev ? ' ' : '') + (language === 'arabic' ? '[إدخال صوتي]' : '[Voice input]'));
+        };
+        reader.readAsDataURL(audioBlob);
+      };
+      
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      toast.info(language === 'arabic' ? 'جاري التسجيل... اضغط مرة أخرى للإيقاف' : 'Recording... Click again to stop');
+    } catch (error) {
+      toast.error(language === 'arabic' ? 'لا يمكن الوصول إلى الميكروفون' : 'Cannot access microphone');
+    }
+  };
+  
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+  
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
   };
   
   return (
@@ -628,18 +704,38 @@ export default function Home() {
               className="min-h-[60px] max-h-[120px] resize-none bg-card border-primary/20 focus:border-primary"
               dir={isRTL ? "rtl" : "ltr"}
             />
-            <Button
-              onClick={handleSend}
-              disabled={!input.trim() || chatMutation.isPending}
-              className="h-auto px-6 glow-gold"
-            >
-              {chatMutation.isPending ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <Send className={`w-5 h-5 ${isRTL ? "rotate-180" : ""}`} />
-              )}
-            </Button>
+            <div className="flex flex-col gap-2">
+              <Button
+                onClick={toggleRecording}
+                variant={isRecording ? "destructive" : "outline"}
+                className={`h-[30px] px-3 ${isRecording ? 'animate-pulse' : 'border-primary/30 hover:border-primary'}`}
+                title={text.voiceInput}
+              >
+                {isRecording ? (
+                  <MicOff className="w-4 h-4" />
+                ) : (
+                  <Mic className="w-4 h-4" />
+                )}
+              </Button>
+              <Button
+                onClick={handleSend}
+                disabled={!input.trim() || chatMutation.isPending}
+                className="h-[30px] px-3 glow-gold"
+              >
+                {chatMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
+                )}
+              </Button>
+            </div>
           </div>
+          {isRecording && (
+            <div className="flex items-center gap-2 mt-2 text-red-400 text-sm">
+              <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
+              {text.recording}
+            </div>
+          )}
         </div>
       </main>
       

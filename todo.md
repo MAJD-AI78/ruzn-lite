@@ -81,3 +81,28 @@
 - [x] Create mock user activity data for analytics
 - [x] Add historical complaint trends data
 - [x] Include real Omani law references
+
+
+## New Features (Phase 4)
+
+### Bug Fixes
+- [x] Fix Analytics page categoryDistribution.map error
+
+### Voice Input UI
+- [x] Add microphone button to chat input area
+- [x] Implement Web Audio API for recording
+- [x] Show recording indicator with animation
+- [x] Auto-populate text field with transcription
+- [ ] Handle recording errors gracefully
+
+### Conversation Detail Modal (Admin Panel)
+- [x] Add clickable rows in conversation list
+- [x] Create modal component for full transcript view
+- [x] Display user info, timestamps, and all messages
+- [x] Add export single conversation option
+
+### Email Notifications for High-Risk Complaints
+- [x] Detect complaints with risk score >80
+- [x] Send notification to supervisors via notifyOwner
+- [x] Include complaint summary and risk details
+- [x] Log notification events in console

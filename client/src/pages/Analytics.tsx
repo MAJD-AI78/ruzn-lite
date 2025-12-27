@@ -12,12 +12,11 @@ import {
   AlertTriangle,
   Users,
   ArrowLeft,
-  Calendar,
   Download,
   Loader2,
   Shield,
-  Scale,
-  FileSearch
+  Mic,
+  FileDown
 } from "lucide-react";
 
 type Language = "arabic" | "english";
@@ -32,9 +31,11 @@ const UI_TEXT = {
     activeUsers: "المستخدمون النشطون",
     categoryDistribution: "توزيع التصنيفات",
     riskDistribution: "توزيع درجات الخطورة",
-    recentActivity: "النشاط الأخير",
+    monthlyTrends: "الاتجاهات الشهرية",
     backToChat: "العودة للمحادثة",
     exportReport: "تصدير التقرير",
+    pdfExports: "تصدير PDF",
+    voiceInputs: "إدخال صوتي",
     noData: "لا توجد بيانات متاحة",
     categories: {
       financial_corruption: "فساد مالي",
@@ -59,9 +60,11 @@ const UI_TEXT = {
     activeUsers: "Active Users",
     categoryDistribution: "Category Distribution",
     riskDistribution: "Risk Score Distribution",
-    recentActivity: "Recent Activity",
+    monthlyTrends: "Monthly Trends",
     backToChat: "Back to Chat",
     exportReport: "Export Report",
+    pdfExports: "PDF Exports",
+    voiceInputs: "Voice Inputs",
     noData: "No data available",
     categories: {
       financial_corruption: "Financial Corruption",
@@ -88,6 +91,35 @@ const CATEGORY_COLORS: Record<string, string> = {
   general: "#8b5cf6"
 };
 
+// Helper function to convert object to array format
+function convertCategoryDistribution(data: Record<string, number> | Array<{category: string, count: number, percentage: number}>) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  
+  // Convert object format to array format
+  const total = Object.values(data).reduce((sum, count) => sum + count, 0);
+  return Object.entries(data).map(([category, count]) => ({
+    category,
+    count,
+    percentage: total > 0 ? Math.round((count / total) * 100 * 10) / 10 : 0
+  }));
+}
+
+// Helper function to convert risk distribution
+function convertRiskDistribution(data: {high: number, medium: number, low: number} | Array<{level: string, count: number, percentage: number}>) {
+  if (Array.isArray(data)) {
+    return data;
+  }
+  
+  const total = data.high + data.medium + data.low;
+  return [
+    { level: "high", count: data.high, percentage: total > 0 ? Math.round((data.high / total) * 100 * 10) / 10 : 0 },
+    { level: "medium", count: data.medium, percentage: total > 0 ? Math.round((data.medium / total) * 100 * 10) / 10 : 0 },
+    { level: "low", count: data.low, percentage: total > 0 ? Math.round((data.low / total) * 100 * 10) / 10 : 0 }
+  ];
+}
+
 export default function Analytics() {
   const [language, setLanguage] = useState<Language>("arabic");
   const { user, isAuthenticated } = useAuth();
@@ -95,38 +127,30 @@ export default function Analytics() {
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
   
-  const { data: analytics, isLoading } = trpc.analytics.getSummary.useQuery({});
+  const { data: analytics, isLoading, error } = trpc.analytics.getSummary.useQuery({});
   
-  // Mock data for demo (will be replaced with real data when available)
-  const mockData = {
-    totalComplaints: 1378,
-    avgRiskScore: 58,
-    highRiskCount: 312,
-    activeUsers: 47,
-    categoryDistribution: [
-      { category: "financial_corruption", count: 287, percentage: 20.8 },
-      { category: "conflict_of_interest", count: 198, percentage: 14.4 },
-      { category: "abuse_of_power", count: 156, percentage: 11.3 },
-      { category: "tender_violation", count: 234, percentage: 17.0 },
-      { category: "administrative_negligence", count: 312, percentage: 22.6 },
-      { category: "general", count: 191, percentage: 13.9 }
-    ],
-    riskDistribution: [
-      { level: "high", count: 312, percentage: 22.6 },
-      { level: "medium", count: 534, percentage: 38.8 },
-      { level: "low", count: 532, percentage: 38.6 }
-    ],
-    trends: [
-      { month: "يناير", complaints: 98 },
-      { month: "فبراير", complaints: 112 },
-      { month: "مارس", complaints: 134 },
-      { month: "أبريل", complaints: 121 },
-      { month: "مايو", complaints: 145 },
-      { month: "يونيو", complaints: 167 }
-    ]
-  };
-  
-  const data = (analytics || mockData) as any;
+  // Process the data to ensure correct format
+  const processedData = analytics ? {
+    totalComplaints: analytics.totalComplaints || 0,
+    avgRiskScore: analytics.avgRiskScore || 0,
+    highRiskCount: analytics.riskDistribution ? 
+      (typeof analytics.riskDistribution === 'object' && !Array.isArray(analytics.riskDistribution) 
+        ? (analytics.riskDistribution as any).high 
+        : Array.isArray(analytics.riskDistribution) 
+          ? analytics.riskDistribution.find((r: any) => r.level === 'high')?.count 
+          : 0) 
+      : 0,
+    activeUsers: analytics.totalUsers || 0,
+    categoryDistribution: analytics.categoryDistribution 
+      ? convertCategoryDistribution(analytics.categoryDistribution as any) 
+      : [],
+    riskDistribution: analytics.riskDistribution 
+      ? convertRiskDistribution(analytics.riskDistribution as any) 
+      : [],
+    trends: (analytics as any).trends || [],
+    totalPdfExports: (analytics as any).totalPdfExports || 0,
+    totalVoiceInputs: (analytics as any).totalVoiceInputs || 0
+  } : null;
   
   return (
     <div 
@@ -173,7 +197,12 @@ export default function Analytics() {
           <div className="flex items-center justify-center h-64">
             <Loader2 className="w-8 h-8 animate-spin text-primary" />
           </div>
-        ) : (
+        ) : error ? (
+          <div className="flex items-center justify-center h-64 text-red-500">
+            <AlertTriangle className="w-6 h-6 mr-2" />
+            {text.noData}
+          </div>
+        ) : processedData ? (
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -184,7 +213,7 @@ export default function Analytics() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{text.totalComplaints}</p>
-                    <p className="text-3xl font-bold text-primary">{data.totalComplaints?.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-primary">{processedData.totalComplaints.toLocaleString()}</p>
                   </div>
                 </div>
               </Card>
@@ -196,7 +225,7 @@ export default function Analytics() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{text.avgRiskScore}</p>
-                    <p className="text-3xl font-bold text-yellow-500">{data.avgRiskScore}/100</p>
+                    <p className="text-3xl font-bold text-yellow-500">{processedData.avgRiskScore}/100</p>
                   </div>
                 </div>
               </Card>
@@ -208,7 +237,7 @@ export default function Analytics() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{text.highRiskCount}</p>
-                    <p className="text-3xl font-bold text-red-500">{data.highRiskCount?.toLocaleString()}</p>
+                    <p className="text-3xl font-bold text-red-500">{processedData.highRiskCount?.toLocaleString() || 0}</p>
                   </div>
                 </div>
               </Card>
@@ -220,8 +249,26 @@ export default function Analytics() {
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">{text.activeUsers}</p>
-                    <p className="text-3xl font-bold text-green-500">{data.activeUsers}</p>
+                    <p className="text-3xl font-bold text-green-500">{processedData.activeUsers}</p>
                   </div>
+                </div>
+              </Card>
+            </div>
+            
+            {/* Additional Stats Row */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              <Card className="p-4 bg-card border-primary/20">
+                <div className="flex items-center gap-3">
+                  <FileDown className="w-5 h-5 text-primary" />
+                  <span className="text-sm text-muted-foreground">{text.pdfExports}:</span>
+                  <span className="font-bold text-primary">{processedData.totalPdfExports}</span>
+                </div>
+              </Card>
+              <Card className="p-4 bg-card border-primary/20">
+                <div className="flex items-center gap-3">
+                  <Mic className="w-5 h-5 text-primary" />
+                  <span className="text-sm text-muted-foreground">{text.voiceInputs}:</span>
+                  <span className="font-bold text-primary">{processedData.totalVoiceInputs}</span>
                 </div>
               </Card>
             </div>
@@ -235,23 +282,27 @@ export default function Analytics() {
                   <h3 className="text-lg font-semibold">{text.categoryDistribution}</h3>
                 </div>
                 <div className="space-y-4">
-                  {data.categoryDistribution?.map((item: any) => (
-                    <div key={item.category} className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{text.categories[item.category as keyof typeof text.categories] || item.category}</span>
-                        <span className="text-muted-foreground">{item.count} ({item.percentage}%)</span>
+                  {processedData.categoryDistribution.length > 0 ? (
+                    processedData.categoryDistribution.map((item) => (
+                      <div key={item.category} className="space-y-2">
+                        <div className="flex justify-between text-sm">
+                          <span>{text.categories[item.category as keyof typeof text.categories] || item.category}</span>
+                          <span className="text-muted-foreground">{item.count} ({item.percentage}%)</span>
+                        </div>
+                        <div className="h-3 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className="h-full rounded-full transition-all duration-500"
+                            style={{ 
+                              width: `${Math.min(item.percentage * 4, 100)}%`,
+                              backgroundColor: CATEGORY_COLORS[item.category] || "#c9a227"
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="h-3 bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full rounded-full transition-all duration-500"
-                          style={{ 
-                            width: `${item.percentage}%`,
-                            backgroundColor: CATEGORY_COLORS[item.category] || "#c9a227"
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">{text.noData}</p>
+                  )}
                 </div>
               </Card>
               
@@ -262,76 +313,81 @@ export default function Analytics() {
                   <h3 className="text-lg font-semibold">{text.riskDistribution}</h3>
                 </div>
                 <div className="space-y-6">
-                  {data.riskDistribution?.map((item: any) => {
-                    const colors = {
-                      high: { bg: "bg-red-500", text: "text-red-500" },
-                      medium: { bg: "bg-yellow-500", text: "text-yellow-500" },
-                      low: { bg: "bg-green-500", text: "text-green-500" }
-                    };
-                    const color = colors[item.level as keyof typeof colors] || colors.low;
-                    
-                    return (
-                      <div key={item.level} className="space-y-2">
-                        <div className="flex justify-between items-center">
-                          <div className="flex items-center gap-2">
-                            <Shield className={`w-4 h-4 ${color.text}`} />
-                            <span>{text.riskLevels[item.level as keyof typeof text.riskLevels]}</span>
+                  {processedData.riskDistribution.length > 0 ? (
+                    processedData.riskDistribution.map((item) => {
+                      const colors = {
+                        high: { bg: "bg-red-500", text: "text-red-500" },
+                        medium: { bg: "bg-yellow-500", text: "text-yellow-500" },
+                        low: { bg: "bg-green-500", text: "text-green-500" }
+                      };
+                      const color = colors[item.level as keyof typeof colors] || colors.low;
+                      
+                      return (
+                        <div key={item.level} className="space-y-2">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                              <Shield className={`w-4 h-4 ${color.text}`} />
+                              <span>{text.riskLevels[item.level as keyof typeof text.riskLevels]}</span>
+                            </div>
+                            <span className={`font-bold ${color.text}`}>{item.count}</span>
                           </div>
-                          <span className={`font-bold ${color.text}`}>{item.count}</span>
-                        </div>
-                        <div className="h-8 bg-muted rounded-lg overflow-hidden flex items-center">
-                          <div 
-                            className={`h-full ${color.bg} rounded-lg flex items-center justify-end px-3 transition-all duration-500`}
-                            style={{ width: `${item.percentage}%` }}
-                          >
-                            <span className="text-xs font-bold text-white">{item.percentage}%</span>
+                          <div className="h-8 bg-muted rounded-lg overflow-hidden flex items-center">
+                            <div 
+                              className={`h-full ${color.bg} transition-all duration-500 flex items-center justify-end px-2`}
+                              style={{ width: `${Math.min(item.percentage * 2.5, 100)}%` }}
+                            >
+                              <span className="text-xs text-white font-medium">{item.percentage}%</span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })
+                  ) : (
+                    <p className="text-muted-foreground text-center py-4">{text.noData}</p>
+                  )}
                 </div>
               </Card>
             </div>
             
-            {/* Monthly Trend */}
-            <Card className="p-6 bg-card border-primary/20">
-              <div className="flex items-center gap-2 mb-6">
-                <Calendar className="w-5 h-5 text-primary" />
-                <h3 className="text-lg font-semibold">
-                  {language === "arabic" ? "الاتجاه الشهري للشكاوى" : "Monthly Complaint Trend"}
-                </h3>
-              </div>
-              <div className="h-64 flex items-end justify-between gap-4">
-                {(data.trends)?.map((item: any, idx: number) => {
-                  const trendData = data.trends || [];
-                  const maxComplaints = Math.max(...(trendData.map((i: any) => i.complaints || i.count) || [1]));
-                  const height = (item.complaints / maxComplaints) * 100;
-                  
-                  return (
-                    <div key={idx} className="flex-1 flex flex-col items-center gap-2">
-                      <span className="text-sm font-bold text-primary">{item.complaints}</span>
-                      <div 
-                        className="w-full bg-primary/80 rounded-t-lg transition-all duration-500 hover:bg-primary"
-                        style={{ height: `${height}%`, minHeight: "20px" }}
-                      />
-                      <span className="text-xs text-muted-foreground">{item.month}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </Card>
+            {/* Monthly Trends */}
+            {processedData.trends && processedData.trends.length > 0 && (
+              <Card className="p-6 bg-card border-primary/20">
+                <div className="flex items-center gap-2 mb-6">
+                  <TrendingUp className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold">{text.monthlyTrends}</h3>
+                </div>
+                <div className="overflow-x-auto">
+                  <div className="flex gap-4 min-w-max pb-4">
+                    {processedData.trends.map((trend: any, index: number) => (
+                      <div key={index} className="flex flex-col items-center gap-2 min-w-[80px]">
+                        <div 
+                          className="w-12 bg-primary/20 rounded-t-lg transition-all duration-500 flex items-end justify-center"
+                          style={{ height: `${Math.max(trend.complaints * 1.5, 20)}px` }}
+                        >
+                          <div 
+                            className="w-full bg-primary rounded-t-lg"
+                            style={{ height: `${Math.max(trend.complaints * 1.2, 15)}px` }}
+                          />
+                        </div>
+                        <span className="text-xs text-muted-foreground">{trend.month}</span>
+                        <span className="text-sm font-medium text-primary">{trend.complaints}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </Card>
+            )}
           </>
+        ) : (
+          <div className="flex items-center justify-center h-64 text-muted-foreground">
+            {text.noData}
+          </div>
         )}
       </main>
       
       {/* Footer */}
-      <footer className="border-t border-border/50 py-4">
-        <div className="container max-w-7xl mx-auto px-4 text-center">
-          <p className="text-sm text-muted-foreground">
-            {language === "arabic" ? "مدعوم من أكيوتيريوم تكنولوجيز" : "Powered by Acuterium Technologies"}
-          </p>
-        </div>
+      <footer className="border-t border-border/50 py-4 text-center text-sm text-muted-foreground">
+        <p>مدعوم من أكيوتيريوم تكنولوجيز | Powered by Acuterium Technologies</p>
       </footer>
     </div>
   );

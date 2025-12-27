@@ -184,6 +184,33 @@ export const appRouter = router({
             metadata: JSON.stringify({ messageLength: message.length })
           });
           
+          // Send notification for high-risk complaints (score >= 80)
+          if (feature === 'complaints' && riskScore && riskScore >= 80) {
+            try {
+              const { notifyOwner } = await import('./_core/notification');
+              const categoryLabel = category ? {
+                'financial_corruption': language === 'arabic' ? 'فساد مالي' : 'Financial Corruption',
+                'conflict_of_interest': language === 'arabic' ? 'تضارب المصالح' : 'Conflict of Interest',
+                'abuse_of_power': language === 'arabic' ? 'إساءة استخدام السلطة' : 'Abuse of Power',
+                'tender_violation': language === 'arabic' ? 'مخالفة قانون المناقصات' : 'Tender Violation',
+                'administrative_negligence': language === 'arabic' ? 'إهمال إداري' : 'Administrative Negligence',
+                'general': language === 'arabic' ? 'شكوى عامة' : 'General Complaint'
+              }[category] || category : 'Unknown';
+              
+              await notifyOwner({
+                title: language === 'arabic' 
+                  ? `⚠️ تنبيه: شكوى عالية الخطورة (${riskScore}/100)`
+                  : `⚠️ Alert: High-Risk Complaint (${riskScore}/100)`,
+                content: language === 'arabic'
+                  ? `تم استلام شكوى بدرجة خطورة عالية.\n\nالتصنيف: ${categoryLabel}\nدرجة الخطورة: ${riskScore}/100\n\nملخص الشكوى:\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\nيرجى مراجعة الشكوى في لوحة المشرف.`
+                  : `A high-risk complaint has been received.\n\nCategory: ${categoryLabel}\nRisk Score: ${riskScore}/100\n\nComplaint Summary:\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\nPlease review the complaint in the Admin Panel.`
+              });
+              console.log(`[Notification] High-risk complaint alert sent (Risk: ${riskScore})`);
+            } catch (notifyError) {
+              console.error('[Notification] Failed to send high-risk alert:', notifyError);
+            }
+          }
+          
           return {
             response: assistantMessage,
             status: 'success' as const,
