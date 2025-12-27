@@ -465,14 +465,14 @@ function getHardcodedSamples(language?: string, category?: string) {
     { id: 42, textArabic: "عدم توثيق القرارات الإدارية بشكل صحيح", textEnglish: "Failure to properly document administrative decisions", category: "administrative_negligence", expectedRiskScore: 42, ministry: "وزارة العدل" },
 
     // General Complaints (8 samples)
-    { id: 43, textArabic: "استفسار عن إجراءات تقديم شكوى رسمية", textEnglish: "Inquiry about procedures for filing an official complaint", category: "general", expectedRiskScore: 15, ministry: "ديوان الرقابة" },
+    { id: 43, textArabic: "استفسار عن إجراءات تقديم شكوى رسمية", textEnglish: "Inquiry about procedures for filing an official complaint", category: "general", expectedRiskScore: 15, ministry: "جهاز الرقابة المالية" },
     { id: 44, textArabic: "ملاحظات عامة حول تحسين الخدمات الحكومية", textEnglish: "General observations about improving government services", category: "general", expectedRiskScore: 10, ministry: "عام" },
-    { id: 45, textArabic: "طلب معلومات عن صلاحيات ديوان الرقابة", textEnglish: "Request for information about State Audit Institution powers", category: "general", expectedRiskScore: 5, ministry: "ديوان الرقابة" },
-    { id: 46, textArabic: "اقتراح لتطوير آلية استقبال الشكاوى", textEnglish: "Suggestion to improve the complaint reception mechanism", category: "general", expectedRiskScore: 8, ministry: "ديوان الرقابة" },
-    { id: 47, textArabic: "استفسار عن نتيجة شكوى سابقة", textEnglish: "Inquiry about the result of a previous complaint", category: "general", expectedRiskScore: 12, ministry: "ديوان الرقابة" },
-    { id: 48, textArabic: "طلب نسخة من تقرير الرقابة السنوي", textEnglish: "Request for a copy of the annual audit report", category: "general", expectedRiskScore: 5, ministry: "ديوان الرقابة" },
-    { id: 49, textArabic: "شكر وتقدير لجهود ديوان الرقابة", textEnglish: "Thanks and appreciation for the State Audit Institution's efforts", category: "general", expectedRiskScore: 0, ministry: "ديوان الرقابة" },
-    { id: 50, textArabic: "استفسار عن التعاون مع المنظمات الدولية للرقابة", textEnglish: "Inquiry about cooperation with international audit organizations", category: "general", expectedRiskScore: 5, ministry: "ديوان الرقابة" }
+    { id: 45, textArabic: "طلب معلومات عن صلاحيات جهاز الرقابة المالية", textEnglish: "Request for information about State Audit Institution powers", category: "general", expectedRiskScore: 5, ministry: "جهاز الرقابة المالية" },
+    { id: 46, textArabic: "اقتراح لتطوير آلية استقبال الشكاوى", textEnglish: "Suggestion to improve the complaint reception mechanism", category: "general", expectedRiskScore: 8, ministry: "جهاز الرقابة المالية" },
+    { id: 47, textArabic: "استفسار عن نتيجة شكوى سابقة", textEnglish: "Inquiry about the result of a previous complaint", category: "general", expectedRiskScore: 12, ministry: "جهاز الرقابة المالية" },
+    { id: 48, textArabic: "طلب نسخة من تقرير الرقابة السنوي", textEnglish: "Request for a copy of the annual audit report", category: "general", expectedRiskScore: 5, ministry: "جهاز الرقابة المالية" },
+    { id: 49, textArabic: "شكر وتقدير لجهود جهاز الرقابة المالية", textEnglish: "Thanks and appreciation for the State Audit Institution's efforts", category: "general", expectedRiskScore: 0, ministry: "جهاز الرقابة المالية" },
+    { id: 50, textArabic: "استفسار عن التعاون مع المنظمات الدولية للرقابة", textEnglish: "Inquiry about cooperation with international audit organizations", category: "general", expectedRiskScore: 5, ministry: "جهاز الرقابة المالية" }
   ];
 
   let filtered = samples;
@@ -515,7 +515,7 @@ function getHardcodedAuditFindings(language?: string) {
 // Hardcoded legislative documents for demo
 function getHardcodedLegislativeDocuments(language?: string) {
   const documents = [
-    { id: 1, titleArabic: "قانون الرقابة المالية والإدارية للدولة", titleEnglish: "State Financial and Administrative Audit Law", documentType: "royal_decree" as const, documentNumber: "111/2011", year: 2011, summaryArabic: "ينظم عمل ديوان الرقابة المالية والإدارية للدولة وصلاحياته", summaryEnglish: "Regulates the work and powers of the State Audit Institution", keyProvisions: ["صلاحيات الرقابة", "استقلالية الديوان", "التقارير السنوية"] },
+    { id: 1, titleArabic: "قانون الرقابة المالية والإدارية للدولة", titleEnglish: "State Financial and Administrative Audit Law", documentType: "royal_decree" as const, documentNumber: "111/2011", year: 2011, summaryArabic: "ينظم عمل جهاز الرقابة المالية والإدارية للدولة وصلاحياته", summaryEnglish: "Regulates the work and powers of the State Audit Institution", keyProvisions: ["صلاحيات الرقابة", "استقلالية الديوان", "التقارير السنوية"] },
     { id: 2, titleArabic: "قانون المناقصات", titleEnglish: "Tender Law", documentType: "royal_decree" as const, documentNumber: "36/2008", year: 2008, summaryArabic: "ينظم إجراءات المناقصات والمشتريات الحكومية", summaryEnglish: "Regulates government tender and procurement procedures", keyProvisions: ["إجراءات الطرح", "لجان المناقصات", "الاستثناءات"] },
     { id: 3, titleArabic: "قانون حماية المال العام", titleEnglish: "Public Funds Protection Law", documentType: "royal_decree" as const, documentNumber: "112/2011", year: 2011, summaryArabic: "يحدد العقوبات على جرائم المال العام", summaryEnglish: "Defines penalties for public fund crimes", keyProvisions: ["تعريف المال العام", "العقوبات", "الإجراءات"] },
     { id: 4, titleArabic: "لائحة تنظيم العمل الإداري", titleEnglish: "Administrative Work Regulation", documentType: "ministerial_decision" as const, documentNumber: "45/2020", year: 2020, summaryArabic: "تنظم الإجراءات الإدارية في الجهات الحكومية", summaryEnglish: "Regulates administrative procedures in government entities", keyProvisions: ["التفويض", "التوثيق", "المتابعة"] },

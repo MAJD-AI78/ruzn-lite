@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { Streamdown } from "streamdown";
 import { toast } from "sonner";
-import { 
+import {
   Send, 
   Loader2, 
   Globe, 
@@ -29,7 +29,9 @@ import {
   Clock,
   CheckCircle,
   FileText,
-  TrendingUp
+  TrendingUp,
+  ClipboardList,
+  Map
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -57,7 +59,7 @@ const PRESET_QUERIES = {
   },
   legislative: {
     arabic: [
-      "ما هي صلاحيات ديوان الرقابة المالية؟",
+      "ما هي صلاحيات جهاز الرقابة المالية؟",
       "ما هي إجراءات قانون المناقصات الجديد؟",
       "كيف يتم التعامل مع تضارب المصالح؟"
     ],
@@ -72,7 +74,7 @@ const PRESET_QUERIES = {
 const UI_TEXT = {
   arabic: {
     title: "رُزن",
-    subtitle: "مساعدك الذكي لديوان الرقابة المالية والإدارية للدولة",
+    subtitle: "مساعدك الذكي لجهاز الرقابة المالية والإدارية للدولة",
     complaints: "تصنيف الشكاوى",
     legislative: "الاستشارات القانونية",
     placeholder: "اكتب شكواك أو استفسارك هنا...",
@@ -92,6 +94,8 @@ const UI_TEXT = {
     sampleComplaints: "نماذج الشكاوى",
     analytics: "التحليلات",
     admin: "لوحة المشرف",
+    operations: "مركز العمليات",
+    entityMap: "خريطة الجهات",
     voiceInput: "إدخال صوتي",
     recording: "جاري التسجيل..."
   },
@@ -117,6 +121,8 @@ const UI_TEXT = {
     sampleComplaints: "Sample Complaints",
     analytics: "Analytics",
     admin: "Admin Panel",
+    operations: "Operations",
+    entityMap: "Entity Map",
     voiceInput: "Voice Input",
     recording: "Recording..."
   }
@@ -578,6 +584,26 @@ export default function Home() {
             
             {/* Navigation Links */}
             <div className="flex-1" />
+            <Link href="/operations">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 border-primary/20 text-xs"
+              >
+                <ClipboardList className="w-3 h-3" />
+                {text.operations}
+              </Button>
+            </Link>
+            <Link href="/entity-map">
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1 border-primary/20 text-xs"
+              >
+                <Map className="w-3 h-3" />
+                {text.entityMap}
+              </Button>
+            </Link>
             <Link href="/analytics">
               <Button
                 variant="outline"

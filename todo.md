@@ -151,3 +151,36 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [ ] Build triage queue with filtering (All/High/Med/Low)
 - [ ] Add entity intelligence map with aggregated stats
 - [ ] Create minister dashboard view with KPIs
+
+
+## New Features (Phase 6)
+
+### Arabic Naming Corrections
+- [x] Fix subtitle: "مساعدك الذكي لجهاز الرقابة المالية والإدارية للدولة"
+- [x] Fix legislative query: "ما هي صلاحيات جهاز الرقابة المالية؟"
+- [x] Update all files with correct Arabic naming
+
+### POC Demo Color Scheme Adoption
+- [x] Analyze POC demo HTML color palette
+- [x] Update index.css with new color variables
+- [x] Apply consistent styling across all pages
+
+### Operations Page (4-Tab Interface)
+- [x] Create /operations route
+- [x] Implement Intake tab with complaint form
+- [x] Implement Triage Queue tab with filtering
+- [x] Implement Entity Map tab with aggregated stats
+- [x] Implement Schemas tab with JSON definitions
+
+### Scheduled Email Reports
+- [x] Configure weekly report service
+- [x] Generate HTML/text report with trends and breakdown
+- [x] Send notification to owner with report summary
+- [x] Add manual trigger endpoint for admins
+
+### Entity Intelligence Map
+- [x] Create aggregated complaint view by entity
+- [x] Add risk concentration visualization
+- [x] Build Minister Dashboard view with KPIs
+- [x] Add sorting and filtering options
+- [x] Add expandable entity details with recent complaints

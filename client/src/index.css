@@ -43,76 +43,77 @@
 }
 
 :root {
-  /* Ruzn Gold Theme */
-  --primary: oklch(0.75 0.12 90);
-  --primary-foreground: oklch(0.145 0.005 285);
-  --sidebar-primary: oklch(0.75 0.12 90);
-  --sidebar-primary-foreground: oklch(0.145 0.005 285);
-  --chart-1: oklch(0.75 0.12 90);
-  --chart-2: oklch(0.65 0.15 160);
-  --chart-3: oklch(0.55 0.15 250);
-  --chart-4: oklch(0.7 0.1 50);
-  --chart-5: oklch(0.6 0.18 20);
-  --radius: 0.625rem;
-  --background: oklch(0.145 0.005 285);
-  --foreground: oklch(0.95 0.01 90);
-  --card: oklch(0.18 0.005 285);
+  /* Ruzn POC Demo Theme - Deep Blacks with Rich Gold */
+  /* POC Colors: --bg:#070708, --gold:#d6b36a, --gold2:#b8924d */
+  --primary: oklch(0.78 0.11 85); /* Rich gold #d6b36a */
+  --primary-foreground: oklch(0.08 0.005 285); /* Near black */
+  --sidebar-primary: oklch(0.78 0.11 85);
+  --sidebar-primary-foreground: oklch(0.08 0.005 285);
+  --chart-1: oklch(0.78 0.11 85); /* Gold */
+  --chart-2: oklch(0.65 0.18 25); /* Red/bad #ff6b6b */
+  --chart-3: oklch(0.75 0.18 145); /* Green/good #4ade80 */
+  --chart-4: oklch(0.80 0.15 85); /* Warn #fbbf24 */
+  --chart-5: oklch(0.70 0.12 250); /* Info #60a5fa */
+  --radius: 1.375rem; /* 22px like POC demo */
+  --background: oklch(0.08 0.005 285); /* Deep black #070708 */
+  --foreground: oklch(0.95 0.01 90); /* Near white rgba(255,255,255,.92) */
+  --card: oklch(0.12 0.005 285); /* Panel rgba(255,255,255,.06) */
   --card-foreground: oklch(0.95 0.01 90);
-  --popover: oklch(0.18 0.005 285);
+  --popover: oklch(0.12 0.005 285);
   --popover-foreground: oklch(0.95 0.01 90);
-  --secondary: oklch(0.25 0.01 285);
+  --secondary: oklch(0.15 0.005 285); /* Panel2 rgba(255,255,255,.09) */
   --secondary-foreground: oklch(0.95 0.01 90);
-  --muted: oklch(0.22 0.005 285);
-  --muted-foreground: oklch(0.65 0.02 90);
-  --accent: oklch(0.75 0.12 90);
-  --accent-foreground: oklch(0.145 0.005 285);
-  --destructive: oklch(0.55 0.2 25);
+  --muted: oklch(0.12 0.005 285);
+  --muted-foreground: oklch(0.75 0.02 90); /* Muted rgba(255,255,255,.70) */
+  --accent: oklch(0.78 0.11 85); /* Gold */
+  --accent-foreground: oklch(0.08 0.005 285);
+  --destructive: oklch(0.65 0.22 25); /* Bad #ff6b6b */
   --destructive-foreground: oklch(0.95 0.01 90);
-  --border: oklch(0.3 0.02 90);
-  --input: oklch(0.25 0.01 285);
-  --ring: oklch(0.75 0.12 90);
-  --sidebar: oklch(0.12 0.005 285);
+  --border: oklch(0.20 0.01 90); /* Stroke rgba(255,255,255,.10) */
+  --input: oklch(0.10 0.005 285); /* Dark input bg */
+  --ring: oklch(0.78 0.11 85); /* Gold ring */
+  --sidebar: oklch(0.06 0.005 285); /* Deeper sidebar */
   --sidebar-foreground: oklch(0.95 0.01 90);
-  --sidebar-accent: oklch(0.22 0.01 285);
+  --sidebar-accent: oklch(0.15 0.005 285);
   --sidebar-accent-foreground: oklch(0.95 0.01 90);
-  --sidebar-border: oklch(0.3 0.02 90);
-  --sidebar-ring: oklch(0.75 0.12 90);
+  --sidebar-border: oklch(0.20 0.01 90);
+  --sidebar-ring: oklch(0.78 0.11 85);
 }
 
 .dark {
-  /* Ruzn Gold Theme - Dark Mode (same as root for this app) */
-  --primary: oklch(0.75 0.12 90);
-  --primary-foreground: oklch(0.145 0.005 285);
-  --sidebar-primary: oklch(0.75 0.12 90);
-  --sidebar-primary-foreground: oklch(0.145 0.005 285);
-  --background: oklch(0.145 0.005 285);
+  /* Ruzn POC Demo Theme - Dark Mode (same as root) */
+  --primary: oklch(0.78 0.11 85);
+  --primary-foreground: oklch(0.08 0.005 285);
+  --sidebar-primary: oklch(0.78 0.11 85);
+  --sidebar-primary-foreground: oklch(0.08 0.005 285);
+  --background: oklch(0.08 0.005 285);
   --foreground: oklch(0.95 0.01 90);
-  --card: oklch(0.18 0.005 285);
+  --card: oklch(0.12 0.005 285);
   --card-foreground: oklch(0.95 0.01 90);
-  --popover: oklch(0.18 0.005 285);
+  --popover: oklch(0.12 0.005 285);
   --popover-foreground: oklch(0.95 0.01 90);
-  --secondary: oklch(0.25 0.01 285);
+  --secondary: oklch(0.15 0.005 285);
   --secondary-foreground: oklch(0.95 0.01 90);
-  --muted: oklch(0.22 0.005 285);
-  --muted-foreground: oklch(0.65 0.02 90);
-  --accent: oklch(0.75 0.12 90);
-  --accent-foreground: oklch(0.145 0.005 285);
-  --destructive: oklch(0.55 0.2 25);
+  --muted: oklch(0.12 0.005 285);
+  --muted-foreground: oklch(0.75 0.02 90);
+  --accent: oklch(0.78 0.11 85);
+  --accent-foreground: oklch(0.08 0.005 285);
+  --destructive: oklch(0.65 0.22 25);
   --destructive-foreground: oklch(0.95 0.01 90);
-  --border: oklch(0.3 0.02 90);
-  --input: oklch(0.25 0.01 285);
-  --ring: oklch(0.75 0.12 90);
-  --chart-1: oklch(0.75 0.12 90);
-  --chart-2: oklch(0.65 0.15 160);
-  --chart-3: oklch(0.55 0.15 250);
-  --chart-4: oklch(0.7 0.1 50);
-  --chart-5: oklch(0.6 0.18 20);
-  --sidebar: oklch(0.12 0.005 285);
+  --border: oklch(0.20 0.01 90);
+  --input: oklch(0.10 0.005 285);
+  --ring: oklch(0.78 0.11 85);
+  --chart-1: oklch(0.78 0.11 85);
+  --chart-2: oklch(0.65 0.18 25);
+  --chart-3: oklch(0.75 0.18 145);
+  --chart-4: oklch(0.80 0.15 85);
+  --chart-5: oklch(0.70 0.12 250);
+  --sidebar: oklch(0.06 0.005 285);
   --sidebar-foreground: oklch(0.95 0.01 90);
-  --sidebar-accent: oklch(0.22 0.01 285);
+  --sidebar-accent: oklch(0.15 0.005 285);
   --sidebar-accent-foreground: oklch(0.95 0.01 90);
-  --sidebar-border: oklch(0.3 0.02 90);
-  --sidebar-ring: oklch(0.75 0.12 90);
+  --sidebar-border: oklch(0.20 0.01 90);
+  --sidebar-ring: oklch(0.78 0.11 85);
 }
 
 @layer base {
@@ -121,10 +122,16 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: "Inter", "Noto Sans Arabic", system-ui, sans-serif;
+    font-family: "Inter", "Noto Naskh Arabic", "Noto Sans Arabic", system-ui, sans-serif;
+    /* POC Demo gradient background */
+    background: 
+      radial-gradient(1200px 600px at 60% 18%, rgba(214,179,106,.12), transparent 55%),
+      radial-gradient(900px 500px at 20% 80%, rgba(96,165,250,.08), transparent 60%),
+      linear-gradient(180deg, #050506, #0a0a0c);
+    min-height: 100vh;
   }
   html[dir="rtl"] body {
-    font-family: "Noto Sans Arabic", "Inter", system-ui, sans-serif;
+    font-family: "Noto Naskh Arabic", "Noto Kufi Arabic", "Geeza Pro", "Tahoma", "Arial", sans-serif;
   }
   button:not(:disabled),
   [role="button"]:not([aria-disabled="true"]),
@@ -142,22 +149,12 @@
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
    */
   .container {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
+    padding-left: 1rem;
     padding-right: 1rem;
   }
 
@@ -168,35 +165,193 @@
 
   @media (min-width: 640px) {
     .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
+      padding-left: 1.5rem;
       padding-right: 1.5rem;
     }
   }
 
   @media (min-width: 1024px) {
     .container {
-      padding-left: 2rem; /* 32px - desktop padding */
+      padding-left: 2rem;
       padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
+      max-width: 1280px;
     }
+  }
+
+  /* POC Demo Card Styles */
+  .ruzn-card {
+    background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+    border: 1px solid rgba(255,255,255,.10);
+    border-radius: 1.375rem;
+    box-shadow: 0 18px 60px rgba(0,0,0,.55);
+    backdrop-filter: blur(10px);
+    overflow: hidden;
+  }
+
+  .ruzn-card-header {
+    padding: 0.875rem 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.625rem;
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    background: linear-gradient(90deg, rgba(214,179,106,.10), transparent 35%);
+  }
+
+  /* POC Demo Button Styles */
+  .ruzn-btn {
+    border: 1px solid rgba(255,255,255,.10);
+    background: linear-gradient(180deg, rgba(255,255,255,.09), rgba(255,255,255,.04));
+    color: rgba(255,255,255,.92);
+    border-radius: 0.875rem;
+    padding: 0.625rem 0.75rem;
+    cursor: pointer;
+    box-shadow: 0 10px 35px rgba(0,0,0,.35);
+    transition: 0.15s transform, 0.15s background, 0.15s border;
+    font-size: 0.8125rem;
+  }
+
+  .ruzn-btn:hover {
+    transform: translateY(-1px);
+    border-color: rgba(214,179,106,.30);
+  }
+
+  .ruzn-btn-gold {
+    border-color: rgba(214,179,106,.38);
+    background: linear-gradient(180deg, rgba(214,179,106,.22), rgba(214,179,106,.08));
+  }
+
+  /* POC Demo Tab Styles */
+  .ruzn-tab {
+    padding: 0.5rem 0.625rem;
+    border-radius: 0.75rem;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04);
+    color: rgba(255,255,255,.70);
+    cursor: pointer;
+    font-size: 0.75rem;
+    transition: all 0.15s;
+  }
+
+  .ruzn-tab.active,
+  .ruzn-tab:hover {
+    border-color: rgba(214,179,106,.35);
+    color: rgba(214,179,106,.95);
+    background: rgba(214,179,106,.12);
+  }
+
+  /* POC Demo Tag Styles */
+  .ruzn-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.3125rem 0.5rem;
+    border-radius: 999px;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.20);
+    color: rgba(255,255,255,.70);
+    font-size: 0.6875rem;
+    white-space: nowrap;
+  }
+
+  .ruzn-tag-high {
+    border-color: rgba(255,107,107,.35);
+    color: rgba(255,107,107,.95);
+    background: rgba(255,107,107,.10);
+  }
+
+  .ruzn-tag-med {
+    border-color: rgba(251,191,36,.35);
+    color: rgba(251,191,36,.95);
+    background: rgba(251,191,36,.10);
+  }
+
+  .ruzn-tag-low {
+    border-color: rgba(74,222,128,.30);
+    color: rgba(74,222,128,.95);
+    background: rgba(74,222,128,.10);
+  }
+
+  .ruzn-tag-info {
+    border-color: rgba(96,165,250,.30);
+    color: rgba(96,165,250,.95);
+    background: rgba(96,165,250,.10);
+  }
+
+  /* POC Demo KPI Box */
+  .ruzn-kpi {
+    padding: 0.75rem;
+    border-radius: 1.125rem;
+    border: 1px solid rgba(255,255,255,.08);
+    background: rgba(255,255,255,.04);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .ruzn-kpi::before {
+    content: "";
+    position: absolute;
+    inset: -40px -80px auto auto;
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(214,179,106,.25), transparent 60%);
+    transform: rotate(12deg);
+    pointer-events: none;
+  }
+
+  .ruzn-kpi-value {
+    font-size: 1.125rem;
+    font-weight: 900;
+    color: rgba(214,179,106,.95);
+  }
+
+  .ruzn-kpi-label {
+    font-size: 0.75rem;
+    color: rgba(255,255,255,.70);
+    margin-top: 0.125rem;
+  }
+
+  /* POC Demo Input Styles */
+  .ruzn-input {
+    width: 100%;
+    border-radius: 0.875rem;
+    border: 1px solid rgba(255,255,255,.10);
+    background: rgba(0,0,0,.28);
+    color: rgba(255,255,255,.92);
+    padding: 0.625rem 0.75rem;
+    outline: none;
+    font-size: 0.8125rem;
+  }
+
+  .ruzn-input:focus {
+    border-color: rgba(214,179,106,.35);
   }
 }
 
 /* Ruzn Custom Utilities */
 @layer utilities {
   .text-gold-gradient {
-    background: linear-gradient(135deg, #c9a227 0%, #f4d03f 50%, #c9a227 100%);
+    background: linear-gradient(135deg, #d6b36a 0%, #f4d03f 50%, #d6b36a 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
   }
 
   .glow-gold {
-    box-shadow: 0 0 20px rgba(201, 162, 39, 0.3);
+    box-shadow: 0 0 20px rgba(214, 179, 106, 0.3);
   }
 
   .border-gold {
-    border-color: rgba(201, 162, 39, 0.3);
+    border-color: rgba(214, 179, 106, 0.3);
+  }
+
+  .bg-gold-gradient {
+    background: linear-gradient(180deg, rgba(214,179,106,.22), rgba(214,179,106,.08));
+  }
+
+  .shadow-deep {
+    box-shadow: 0 18px 60px rgba(0,0,0,.55);
   }
 
   .rtl {

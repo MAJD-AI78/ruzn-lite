@@ -12,6 +12,7 @@ import {
   updateConversationStatus, getStatusHistory, getConversationsByStatus,
   getDashboardStats, generateWeeklyReport, getWeeklyReports
 } from "./db";
+import { sendWeeklyReportToRecipients, getReportHtml, getReportText } from "./scheduledReports";
 
 // System prompts for Ruzn-Lite OSAI
 const SYSTEM_PROMPTS = {
@@ -517,6 +518,35 @@ export const appRouter = router({
         
         const reports = await getWeeklyReports(input.limit);
         return { reports };
+      }),
+
+    // Send weekly report to recipients (manual trigger)
+    sendWeeklyReport: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          return { success: false, error: 'Unauthorized' };
+        }
+        
+        const result = await sendWeeklyReportToRecipients();
+        return result;
+      }),
+
+    // Get report as HTML
+    getReportHtml: protectedProcedure
+      .input(z.object({ reportId: z.number().optional() }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          return { html: '', error: 'Unauthorized' };
+        }
+        
+        // Get latest report or specific one
+        const reports = await getWeeklyReports(1);
+        if (reports.length === 0) {
+          return { html: '', error: 'No reports found' };
+        }
+        
+        const html = getReportHtml(reports[0]);
+        return { html };
       })
   }),
 

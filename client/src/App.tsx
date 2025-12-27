@@ -7,6 +7,8 @@ import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
 import Analytics from "./pages/Analytics";
 import Admin from "./pages/Admin";
+import Operations from "./pages/Operations";
+import EntityMap from "./pages/EntityMap";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
@@ -15,6 +17,8 @@ function Router() {
       <Route path={"/"} component={Home} />
       <Route path={"/analytics"} component={Analytics} />
       <Route path={"/admin"} component={Admin} />
+      <Route path={"/operations"} component={Operations} />
+      <Route path={"/entity-map"} component={EntityMap} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
