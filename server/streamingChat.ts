@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import { invokeLLMStream, Message } from './_core/llm';
-import { logAnalyticsEvent } from './db';
+import { logAnalyticsEvent, searchKnowledgeBase } from './db';
 import { notifyOwner } from './_core/notification';
 import { shouldSearchWeb, searchAndScrape, formatSearchResultsForAI } from './webSearch';
 
@@ -90,6 +90,25 @@ export async function handleStreamingChat(req: Request, res: Response) {
       }
     }
 
+    // Search knowledge base first
+    let knowledgeContext = '';
+    try {
+      const knowledgeResults = await searchKnowledgeBase(message, language, 3);
+      if (knowledgeResults.length > 0) {
+        knowledgeContext = '\n\n--- OSAI Knowledge Base ---\n';
+        for (const doc of knowledgeResults) {
+          const title = language === 'arabic' ? (doc.titleArabic || doc.titleEnglish) : doc.titleEnglish;
+          const content = language === 'arabic' ? (doc.contentArabic || doc.contentEnglish) : doc.contentEnglish;
+          knowledgeContext += `\n### ${title}\n`;
+          if (doc.referenceNumber) knowledgeContext += `Reference: ${doc.referenceNumber}\n`;
+          knowledgeContext += `${content?.substring(0, 1500) || ''}\n`;
+        }
+        knowledgeContext += '\n--- End of Knowledge Base ---\n';
+      }
+    } catch (kbError) {
+      console.error('[KnowledgeBase] Error searching:', kbError);
+    }
+
     // Check if web search is needed
     let webSearchContext = '';
     if (shouldSearchWeb(message)) {
@@ -118,10 +137,14 @@ export async function handleStreamingChat(req: Request, res: Response) {
       }
     }
 
-    // Add current message with web search context if available
-    const userMessageWithContext = webSearchContext 
-      ? `${message}\n\n${webSearchContext}`
-      : message;
+    // Add current message with knowledge base and web search context if available
+    let userMessageWithContext = message;
+    if (knowledgeContext) {
+      userMessageWithContext += knowledgeContext;
+    }
+    if (webSearchContext) {
+      userMessageWithContext += webSearchContext;
+    }
     messages.push({ role: 'user', content: userMessageWithContext });
 
     // Log analytics event

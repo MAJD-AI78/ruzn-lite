@@ -1,0 +1,20 @@
+CREATE TABLE `knowledge_base` (
+	`id` int AUTO_INCREMENT NOT NULL,
+	`documentType` enum('royal_decree','regulation','policy','guideline','report','legal_article','procedure') NOT NULL,
+	`titleArabic` varchar(500),
+	`titleEnglish` varchar(500) NOT NULL,
+	`referenceNumber` varchar(100),
+	`contentArabic` text,
+	`contentEnglish` text,
+	`summaryArabic` text,
+	`summaryEnglish` text,
+	`keywords` text,
+	`category` varchar(200),
+	`sourceFile` varchar(300),
+	`articleNumber` varchar(50),
+	`penalties` text,
+	`effectiveDate` timestamp,
+	`createdAt` timestamp NOT NULL DEFAULT (now()),
+	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	CONSTRAINT `knowledge_base_id` PRIMARY KEY(`id`)
+);

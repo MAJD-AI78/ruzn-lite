@@ -263,3 +263,36 @@ export const caseLaw = mysqlTable("case_law", {
 
 export type CaseLaw = typeof caseLaw.$inferSelect;
 export type InsertCaseLaw = typeof caseLaw.$inferInsert;
+
+
+// Knowledge Base - Stores ingested document content for AI retrieval
+export const knowledgeBase = mysqlTable("knowledge_base", {
+  id: int("id").autoincrement().primaryKey(),
+  documentType: mysqlEnum("documentType", [
+    "royal_decree", 
+    "regulation", 
+    "policy", 
+    "guideline", 
+    "report",
+    "legal_article",
+    "procedure"
+  ]).notNull(),
+  titleArabic: varchar("titleArabic", { length: 500 }),
+  titleEnglish: varchar("titleEnglish", { length: 500 }).notNull(),
+  referenceNumber: varchar("referenceNumber", { length: 100 }), // e.g., "111/2011"
+  contentArabic: text("contentArabic"),
+  contentEnglish: text("contentEnglish"),
+  summaryArabic: text("summaryArabic"),
+  summaryEnglish: text("summaryEnglish"),
+  keywords: text("keywords"), // JSON array of keywords for search
+  category: varchar("category", { length: 200 }), // e.g., "Financial Oversight", "Anti-Corruption"
+  sourceFile: varchar("sourceFile", { length: 300 }), // Original file name
+  articleNumber: varchar("articleNumber", { length: 50 }), // For specific articles
+  penalties: text("penalties"), // JSON object with penalty details
+  effectiveDate: timestamp("effectiveDate"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
+export type InsertKnowledgeBase = typeof knowledgeBase.$inferInsert;

@@ -17,7 +17,8 @@ import {
   searchCaseLaw, getCaseLawById, getCaseLawStats, seedCaseLawDatabase,
   seedHistoricalData,
   saveRegistryComplaint, getRegistryComplaints, assignComplaint,
-  getAssignedComplaints, getAssignmentStats
+  getAssignedComplaints, getAssignmentStats,
+  searchKnowledgeBase, seedKnowledgeBase, getAllKnowledge
 } from "./db";
 import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshStatus, recordRefresh, updateRefreshConfig } from "./scheduledReports";
 import { storagePut } from "./storage";
@@ -1081,6 +1082,34 @@ export const appRouter = router({
           name: u.name || u.email || `User ${u.id}`,
           role: u.role
         }));
+      })
+  }),
+
+  // Knowledge Base Router
+  knowledge: router({
+    // Search knowledge base
+    search: publicProcedure
+      .input(z.object({
+        query: z.string(),
+        language: z.enum(['arabic', 'english']).optional()
+      }))
+      .query(async ({ input }) => {
+        const results = await searchKnowledgeBase(input.query, input.language || 'english');
+        return results;
+      }),
+
+    // Get all knowledge entries
+    getAll: publicProcedure
+      .query(async () => {
+        const entries = await getAllKnowledge();
+        return entries;
+      }),
+
+    // Seed knowledge base
+    seed: publicProcedure
+      .mutation(async () => {
+        const result = await seedKnowledgeBase();
+        return result;
       })
   })
 });

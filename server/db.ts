@@ -9,7 +9,7 @@ import {
   historicalStats, InsertHistoricalStat, historicalComplaintsByEntity,
   InsertHistoricalComplaintsByEntity, historicalComplaintsByCategory,
   InsertHistoricalComplaintsByCategory, historicalConvictions, InsertHistoricalConviction,
-  caseLaw, InsertCaseLaw
+  caseLaw, InsertCaseLaw, knowledgeBase, InsertKnowledgeBase
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1972,5 +1972,359 @@ export async function getAssignmentStats() {
   } catch (error) {
     console.error("[Database] Failed to get assignment stats:", error);
     return { unassigned: 0, assigned: 0, byUser: [] };
+  }
+}
+
+
+// ============================================
+// KNOWLEDGE BASE FUNCTIONS
+// ============================================
+
+// Search knowledge base by query
+export async function searchKnowledgeBase(query: string, language: 'arabic' | 'english' = 'english', limit: number = 5) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot search knowledge base: database not available");
+    return [];
+  }
+
+  try {
+    const searchPattern = `%${query}%`;
+    const contentField = language === 'arabic' ? knowledgeBase.contentArabic : knowledgeBase.contentEnglish;
+    const titleField = language === 'arabic' ? knowledgeBase.titleArabic : knowledgeBase.titleEnglish;
+    
+    const results = await db.select().from(knowledgeBase)
+      .where(
+        sql`${contentField} LIKE ${searchPattern} OR ${titleField} LIKE ${searchPattern} OR ${knowledgeBase.keywords} LIKE ${searchPattern}`
+      )
+      .limit(limit);
+    
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to search knowledge base:", error);
+    return [];
+  }
+}
+
+// Get knowledge base entry by reference number
+export async function getKnowledgeByReference(referenceNumber: string) {
+  const db = await getDb();
+  if (!db) return null;
+
+  try {
+    const results = await db.select().from(knowledgeBase)
+      .where(eq(knowledgeBase.referenceNumber, referenceNumber));
+    return results[0] || null;
+  } catch (error) {
+    console.error("[Database] Failed to get knowledge by reference:", error);
+    return null;
+  }
+}
+
+// Get all knowledge base entries by document type
+export async function getKnowledgeByType(documentType: string) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    const results = await db.select().from(knowledgeBase)
+      .where(eq(knowledgeBase.documentType, documentType as any));
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to get knowledge by type:", error);
+    return [];
+  }
+}
+
+// Seed knowledge base with OSAI legal documents
+export async function seedKnowledgeBase() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot seed knowledge base: database not available");
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    // Clear existing data
+    await db.delete(knowledgeBase);
+
+    const documents: InsertKnowledgeBase[] = [
+      // Royal Decree 111/2011 - State Audit Law
+      {
+        documentType: "royal_decree",
+        titleEnglish: "State Audit Law - Royal Decree 111/2011",
+        titleArabic: "قانون الرقابة المالية والإدارية للدولة - المرسوم السلطاني رقم 111/2011",
+        referenceNumber: "111/2011",
+        contentEnglish: `Royal Decree 111/2011 establishes the State Audit Institution (OSAI) as an independent body reporting directly to His Majesty the Sultan. 
+
+Key Provisions:
+- Article 4: OSAI has authority to audit all government entities, public institutions, and companies with state ownership
+- Article 8(7): Authority to investigate administrative irregularities and negligence
+- Article 8(8): Authority to investigate violations of duties and responsibilities
+- Article 12: Power to request any documents, records, or information from audited entities
+- Article 15: Entities must respond to OSAI findings within 30 days
+- Article 18: OSAI submits annual report to His Majesty the Sultan`,
+        contentArabic: `المرسوم السلطاني رقم 111/2011 ينشئ جهاز الرقابة المالية والإدارية للدولة كجهاز مستقل يتبع جلالة السلطان مباشرة.
+
+الأحكام الرئيسية:
+- المادة 4: للجهاز صلاحية مراقبة جميع الجهات الحكومية والمؤسسات العامة والشركات ذات الملكية الحكومية
+- المادة 8(7): صلاحية التحقيق في المخالفات الإدارية والإهمال
+- المادة 8(8): صلاحية التحقيق في مخالفات الواجبات والمسؤوليات
+- المادة 12: صلاحية طلب أي وثائق أو سجلات أو معلومات من الجهات الخاضعة للرقابة
+- المادة 15: يجب على الجهات الرد على ملاحظات الجهاز خلال 30 يوماً
+- المادة 18: يرفع الجهاز تقريره السنوي إلى جلالة السلطان`,
+        summaryEnglish: "Establishes OSAI as independent audit body with comprehensive oversight authority over all government entities",
+        summaryArabic: "ينشئ جهاز الرقابة المالية والإدارية للدولة كجهاز رقابي مستقل بصلاحيات شاملة على جميع الجهات الحكومية",
+        keywords: JSON.stringify(["OSAI", "State Audit", "oversight", "government audit", "الرقابة", "جهاز الرقابة", "تدقيق"]),
+        category: "Financial Oversight",
+        sourceFile: "Royal_Decree_111_2011.pdf",
+        penalties: JSON.stringify({})
+      },
+      // Royal Decree 112/2011 - Protection of Public Funds
+      {
+        documentType: "royal_decree",
+        titleEnglish: "Protection of Public Funds and Avoidance of Conflict of Interest Law - Royal Decree 112/2011",
+        titleArabic: "قانون حماية المال العام وتجنب تضارب المصالح - المرسوم السلطاني رقم 112/2011",
+        referenceNumber: "112/2011",
+        contentEnglish: `Royal Decree 112/2011 criminalizes misuse of public funds and establishes conflict of interest rules.
+
+Key Articles and Penalties:
+- Article 4: Embezzlement of public funds - 6 months to 2 years imprisonment + dismissal + asset confiscation
+- Article 5: Failure to report violations - 6 months to 2 years imprisonment
+- Article 6: Conflict of interest through business dealings - 3 months to 1 year imprisonment
+- Article 7: Abuse of position for personal gain - 1 to 3 years imprisonment
+- Article 9: Accepting bribes - imprisonment + dismissal
+- Article 11: Trading with entities under one's supervision - 3 months to 1 year imprisonment`,
+        contentArabic: `المرسوم السلطاني رقم 112/2011 يجرم إساءة استخدام الأموال العامة ويضع قواعد تضارب المصالح.
+
+المواد الرئيسية والعقوبات:
+- المادة 4: اختلاس الأموال العامة - السجن من 6 أشهر إلى سنتين + الفصل + مصادرة الأموال
+- المادة 5: عدم الإبلاغ عن المخالفات - السجن من 6 أشهر إلى سنتين
+- المادة 6: تضارب المصالح من خلال التعاملات التجارية - السجن من 3 أشهر إلى سنة
+- المادة 7: استغلال المنصب لتحقيق منفعة شخصية - السجن من سنة إلى 3 سنوات
+- المادة 9: قبول الرشوة - السجن + الفصل من الوظيفة
+- المادة 11: التعامل مع جهات تحت إشرافه - السجن من 3 أشهر إلى سنة`,
+        summaryEnglish: "Criminalizes embezzlement, bribery, conflict of interest, and abuse of power with specific penalties",
+        summaryArabic: "يجرم الاختلاس والرشوة وتضارب المصالح وإساءة استخدام السلطة مع عقوبات محددة",
+        keywords: JSON.stringify(["embezzlement", "bribery", "conflict of interest", "public funds", "اختلاس", "رشوة", "تضارب المصالح", "المال العام"]),
+        category: "Anti-Corruption",
+        sourceFile: "Royal_Decree_112_2011.pdf",
+        penalties: JSON.stringify({
+          embezzlement: { minMonths: 6, maxYears: 2, additional: ["dismissal", "asset confiscation"] },
+          failureToReport: { minMonths: 6, maxYears: 2 },
+          conflictOfInterest: { minMonths: 3, maxYears: 1 },
+          abuseOfPower: { minYears: 1, maxYears: 3 },
+          bribery: { imprisonment: true, additional: ["dismissal"] }
+        })
+      },
+      // Complaint Classifications
+      {
+        documentType: "guideline",
+        titleEnglish: "OSAI Complaint Classification Guidelines",
+        titleArabic: "دليل تصنيف الشكاوى لجهاز الرقابة",
+        referenceNumber: "OSAI-CLASS-001",
+        contentEnglish: `Complaint Classification System:
+
+1. EMBEZZLEMENT OF PUBLIC FUNDS (Risk: 90-100)
+   - Articles 4, 9 of RD 112/2011
+   - Penalty: 6 months - 2 years + dismissal + asset confiscation
+
+2. BRIBERY (Risk: 90-100)
+   - Accepting bribes for performing duties contrary to regulations
+   - Penalty: Imprisonment + dismissal
+
+3. CONFLICT OF INTEREST (Risk: 70-89)
+   - Articles 6, 11 of RD 112/2011
+   - Trading with entities under supervision or owning shares
+   - Penalty: 3 months - 1 year
+
+4. ABUSE OF POSITION (Risk: 70-89)
+   - Article 7 of RD 112/2011
+   - Using position for personal benefit
+   - Penalty: 1-3 years
+
+5. FORGERY (Risk: 70-89)
+   - Falsifying information or official documents
+   - Penalty: 1-5 years + fine
+
+6. TENDER VIOLATIONS (Risk: 60-79)
+   - Bypassing procedures, favoring contractors
+
+7. ADMINISTRATIVE NEGLIGENCE (Risk: 40-59)
+   - Articles 8(7), 8(8) of RD 111/2011
+
+8. FAILURE TO REPORT (Risk: 40-59)
+   - Article 5 of RD 112/2011
+   - Penalty: 6 months - 2 years`,
+        contentArabic: `نظام تصنيف الشكاوى:
+
+1. اختلاس المال العام (درجة الخطورة: 90-100)
+   - المادتان 4، 9 من المرسوم 112/2011
+   - العقوبة: 6 أشهر - سنتان + الفصل + مصادرة الأموال
+
+2. الرشوة (درجة الخطورة: 90-100)
+   - قبول رشوة لأداء عمل مخالف للواجبات
+   - العقوبة: السجن + الفصل من الوظيفة
+
+3. تضارب المصالح (درجة الخطورة: 70-89)
+   - المادتان 6، 11 من المرسوم 112/2011
+   - التعامل مع شركات تحت إشرافه أو ملكية أسهم فيها
+   - العقوبة: 3 أشهر - سنة
+
+4. استغلال المنصب (درجة الخطورة: 70-89)
+   - المادة 7 من المرسوم 112/2011
+   - استخدام المنصب لتحقيق منفعة شخصية
+   - العقوبة: 1-3 سنوات
+
+5. التزوير (درجة الخطورة: 70-89)
+   - تزوير المعلومات أو المحررات الرسمية
+   - العقوبة: 1-5 سنوات + غرامة
+
+6. مخالفة قانون المناقصات (درجة الخطورة: 60-79)
+   - تجاوز إجراءات الطرح، تفضيل مقاول
+
+7. إهمال إداري (درجة الخطورة: 40-59)
+   - المادتان 8(7)، 8(8) من المرسوم 111/2011
+
+8. عدم الإبلاغ عن مخالفات (درجة الخطورة: 40-59)
+   - المادة 5 من المرسوم 112/2011
+   - العقوبة: 6 أشهر - سنتان`,
+        summaryEnglish: "Classification system for complaints with risk scores and applicable penalties",
+        summaryArabic: "نظام تصنيف الشكاوى مع درجات الخطورة والعقوبات المطبقة",
+        keywords: JSON.stringify(["classification", "risk score", "complaints", "تصنيف", "درجة الخطورة", "شكاوى"]),
+        category: "Complaints Triage",
+        sourceFile: "OSAI_Classification_Guidelines.pdf",
+        penalties: JSON.stringify({})
+      },
+      // National Integrity Plan
+      {
+        documentType: "policy",
+        titleEnglish: "National Integrity Promotion and Anti-Corruption Plan 2022-2030",
+        titleArabic: "الخطة الوطنية لتعزيز النزاهة ومكافحة الفساد 2022-2030",
+        referenceNumber: "NIP-2022-2030",
+        contentEnglish: `The National Integrity Plan establishes Oman's comprehensive anti-corruption framework.
+
+Key Pillars:
+1. Prevention - Strengthening governance and transparency
+2. Detection - Enhanced monitoring and reporting mechanisms
+3. Enforcement - Swift and fair prosecution of violations
+4. Education - Public awareness and ethical training
+
+Strategic Goals:
+- Achieve top 50 ranking in Transparency International CPI by 2030
+- 100% e-government services to reduce corruption opportunities
+- Mandatory asset disclosure for all public officials
+- Whistleblower protection framework
+- Integration of AI in audit and compliance monitoring`,
+        contentArabic: `الخطة الوطنية للنزاهة تؤسس إطار عمان الشامل لمكافحة الفساد.
+
+الركائز الأساسية:
+1. الوقاية - تعزيز الحوكمة والشفافية
+2. الكشف - تعزيز آليات المراقبة والإبلاغ
+3. الإنفاذ - الملاحقة القضائية السريعة والعادلة للمخالفات
+4. التوعية - التثقيف العام والتدريب الأخلاقي
+
+الأهداف الاستراتيجية:
+- تحقيق مرتبة ضمن أفضل 50 دولة في مؤشر مدركات الفساد بحلول 2030
+- 100% خدمات حكومية إلكترونية للحد من فرص الفساد
+- إفصاح إلزامي عن الذمة المالية لجميع المسؤولين الحكوميين
+- إطار حماية المبلغين عن المخالفات
+- دمج الذكاء الاصطناعي في الرقابة والامتثال`,
+        summaryEnglish: "Oman's 8-year strategic plan for integrity promotion and anti-corruption",
+        summaryArabic: "خطة عمان الاستراتيجية لثماني سنوات لتعزيز النزاهة ومكافحة الفساد",
+        keywords: JSON.stringify(["integrity", "anti-corruption", "transparency", "النزاهة", "مكافحة الفساد", "الشفافية"]),
+        category: "Strategic Planning",
+        sourceFile: "National_Integrity_Plan_2022_2030.pdf",
+        penalties: JSON.stringify({})
+      },
+      // OSAI Authorities
+      {
+        documentType: "legal_article",
+        titleEnglish: "OSAI Authorities and Powers",
+        titleArabic: "صلاحيات واختصاصات جهاز الرقابة",
+        referenceNumber: "OSAI-AUTH-001",
+        contentEnglish: `State Audit Institution Authorities (RD 111/2011):
+
+1. AUDIT AUTHORITY
+   - Audit all government ministries and agencies
+   - Audit public institutions and corporations
+   - Audit companies with 25%+ government ownership
+   - Audit entities receiving government subsidies
+
+2. INVESTIGATION AUTHORITY
+   - Investigate financial irregularities
+   - Investigate administrative violations
+   - Investigate complaints from citizens
+   - Refer criminal matters to Public Prosecution
+
+3. ACCESS RIGHTS
+   - Access to all financial records and documents
+   - Access to contracts and agreements
+   - Access to personnel files when relevant
+   - Right to interview any employee
+
+4. REPORTING
+   - Annual report to His Majesty the Sultan
+   - Special reports on significant findings
+   - Recommendations for legislative improvements`,
+        contentArabic: `صلاحيات جهاز الرقابة المالية والإدارية للدولة (المرسوم 111/2011):
+
+1. صلاحية التدقيق
+   - تدقيق جميع الوزارات والجهات الحكومية
+   - تدقيق المؤسسات والشركات العامة
+   - تدقيق الشركات ذات الملكية الحكومية 25% فأكثر
+   - تدقيق الجهات المستفيدة من الدعم الحكومي
+
+2. صلاحية التحقيق
+   - التحقيق في المخالفات المالية
+   - التحقيق في المخالفات الإدارية
+   - التحقيق في شكاوى المواطنين
+   - إحالة القضايا الجنائية للادعاء العام
+
+3. حقوق الوصول
+   - الوصول لجميع السجلات والوثائق المالية
+   - الوصول للعقود والاتفاقيات
+   - الوصول لملفات الموظفين عند الحاجة
+   - حق استجواب أي موظف
+
+4. التقارير
+   - التقرير السنوي لجلالة السلطان
+   - تقارير خاصة عن النتائج المهمة
+   - توصيات لتحسين التشريعات`,
+        summaryEnglish: "Comprehensive overview of OSAI's legal authorities and powers",
+        summaryArabic: "نظرة شاملة على الصلاحيات والاختصاصات القانونية لجهاز الرقابة",
+        keywords: JSON.stringify(["authority", "powers", "audit", "investigation", "صلاحيات", "اختصاصات", "تدقيق", "تحقيق"]),
+        category: "Legal Framework",
+        sourceFile: "OSAI_Authorities.pdf",
+        penalties: JSON.stringify({})
+      }
+    ];
+
+    // Insert all documents
+    for (const doc of documents) {
+      await db.insert(knowledgeBase).values(doc);
+    }
+
+    return { 
+      success: true, 
+      message: "Knowledge base seeded successfully",
+      count: documents.length
+    };
+  } catch (error) {
+    console.error("[Database] Error seeding knowledge base:", error);
+    return { success: false, message: String(error) };
+  }
+}
+
+// Get all knowledge base entries
+export async function getAllKnowledge() {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db.select().from(knowledgeBase);
+  } catch (error) {
+    console.error("[Database] Failed to get all knowledge:", error);
+    return [];
   }
 }
