@@ -1,3 +1,4 @@
+import { useState, useEffect } from "react";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -9,9 +10,9 @@ import Analytics from "./pages/Analytics";
 import Admin from "./pages/Admin";
 import Operations from "./pages/Operations";
 import EntityMap from "./pages/EntityMap";
+import Landing from "./pages/Landing";
 
-function Router() {
-  // make sure to consider if you need authentication for certain routes
+function ProtectedRouter() {
   return (
     <Switch>
       <Route path={"/"} component={Home} />
@@ -24,6 +25,37 @@ function Router() {
       <Route component={NotFound} />
     </Switch>
   );
+}
+
+function AccessGate() {
+  const [hasAccess, setHasAccess] = useState<boolean | null>(null);
+  
+  useEffect(() => {
+    // Check if user has access from session storage
+    const access = sessionStorage.getItem("ruzn_access");
+    setHasAccess(access === "granted");
+  }, []);
+  
+  const handleAccessGranted = () => {
+    setHasAccess(true);
+  };
+  
+  // Loading state
+  if (hasAccess === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-pulse text-primary text-2xl font-bold">رُزن</div>
+      </div>
+    );
+  }
+  
+  // Show landing page if no access
+  if (!hasAccess) {
+    return <Landing onAccessGranted={handleAccessGranted} />;
+  }
+  
+  // Show protected routes if access granted
+  return <ProtectedRouter />;
 }
 
 // NOTE: About Theme
@@ -40,7 +72,7 @@ function App() {
       >
         <TooltipProvider>
           <Toaster />
-          <Router />
+          <AccessGate />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

@@ -1,0 +1,15 @@
+# Robots.txt for ruzn.ai
+# https://ruzn.ai/robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://ruzn.ai/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Disallow admin and internal routes
+Disallow: /admin
+Disallow: /api/
