@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, json, boolean } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -287,12 +287,34 @@ export const knowledgeBase = mysqlTable("knowledge_base", {
   keywords: text("keywords"), // JSON array of keywords for search
   category: varchar("category", { length: 200 }), // e.g., "Financial Oversight", "Anti-Corruption"
   sourceFile: varchar("sourceFile", { length: 300 }), // Original file name
+  sourceFileUrl: varchar("sourceFileUrl", { length: 500 }), // S3 URL for uploaded PDF
   articleNumber: varchar("articleNumber", { length: 50 }), // For specific articles
   penalties: text("penalties"), // JSON object with penalty details
   effectiveDate: timestamp("effectiveDate"),
+  // Versioning fields
+  version: int("version").default(1).notNull(),
+  isLatest: boolean("isLatest").default(true).notNull(),
+  parentId: int("parentId"), // Reference to original document for version tracking
+  createdBy: int("createdBy"), // User who created/uploaded
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
 export type InsertKnowledgeBase = typeof knowledgeBase.$inferInsert;
+
+// Document version history - tracks all changes to documents
+export const documentVersions = mysqlTable("document_versions", {
+  id: int("id").autoincrement().primaryKey(),
+  documentId: int("documentId").notNull(), // Reference to knowledge_base.id
+  version: int("version").notNull(),
+  changeType: mysqlEnum("changeType", ["created", "updated", "restored"]).notNull(),
+  changeSummary: text("changeSummary"), // Description of what changed
+  previousContent: text("previousContent"), // Snapshot of previous content (JSON)
+  changedBy: int("changedBy"), // User who made the change
+  changedByName: varchar("changedByName", { length: 200 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type DocumentVersion = typeof documentVersions.$inferSelect;
+export type InsertDocumentVersion = typeof documentVersions.$inferInsert;

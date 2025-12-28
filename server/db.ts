@@ -9,7 +9,8 @@ import {
   historicalStats, InsertHistoricalStat, historicalComplaintsByEntity,
   InsertHistoricalComplaintsByEntity, historicalComplaintsByCategory,
   InsertHistoricalComplaintsByCategory, historicalConvictions, InsertHistoricalConviction,
-  caseLaw, InsertCaseLaw, knowledgeBase, InsertKnowledgeBase
+  caseLaw, InsertCaseLaw, knowledgeBase, InsertKnowledgeBase,
+  documentVersions, InsertDocumentVersion
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -2685,6 +2686,283 @@ export async function deleteKnowledgeEntry(id: number) {
     return { success: true, message: "Knowledge entry deleted successfully" };
   } catch (error) {
     console.error("[Database] Error deleting knowledge entry:", error);
+    return { success: false, message: String(error) };
+  }
+}
+
+
+// Create a new version of a document
+export async function createDocumentVersion(
+  documentId: number,
+  version: number,
+  changeType: 'created' | 'updated' | 'restored',
+  changeSummary: string,
+  previousContent: Record<string, any> | null,
+  changedBy: number | null,
+  changedByName: string | null
+) {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    await db.insert(documentVersions).values({
+      documentId,
+      version,
+      changeType,
+      changeSummary,
+      previousContent: previousContent ? JSON.stringify(previousContent) : null,
+      changedBy,
+      changedByName
+    });
+
+    return { success: true, message: "Version created successfully" };
+  } catch (error) {
+    console.error("[Database] Error creating document version:", error);
+    return { success: false, message: String(error) };
+  }
+}
+
+// Get version history for a document
+export async function getDocumentVersionHistory(documentId: number) {
+  const db = await getDb();
+  if (!db) return [];
+
+  try {
+    return await db.select()
+      .from(documentVersions)
+      .where(eq(documentVersions.documentId, documentId))
+      .orderBy(desc(documentVersions.version));
+  } catch (error) {
+    console.error("[Database] Failed to get version history:", error);
+    return [];
+  }
+}
+
+// Update a knowledge entry with versioning
+export async function updateKnowledgeEntry(
+  id: number,
+  updates: Partial<{
+    titleEnglish: string;
+    titleArabic: string;
+    contentEnglish: string;
+    contentArabic: string;
+    summaryEnglish: string;
+    summaryArabic: string;
+    keywords: string[];
+    category: string;
+  }>,
+  userId: number | null,
+  userName: string | null
+) {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    // Get current document
+    const [current] = await db.select()
+      .from(knowledgeBase)
+      .where(eq(knowledgeBase.id, id));
+
+    if (!current) {
+      return { success: false, message: "Document not found" };
+    }
+
+    // Save current state as version history
+    const previousContent = {
+      titleEnglish: current.titleEnglish,
+      titleArabic: current.titleArabic,
+      contentEnglish: current.contentEnglish,
+      contentArabic: current.contentArabic,
+      summaryEnglish: current.summaryEnglish,
+      summaryArabic: current.summaryArabic,
+      keywords: current.keywords,
+      category: current.category
+    };
+
+    const newVersion = (current.version || 1) + 1;
+
+    // Create version record
+    await createDocumentVersion(
+      id,
+      current.version || 1,
+      'updated',
+      `Updated by ${userName || 'Unknown'}`,
+      previousContent,
+      userId,
+      userName
+    );
+
+    // Update the document
+    await db.update(knowledgeBase)
+      .set({
+        ...updates,
+        keywords: updates.keywords ? JSON.stringify(updates.keywords) : undefined,
+        version: newVersion
+      })
+      .where(eq(knowledgeBase.id, id));
+
+    return { 
+      success: true, 
+      message: "Document updated successfully",
+      newVersion
+    };
+  } catch (error) {
+    console.error("[Database] Error updating knowledge entry:", error);
+    return { success: false, message: String(error) };
+  }
+}
+
+// Restore a document to a previous version
+export async function restoreDocumentVersion(
+  documentId: number,
+  targetVersion: number,
+  userId: number | null,
+  userName: string | null
+) {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    // Get the version to restore
+    const [versionRecord] = await db.select()
+      .from(documentVersions)
+      .where(and(
+        eq(documentVersions.documentId, documentId),
+        eq(documentVersions.version, targetVersion)
+      ));
+
+    if (!versionRecord || !versionRecord.previousContent) {
+      return { success: false, message: "Version not found or has no content" };
+    }
+
+    const previousContent = JSON.parse(versionRecord.previousContent);
+
+    // Get current document for version number
+    const [current] = await db.select()
+      .from(knowledgeBase)
+      .where(eq(knowledgeBase.id, documentId));
+
+    if (!current) {
+      return { success: false, message: "Document not found" };
+    }
+
+    const newVersion = (current.version || 1) + 1;
+
+    // Save current state before restore
+    await createDocumentVersion(
+      documentId,
+      current.version || 1,
+      'restored',
+      `Restored to version ${targetVersion} by ${userName || 'Unknown'}`,
+      {
+        titleEnglish: current.titleEnglish,
+        titleArabic: current.titleArabic,
+        contentEnglish: current.contentEnglish,
+        contentArabic: current.contentArabic,
+        summaryEnglish: current.summaryEnglish,
+        summaryArabic: current.summaryArabic,
+        keywords: current.keywords,
+        category: current.category
+      },
+      userId,
+      userName
+    );
+
+    // Restore the document
+    await db.update(knowledgeBase)
+      .set({
+        titleEnglish: previousContent.titleEnglish,
+        titleArabic: previousContent.titleArabic,
+        contentEnglish: previousContent.contentEnglish,
+        contentArabic: previousContent.contentArabic,
+        summaryEnglish: previousContent.summaryEnglish,
+        summaryArabic: previousContent.summaryArabic,
+        keywords: previousContent.keywords,
+        category: previousContent.category,
+        version: newVersion
+      })
+      .where(eq(knowledgeBase.id, documentId));
+
+    return { 
+      success: true, 
+      message: `Document restored to version ${targetVersion}`,
+      newVersion
+    };
+  } catch (error) {
+    console.error("[Database] Error restoring document version:", error);
+    return { success: false, message: String(error) };
+  }
+}
+
+// Upload PDF and create knowledge entry
+export async function createKnowledgeFromPDF(input: {
+  documentType: string;
+  titleEnglish: string;
+  titleArabic?: string;
+  referenceNumber?: string;
+  contentEnglish: string;
+  contentArabic?: string;
+  summaryEnglish?: string;
+  summaryArabic?: string;
+  keywords?: string[];
+  category?: string;
+  sourceFile: string;
+  sourceFileUrl: string;
+  createdBy?: number;
+}) {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    const result = await db.insert(knowledgeBase).values({
+      documentType: input.documentType as any,
+      titleEnglish: input.titleEnglish,
+      titleArabic: input.titleArabic || null,
+      referenceNumber: input.referenceNumber || null,
+      contentEnglish: input.contentEnglish,
+      contentArabic: input.contentArabic || null,
+      summaryEnglish: input.summaryEnglish || null,
+      summaryArabic: input.summaryArabic || null,
+      keywords: input.keywords ? JSON.stringify(input.keywords) : null,
+      category: input.category || null,
+      sourceFile: input.sourceFile,
+      sourceFileUrl: input.sourceFileUrl,
+      penalties: JSON.stringify({}),
+      version: 1,
+      isLatest: true,
+      createdBy: input.createdBy || null
+    });
+
+    const insertId = (result as any).insertId || (result as any)[0]?.insertId;
+
+    // Create initial version record
+    if (insertId) {
+      await createDocumentVersion(
+        insertId,
+        1,
+        'created',
+        'Initial upload from PDF',
+        null,
+        input.createdBy || null,
+        null
+      );
+    }
+
+    return { 
+      success: true, 
+      message: "Knowledge entry created from PDF",
+      id: insertId
+    };
+  } catch (error) {
+    console.error("[Database] Error creating knowledge from PDF:", error);
     return { success: false, message: String(error) };
   }
 }

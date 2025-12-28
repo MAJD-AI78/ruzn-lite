@@ -20,11 +20,14 @@ import {
   saveRegistryComplaint, getRegistryComplaints, assignComplaint,
   getAssignedComplaints, getAssignmentStats,
   searchKnowledgeBase, seedKnowledgeBase, getAllKnowledge,
-  createKnowledgeEntry, deleteKnowledgeEntry
+  createKnowledgeEntry, deleteKnowledgeEntry,
+  createDocumentVersion, getDocumentVersionHistory,
+  updateKnowledgeEntry, restoreDocumentVersion, createKnowledgeFromPDF
 } from "./db";
 import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshStatus, recordRefresh, updateRefreshConfig } from "./scheduledReports";
 import { storagePut } from "./storage";
 import { generateCaseLawPDF, generateComparativeReportPDF } from "./pdfExport";
+import { parsePDF, extractSummary, extractKeywords, isArabicText } from "./pdfParser";
 
 // System prompts for Ruzn-Lite OSAI - Enhanced with OSAI Knowledge Base
 const SYSTEM_PROMPTS = {
@@ -1147,6 +1150,121 @@ export const appRouter = router({
         }
         const result = await deleteKnowledgeEntry(input.id);
         return result;
+      }),
+
+    // Update knowledge entry with versioning (admin only)
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        titleEnglish: z.string().optional(),
+        titleArabic: z.string().optional(),
+        contentEnglish: z.string().optional(),
+        contentArabic: z.string().optional(),
+        summaryEnglish: z.string().optional(),
+        summaryArabic: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
+        category: z.string().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can update documents' });
+        }
+        const { id, ...updates } = input;
+        const result = await updateKnowledgeEntry(id, updates, ctx.user.id, ctx.user.name || null);
+        return result;
+      }),
+
+    // Get version history for a document
+    getVersionHistory: publicProcedure
+      .input(z.object({ documentId: z.number() }))
+      .query(async ({ input }) => {
+        const history = await getDocumentVersionHistory(input.documentId);
+        return history;
+      }),
+
+    // Restore document to previous version (admin only)
+    restoreVersion: protectedProcedure
+      .input(z.object({
+        documentId: z.number(),
+        targetVersion: z.number()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can restore versions' });
+        }
+        const result = await restoreDocumentVersion(
+          input.documentId,
+          input.targetVersion,
+          ctx.user.id,
+          ctx.user.name || null
+        );
+        return result;
+      }),
+
+    // Upload PDF and create knowledge entry (admin only)
+    uploadPDF: protectedProcedure
+      .input(z.object({
+        fileData: z.string(), // Base64 encoded PDF
+        fileName: z.string(),
+        documentType: z.enum(['royal_decree', 'regulation', 'policy', 'guideline', 'report', 'legal_article', 'procedure']),
+        titleEnglish: z.string().optional(),
+        titleArabic: z.string().optional(),
+        referenceNumber: z.string().optional(),
+        category: z.string().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can upload documents' });
+        }
+
+        try {
+          // Decode base64 PDF
+          const pdfBuffer = Buffer.from(input.fileData, 'base64');
+          
+          // Parse PDF
+          const parsed = await parsePDF(pdfBuffer);
+          
+          // Detect language and extract content
+          const isArabic = isArabicText(parsed.text);
+          const summary = extractSummary(parsed.text);
+          const keywords = extractKeywords(parsed.text);
+          
+          // Upload PDF to S3
+          const fileKey = `knowledge-base/${Date.now()}-${input.fileName}`;
+          const { url: fileUrl } = await storagePut(fileKey, pdfBuffer, 'application/pdf');
+          
+          // Create knowledge entry
+          const result = await createKnowledgeFromPDF({
+            documentType: input.documentType,
+            titleEnglish: input.titleEnglish || parsed.info.title || input.fileName.replace('.pdf', ''),
+            titleArabic: input.titleArabic,
+            referenceNumber: input.referenceNumber,
+            contentEnglish: isArabic ? '' : parsed.text,
+            contentArabic: isArabic ? parsed.text : '',
+            summaryEnglish: isArabic ? '' : summary,
+            summaryArabic: isArabic ? summary : '',
+            keywords,
+            category: input.category,
+            sourceFile: input.fileName,
+            sourceFileUrl: fileUrl,
+            createdBy: ctx.user.id
+          });
+          
+          return {
+            ...result,
+            parsedInfo: {
+              numPages: parsed.numPages,
+              detectedLanguage: isArabic ? 'arabic' : 'english',
+              keywordsExtracted: keywords.length
+            }
+          };
+        } catch (error) {
+          console.error('[Knowledge] PDF upload error:', error);
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: `Failed to process PDF: ${error instanceof Error ? error.message : 'Unknown error'}` 
+          });
+        }
       })
   })
 });

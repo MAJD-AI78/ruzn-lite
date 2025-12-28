@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, FileText, Scale, BookOpen, FileWarning, ClipboardList, Shield, Loader2, ChevronDown, ChevronUp, Upload } from "lucide-react";
+import { Search, FileText, Scale, BookOpen, FileWarning, ClipboardList, Shield, Loader2, ChevronDown, ChevronUp, Upload, FileUp, History, RotateCcw, Download, Eye } from "lucide-react";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
@@ -36,6 +36,18 @@ interface KnowledgeEntry {
   keywords: string | null;
   category: string | null;
   sourceFile: string | null;
+  sourceFileUrl?: string | null;
+  version?: number;
+}
+
+interface VersionEntry {
+  id: number;
+  documentId: number;
+  version: number;
+  changeType: string;
+  changeSummary: string | null;
+  changedByName: string | null;
+  createdAt: Date | string;
 }
 
 export default function KnowledgeBase() {
@@ -44,6 +56,8 @@ export default function KnowledgeBase() {
   const [selectedType, setSelectedType] = useState<string | null>(null);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isPdfUploadOpen, setIsPdfUploadOpen] = useState(false);
+  const [versionHistoryId, setVersionHistoryId] = useState<number | null>(null);
   
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
@@ -142,7 +156,7 @@ export default function KnowledgeBase() {
                 </Button>
               )}
               
-              {/* Admin: Upload Button */}
+              {/* Admin: Manual Upload Button */}
               {isAdmin && (
                 <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
                   <DialogTrigger asChild>
@@ -152,7 +166,7 @@ export default function KnowledgeBase() {
                       className="border-amber-500/30 text-amber-400 hover:bg-amber-500/10"
                     >
                       <Upload className="w-4 h-4 mr-2" />
-                      {language === "arabic" ? "إضافة وثيقة" : "Add Document"}
+                      {language === "arabic" ? "إضافة يدوية" : "Manual Add"}
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="bg-[#1a1a24] border-white/10 text-white max-w-2xl">
@@ -163,6 +177,37 @@ export default function KnowledgeBase() {
                       </DialogDescription>
                     </DialogHeader>
                     <UploadForm language={language} onSuccess={() => { setIsUploadOpen(false); refetch(); }} />
+                  </DialogContent>
+                </Dialog>
+              )}
+
+              {/* Admin: PDF Upload Button */}
+              {isAdmin && (
+                <Dialog open={isPdfUploadOpen} onOpenChange={setIsPdfUploadOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="border-green-500/30 text-green-400 hover:bg-green-500/10"
+                    >
+                      <FileUp className="w-4 h-4 mr-2" />
+                      {language === "arabic" ? "رفع PDF" : "Upload PDF"}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#1a1a24] border-white/10 text-white max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2">
+                        <FileUp className="w-5 h-5 text-green-400" />
+                        {language === "arabic" ? "رفع ملف PDF" : "Upload PDF Document"}
+                      </DialogTitle>
+                      <DialogDescription className="text-white/60">
+                        {language === "arabic" 
+                          ? "سيتم استخراج النص والكلمات المفتاحية تلقائياً" 
+                          : "Text and keywords will be automatically extracted"
+                        }
+                      </DialogDescription>
+                    </DialogHeader>
+                    <PDFUploadForm language={language} onSuccess={() => { setIsPdfUploadOpen(false); refetch(); }} />
                   </DialogContent>
                 </Dialog>
               )}
@@ -308,6 +353,42 @@ export default function KnowledgeBase() {
                               ))}
                             </div>
                           )}
+
+                          {/* Action buttons */}
+                          <div className="mt-4 pt-4 border-t border-white/10 flex items-center gap-2">
+                            {/* Version info */}
+                            {entry.version && (
+                              <Badge variant="outline" className="border-white/20 text-white/50">
+                                v{entry.version}
+                              </Badge>
+                            )}
+                            
+                            {/* View PDF */}
+                            {entry.sourceFileUrl && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-white/60 hover:text-white"
+                                onClick={() => window.open(entry.sourceFileUrl!, '_blank')}
+                              >
+                                <Download className="w-4 h-4 mr-1" />
+                                {language === "arabic" ? "تحميل" : "Download"}
+                              </Button>
+                            )}
+                            
+                            {/* Version History */}
+                            {isAdmin && (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="text-white/60 hover:text-white"
+                                onClick={() => setVersionHistoryId(entry.id)}
+                              >
+                                <History className="w-4 h-4 mr-1" />
+                                {language === "arabic" ? "السجل" : "History"}
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
                     </CardContent>
@@ -318,6 +399,16 @@ export default function KnowledgeBase() {
           </div>
         ))}
       </main>
+
+      {/* Version History Dialog */}
+      {versionHistoryId && (
+        <VersionHistoryDialog
+          documentId={versionHistoryId}
+          language={language}
+          onClose={() => setVersionHistoryId(null)}
+          onRestore={() => refetch()}
+        />
+      )}
     </div>
   );
 }
@@ -465,5 +556,317 @@ function UploadForm({ language, onSuccess }: { language: "arabic" | "english"; o
         </Button>
       </div>
     </form>
+  );
+}
+
+
+// PDF Upload Form Component
+function PDFUploadForm({ language, onSuccess }: { language: "arabic" | "english"; onSuccess: () => void }) {
+  const [formData, setFormData] = useState({
+    documentType: "guideline" as const,
+    titleEnglish: "",
+    titleArabic: "",
+    referenceNumber: "",
+    category: ""
+  });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState("");
+
+  const uploadMutation = trpc.knowledge.uploadPDF.useMutation({
+    onSuccess: (result) => {
+      setUploadProgress(language === "arabic" 
+        ? `تم رفع الملف بنجاح! تم استخراج ${result.parsedInfo?.keywordsExtracted || 0} كلمة مفتاحية`
+        : `Upload successful! Extracted ${result.parsedInfo?.keywordsExtracted || 0} keywords`
+      );
+      setTimeout(() => {
+        onSuccess();
+      }, 1500);
+    },
+    onError: (error) => {
+      setUploadProgress("");
+      alert(error.message);
+    }
+  });
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type !== 'application/pdf') {
+        alert(language === "arabic" ? "يرجى اختيار ملف PDF" : "Please select a PDF file");
+        return;
+      }
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit
+        alert(language === "arabic" ? "حجم الملف يجب أن يكون أقل من 10 ميجابايت" : "File size must be less than 10MB");
+        return;
+      }
+      setSelectedFile(file);
+      // Auto-fill title from filename
+      if (!formData.titleEnglish) {
+        setFormData({...formData, titleEnglish: file.name.replace('.pdf', '')});
+      }
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      alert(language === "arabic" ? "يرجى اختيار ملف PDF" : "Please select a PDF file");
+      return;
+    }
+
+    setIsUploading(true);
+    setUploadProgress(language === "arabic" ? "جاري قراءة الملف..." : "Reading file...");
+
+    try {
+      // Read file as base64
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = (reader.result as string).split(',')[1];
+        
+        setUploadProgress(language === "arabic" ? "جاري تحليل PDF..." : "Parsing PDF...");
+        
+        await uploadMutation.mutateAsync({
+          fileData: base64,
+          fileName: selectedFile.name,
+          documentType: formData.documentType as any,
+          titleEnglish: formData.titleEnglish || undefined,
+          titleArabic: formData.titleArabic || undefined,
+          referenceNumber: formData.referenceNumber || undefined,
+          category: formData.category || undefined
+        });
+      };
+      reader.readAsDataURL(selectedFile);
+    } catch (error) {
+      setIsUploading(false);
+      setUploadProgress("");
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      {/* File Input */}
+      <div className="border-2 border-dashed border-white/20 rounded-lg p-6 text-center">
+        <input
+          type="file"
+          accept=".pdf"
+          onChange={handleFileSelect}
+          className="hidden"
+          id="pdf-upload"
+        />
+        <label htmlFor="pdf-upload" className="cursor-pointer">
+          <FileUp className="w-12 h-12 mx-auto mb-3 text-amber-400" />
+          {selectedFile ? (
+            <div>
+              <p className="text-white font-medium">{selectedFile.name}</p>
+              <p className="text-white/60 text-sm">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
+            </div>
+          ) : (
+            <div>
+              <p className="text-white/80">{language === "arabic" ? "انقر لاختيار ملف PDF" : "Click to select PDF file"}</p>
+              <p className="text-white/40 text-sm">{language === "arabic" ? "الحد الأقصى 10 ميجابايت" : "Max 10MB"}</p>
+            </div>
+          )}
+        </label>
+      </div>
+
+      {/* Document Type */}
+      <div>
+        <Label>{language === "arabic" ? "نوع الوثيقة" : "Document Type"}</Label>
+        <Select value={formData.documentType} onValueChange={(v) => setFormData({...formData, documentType: v as typeof formData.documentType})}>
+          <SelectTrigger className="bg-white/5 border-white/10">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-[#1a1a24] border-white/10">
+            {Object.entries(documentTypeConfig).map(([type, config]) => (
+              <SelectItem key={type} value={type}>
+                {language === "arabic" ? config.labelAr : config.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Title Fields */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>{language === "arabic" ? "العنوان (إنجليزي)" : "Title (English)"}</Label>
+          <Input
+            value={formData.titleEnglish}
+            onChange={(e) => setFormData({...formData, titleEnglish: e.target.value})}
+            className="bg-white/5 border-white/10"
+            placeholder="Document title"
+          />
+        </div>
+        <div>
+          <Label>{language === "arabic" ? "العنوان (عربي)" : "Title (Arabic)"}</Label>
+          <Input
+            value={formData.titleArabic}
+            onChange={(e) => setFormData({...formData, titleArabic: e.target.value})}
+            className="bg-white/5 border-white/10"
+            dir="rtl"
+            placeholder="عنوان الوثيقة"
+          />
+        </div>
+      </div>
+
+      {/* Reference & Category */}
+      <div className="grid grid-cols-2 gap-4">
+        <div>
+          <Label>{language === "arabic" ? "الرقم المرجعي" : "Reference Number"}</Label>
+          <Input
+            value={formData.referenceNumber}
+            onChange={(e) => setFormData({...formData, referenceNumber: e.target.value})}
+            className="bg-white/5 border-white/10"
+            placeholder="e.g., RD-123/2024"
+          />
+        </div>
+        <div>
+          <Label>{language === "arabic" ? "التصنيف" : "Category"}</Label>
+          <Input
+            value={formData.category}
+            onChange={(e) => setFormData({...formData, category: e.target.value})}
+            className="bg-white/5 border-white/10"
+            placeholder="e.g., Legal Framework"
+          />
+        </div>
+      </div>
+
+      {/* Progress */}
+      {uploadProgress && (
+        <div className="flex items-center gap-2 text-amber-400">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>{uploadProgress}</span>
+        </div>
+      )}
+
+      {/* Submit */}
+      <div className="flex justify-end gap-2 pt-4">
+        <Button type="submit" className="bg-amber-500 text-black hover:bg-amber-600" disabled={isUploading || !selectedFile}>
+          {isUploading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Upload className="w-4 h-4 mr-2" />}
+          {language === "arabic" ? "رفع وتحليل" : "Upload & Parse"}
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+// Version History Dialog Component
+function VersionHistoryDialog({ 
+  documentId, 
+  language, 
+  onClose,
+  onRestore
+}: { 
+  documentId: number; 
+  language: "arabic" | "english";
+  onClose: () => void;
+  onRestore: () => void;
+}) {
+  const { data: history, isLoading } = trpc.knowledge.getVersionHistory.useQuery({ documentId });
+  
+  const restoreMutation = trpc.knowledge.restoreVersion.useMutation({
+    onSuccess: () => {
+      onRestore();
+      onClose();
+    },
+    onError: (error) => {
+      alert(error.message);
+    }
+  });
+
+  const handleRestore = (version: number) => {
+    if (confirm(language === "arabic" 
+      ? `هل تريد استعادة الإصدار ${version}؟`
+      : `Restore to version ${version}?`
+    )) {
+      restoreMutation.mutate({ documentId, targetVersion: version });
+    }
+  };
+
+  return (
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="bg-[#1a1a24] border-white/10 max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="text-white flex items-center gap-2">
+            <History className="w-5 h-5 text-amber-400" />
+            {language === "arabic" ? "سجل الإصدارات" : "Version History"}
+          </DialogTitle>
+          <DialogDescription className="text-white/60">
+            {language === "arabic" 
+              ? "عرض جميع التغييرات على هذه الوثيقة"
+              : "View all changes made to this document"
+            }
+          </DialogDescription>
+        </DialogHeader>
+
+        {isLoading ? (
+          <div className="flex justify-center py-8">
+            <Loader2 className="w-8 h-8 animate-spin text-amber-400" />
+          </div>
+        ) : history && history.length > 0 ? (
+          <div className="space-y-3">
+            {history.map((version: VersionEntry, index: number) => (
+              <div 
+                key={version.id}
+                className={`p-4 rounded-lg border ${
+                  index === 0 
+                    ? 'bg-amber-500/10 border-amber-500/30' 
+                    : 'bg-white/5 border-white/10'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Badge className={
+                      version.changeType === 'created' 
+                        ? 'bg-green-500/20 text-green-400'
+                        : version.changeType === 'restored'
+                        ? 'bg-purple-500/20 text-purple-400'
+                        : 'bg-blue-500/20 text-blue-400'
+                    }>
+                      {language === "arabic" 
+                        ? version.changeType === 'created' ? 'إنشاء' : version.changeType === 'restored' ? 'استعادة' : 'تحديث'
+                        : version.changeType
+                      }
+                    </Badge>
+                    <span className="text-white font-medium">
+                      {language === "arabic" ? `الإصدار ${version.version}` : `Version ${version.version}`}
+                    </span>
+                    {index === 0 && (
+                      <Badge className="bg-amber-500/20 text-amber-400">
+                        {language === "arabic" ? "الحالي" : "Current"}
+                      </Badge>
+                    )}
+                  </div>
+                  {index > 0 && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="border-white/20 text-white hover:bg-white/10"
+                      onClick={() => handleRestore(version.version)}
+                      disabled={restoreMutation.isPending}
+                    >
+                      <RotateCcw className="w-3 h-3 mr-1" />
+                      {language === "arabic" ? "استعادة" : "Restore"}
+                    </Button>
+                  )}
+                </div>
+                <p className="text-white/60 text-sm mt-2">
+                  {version.changeSummary || (language === "arabic" ? "لا يوجد وصف" : "No description")}
+                </p>
+                <div className="flex items-center gap-4 mt-2 text-xs text-white/40">
+                  <span>{new Date(version.createdAt).toLocaleString()}</span>
+                  {version.changedByName && <span>by {version.changedByName}</span>}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-white/60">
+            {language === "arabic" ? "لا يوجد سجل إصدارات" : "No version history available"}
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }

@@ -482,3 +482,32 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Add search functionality to Knowledge Base page
 - [x] Create admin document upload interface
 - [ ] Support PDF/text file parsing for document upload (future enhancement)
+
+
+## Phase 21 - PDF Upload & Document Versioning
+
+### PDF File Upload
+- [ ] Create PDF parsing utility using pdf-parse library
+- [ ] Add file upload endpoint for PDF documents
+- [ ] Extract text content from uploaded PDFs
+- [ ] Auto-populate document fields from PDF metadata
+- [ ] Store original PDF in S3 storage
+
+### Document Versioning
+- [ ] Add version tracking fields to knowledge_base schema
+- [ ] Create document_versions table for history
+- [ ] Implement version comparison functionality
+- [ ] Add version restore capability
+- [ ] Show version history in Knowledge Base UI
+
+
+## Phase 21 - PDF Upload & Document Versioning (COMPLETED)
+
+### Features
+- [x] Add PDF parsing utility using pdf-parse library
+- [x] Create PDF upload endpoint with automatic text extraction
+- [x] Add document versioning schema (version field, document_versions table)
+- [x] Implement version history tracking for all document changes
+- [x] Add restore to previous version functionality
+- [x] Update Knowledge Base UI with PDF upload form
+- [x] Add version history dialog in document cards
