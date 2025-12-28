@@ -430,3 +430,10 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Generate app icons in multiple sizes (192x192, 512x512)
 - [x] Configure installability prompt
 - [ ] Test PWA on mobile devices
+
+
+### PWA Screenshots & Installation Guide
+- [x] Generate wide screenshot (1280x720) for desktop/tablet view
+- [x] Generate narrow screenshot (720x1280) for mobile view
+- [x] Update manifest.json with screenshot paths
+- [x] Create installation guide for iOS and Android users

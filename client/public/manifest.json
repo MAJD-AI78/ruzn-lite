@@ -37,14 +37,14 @@
       "sizes": "1280x720",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "Ruzn Dashboard"
+      "label": "رُزن - منصة الذكاء للحوكمة والامتثال"
     },
     {
       "src": "/ruzn-screenshot-narrow.png",
       "sizes": "720x1280",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Ruzn Mobile View"
+      "label": "رُزن - واجهة الهاتف المحمول"
     }
   ],
   "shortcuts": [
