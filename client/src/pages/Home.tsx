@@ -97,6 +97,7 @@ const UI_TEXT = {
     admin: "لوحة المشرف",
     operations: "مركز العمليات",
     entityMap: "خريطة الجهات",
+    comparativeAnalysis: "التحليل المقارن",
     voiceInput: "إدخال صوتي",
     recording: "جاري التسجيل..."
   },
@@ -124,6 +125,7 @@ const UI_TEXT = {
     admin: "Admin Panel",
     operations: "Operations",
     entityMap: "Entity Map",
+    comparativeAnalysis: "Comparative Analysis",
     voiceInput: "Voice Input",
     recording: "Recording..."
   }
@@ -587,6 +589,12 @@ export default function Home() {
               <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                 <Map className="w-3 h-3" />
                 {text.entityMap}
+              </button>
+            </Link>
+            <Link href="/comparative-analysis">
+              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
+                <TrendingUp className="w-3 h-3" />
+                {text.comparativeAnalysis}
               </button>
             </Link>
             <Link href="/analytics">

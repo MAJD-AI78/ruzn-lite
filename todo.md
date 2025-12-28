@@ -249,3 +249,44 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Update sample queries with real OSAI questions
 - [x] Add authentic complaint scenarios (Environment Authority, OIA, Sohar Municipality)
 - [x] Include real legal references in responses
+
+
+## Phase 10 - Comparative Analysis Dashboard
+
+### Historical Data Extraction
+- [x] Extract 2021 Annual Report statistics
+- [x] Extract 2022 Annual Report statistics
+- [x] Extract 2023 Annual Report statistics
+- [x] Consolidate 2024 Annual Report statistics
+- [x] Structure data for year-over-year comparison (JSON file created)
+
+### Database & Backend
+- [x] Create historical_stats table schema
+- [x] Create historical_complaints_by_entity table
+- [x] Create historical_complaints_by_category table
+- [x] Create historical_convictions table
+- [x] Create tRPC endpoints for comparative queries
+- [x] Add filtering by year, category, entity, metric
+
+### Dashboard UI
+- [x] Create /comparative-analysis route with dashboard layout
+- [x] Add year selector (multi-select for comparison)
+- [x] Add metric selector (complaints, recoveries, cases, etc.)
+- [x] Add 5-tab interface (Overview, Entities, Categories, Convictions, Insights)
+
+### Visualizations (Chart.js)
+- [x] Line chart: Trends over time
+- [x] Bar chart: Year-over-year comparison (Direct Added Value)
+- [x] Horizontal bar: Entity comparison by year
+- [x] Grouped bar: Category distribution per year
+- [x] KPI cards: Key metrics with totals
+
+### AI Pattern Detection
+- [x] Analyze trends and identify patterns
+- [x] Generate automated insights (positive/negative/neutral)
+- [x] Highlight anomalies and significant changes
+- [x] Pattern summary section with top entities and violation types
+
+### Export & Reporting
+- [x] PDF export via browser print functionality
+- [x] Include all charts and insights in print view

@@ -1,0 +1,187 @@
+{
+  "years": [2021, 2022, 2023, 2024],
+  "metrics": {
+    "directAddedValue": {
+      "label": "Direct Added Value (Collection & Recovery)",
+      "unit": "OMR Million",
+      "data": {
+        "2021": 76.5,
+        "2022": 97.8,
+        "2023": 177.7,
+        "2024": 25.0
+      }
+    },
+    "legalCases": {
+      "label": "Legal Cases Addressed",
+      "unit": "Cases",
+      "data": {
+        "2021": 101,
+        "2022": 113,
+        "2023": 115,
+        "2024": 72
+      }
+    },
+    "referredToProsecution": {
+      "label": "Referred to Public Prosecution",
+      "unit": "Cases",
+      "data": {
+        "2021": null,
+        "2022": 14,
+        "2023": 28,
+        "2024": null
+      }
+    },
+    "auditsCompleted": {
+      "label": "Total Audits Completed",
+      "unit": "Audits",
+      "data": {
+        "2021": 192,
+        "2022": 181,
+        "2023": null,
+        "2024": null
+      }
+    },
+    "reportsIssued": {
+      "label": "Audit Reports Issued",
+      "unit": "Reports",
+      "data": {
+        "2021": 208,
+        "2022": 147,
+        "2023": null,
+        "2024": null
+      }
+    },
+    "complaints": {
+      "label": "Total Complaints Received",
+      "unit": "Complaints",
+      "data": {
+        "2021": 505,
+        "2022": 587,
+        "2023": null,
+        "2024": null
+      }
+    },
+    "maxImprisonment": {
+      "label": "Maximum Imprisonment Sentence",
+      "unit": "Years",
+      "data": {
+        "2021": 3,
+        "2022": 10,
+        "2023": 10,
+        "2024": null
+      }
+    },
+    "maxFine": {
+      "label": "Maximum Fine Imposed",
+      "unit": "OMR",
+      "data": {
+        "2021": 21000,
+        "2022": 78000,
+        "2023": 63000,
+        "2024": null
+      }
+    }
+  },
+  "complaintsByCategory": {
+    "2021": {
+      "financialIrregularities": 405,
+      "employeeGrievances": 19,
+      "citizenInterests": 35,
+      "tenderingProcess": 22,
+      "abuseOfPower": 24
+    },
+    "2022": {
+      "financialIrregularities": 459,
+      "employeeGrievances": 28,
+      "citizenInterests": 74,
+      "tenderingProcess": 21,
+      "abuseOfPower": 5
+    }
+  },
+  "complaintsByEntity": {
+    "2021": {
+      "Ministry of Housing & Urban Planning": 111,
+      "Municipalities Sector": 110,
+      "Ministry of Health": 37,
+      "Ministry of Education": 34,
+      "Ministry of Labour": 24,
+      "Nama Holding Company": 16,
+      "Ministry of Endowments": 11,
+      "Civil Aviation Authority": 10,
+      "Oman Air": 9,
+      "Petroleum Development Oman": 6,
+      "Oman Water & Wastewater": 6
+    },
+    "2022": {
+      "Ministry of Housing & Urban Planning": 119,
+      "Municipalities Sector": 93,
+      "Ministry of Health": 31,
+      "Nama Holding Company": 25,
+      "Ministry of Education": 20,
+      "Ministry of Endowments": 18,
+      "Ministry of Labour": 15,
+      "Oman Air": 11,
+      "Oman Water & Wastewater": 10,
+      "Civil Aviation Authority": 9,
+      "Petroleum Development Oman": 4
+    }
+  },
+  "violationTypes": [
+    "Bribery",
+    "Embezzlement",
+    "Money Laundering",
+    "Forgery (Official Documents)",
+    "Information Forgery (Government Data)",
+    "Misuse of Position",
+    "Abuse of Position",
+    "Conflict of Interest",
+    "Transgression of Public Fund",
+    "Failure to Perform Job Duties"
+  ],
+  "convictionExamples": [
+    {
+      "year": 2022,
+      "entity": "Government Company",
+      "position": "Director",
+      "violation": "Money Laundering",
+      "sentence": "10 years imprisonment",
+      "fine": 51700,
+      "additional": "Deportation"
+    },
+    {
+      "year": 2022,
+      "entity": "Ministry",
+      "position": "Employee",
+      "violation": "Embezzlement",
+      "sentence": "5 years imprisonment",
+      "fine": 50000,
+      "amountEmbezzled": 8299
+    },
+    {
+      "year": 2023,
+      "entity": "Oman Fisheries Company",
+      "position": "Marketing and Sales Manager",
+      "violation": "Money Laundering, Bribery, Misuse of Position",
+      "sentence": "10 years imprisonment (combined)",
+      "fine": 51700,
+      "additional": "Permanent deportation, removal from office"
+    },
+    {
+      "year": 2024,
+      "entity": "Environment Authority",
+      "position": "Director",
+      "violation": "Embezzlement",
+      "sentence": "7 years imprisonment",
+      "fine": 150000,
+      "amountEmbezzled": 2300000
+    },
+    {
+      "year": 2024,
+      "entity": "Oman Investment Authority",
+      "position": "Investment Manager",
+      "violation": "Conflict of Interest",
+      "sentence": "3 years imprisonment",
+      "fine": 75000
+    }
+  ]
+}

@@ -10,7 +10,10 @@ import {
   getAnalyticsSummary, logAnalyticsEvent, getAllConversations,
   getAuditFindings, getLegislativeDocuments, getAllUsers,
   updateConversationStatus, getStatusHistory, getConversationsByStatus,
-  getDashboardStats, generateWeeklyReport, getWeeklyReports
+  getDashboardStats, generateWeeklyReport, getWeeklyReports,
+  getHistoricalStats, getHistoricalComplaintsByEntityData,
+  getHistoricalComplaintsByCategoryData, getHistoricalConvictionsData,
+  getAvailableMetrics, getAvailableYears
 } from "./db";
 import { sendWeeklyReportToRecipients, getReportHtml, getReportText } from "./scheduledReports";
 
@@ -660,6 +663,60 @@ export const appRouter = router({
       const stats = await getDashboardStats();
       return stats;
     })
+  }),
+
+  // Historical Data Router (for comparative analysis)
+  historical: router({
+    // Get available metrics for comparison
+    getAvailableMetrics: publicProcedure.query(() => {
+      return getAvailableMetrics();
+    }),
+
+    // Get available years for comparison
+    getAvailableYears: publicProcedure.query(() => {
+      return getAvailableYears();
+    }),
+
+    // Get historical statistics
+    getStats: publicProcedure
+      .input(z.object({
+        years: z.array(z.number()).optional(),
+        metrics: z.array(z.string()).optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const stats = await getHistoricalStats(input?.years, input?.metrics);
+        return stats;
+      }),
+
+    // Get complaints by entity
+    getComplaintsByEntity: publicProcedure
+      .input(z.object({
+        years: z.array(z.number()).optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const data = await getHistoricalComplaintsByEntityData(input?.years);
+        return data;
+      }),
+
+    // Get complaints by category
+    getComplaintsByCategory: publicProcedure
+      .input(z.object({
+        years: z.array(z.number()).optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const data = await getHistoricalComplaintsByCategoryData(input?.years);
+        return data;
+      }),
+
+    // Get conviction examples
+    getConvictions: publicProcedure
+      .input(z.object({
+        years: z.array(z.number()).optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const data = await getHistoricalConvictionsData(input?.years);
+        return data;
+      })
   })
 });
 

@@ -5,7 +5,10 @@ import {
   InsertConversation, analyticsEvents, InsertAnalyticsEvent,
   auditFindings, InsertAuditFinding, legislativeDocuments, 
   InsertLegislativeDocument, demoTrends, InsertDemoTrend,
-  statusHistory, InsertStatusHistory, weeklyReports, InsertWeeklyReport
+  statusHistory, InsertStatusHistory, weeklyReports, InsertWeeklyReport,
+  historicalStats, InsertHistoricalStat, historicalComplaintsByEntity,
+  InsertHistoricalComplaintsByEntity, historicalComplaintsByCategory,
+  InsertHistoricalComplaintsByCategory, historicalConvictions, InsertHistoricalConviction
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -852,4 +855,351 @@ export async function getWeeklyReports(limit = 10) {
     console.error("[Database] Failed to get weekly reports:", error);
     return [];
   }
+}
+
+
+// ============================================
+// HISTORICAL DATA FUNCTIONS FOR COMPARATIVE ANALYSIS
+// ============================================
+
+// Get historical statistics for year-over-year comparison
+export async function getHistoricalStats(years?: number[], metrics?: string[]) {
+  const db = await getDb();
+  if (!db) {
+    return getHardcodedHistoricalStats(years, metrics);
+  }
+
+  try {
+    let query = db.select().from(historicalStats);
+    const conditions = [];
+    
+    if (years && years.length > 0) {
+      conditions.push(sql`${historicalStats.year} IN (${sql.join(years.map(y => sql`${y}`), sql`, `)})`);
+    }
+    if (metrics && metrics.length > 0) {
+      conditions.push(sql`${historicalStats.metric} IN (${sql.join(metrics.map(m => sql`${m}`), sql`, `)})`);
+    }
+    
+    const result = await query
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(historicalStats.year, historicalStats.metric);
+    
+    if (result.length === 0) {
+      return getHardcodedHistoricalStats(years, metrics);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get historical stats:", error);
+    return getHardcodedHistoricalStats(years, metrics);
+  }
+}
+
+// Get complaints by entity for comparison
+export async function getHistoricalComplaintsByEntityData(years?: number[]) {
+  const db = await getDb();
+  if (!db) {
+    return getHardcodedComplaintsByEntity(years);
+  }
+
+  try {
+    const conditions = [];
+    if (years && years.length > 0) {
+      conditions.push(sql`${historicalComplaintsByEntity.year} IN (${sql.join(years.map(y => sql`${y}`), sql`, `)})`);
+    }
+    
+    const result = await db.select().from(historicalComplaintsByEntity)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(historicalComplaintsByEntity.year, desc(historicalComplaintsByEntity.complaintCount));
+    
+    if (result.length === 0) {
+      return getHardcodedComplaintsByEntity(years);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get complaints by entity:", error);
+    return getHardcodedComplaintsByEntity(years);
+  }
+}
+
+// Get complaints by category for comparison
+export async function getHistoricalComplaintsByCategoryData(years?: number[]) {
+  const db = await getDb();
+  if (!db) {
+    return getHardcodedComplaintsByCategory(years);
+  }
+
+  try {
+    const conditions = [];
+    if (years && years.length > 0) {
+      conditions.push(sql`${historicalComplaintsByCategory.year} IN (${sql.join(years.map(y => sql`${y}`), sql`, `)})`);
+    }
+    
+    const result = await db.select().from(historicalComplaintsByCategory)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(historicalComplaintsByCategory.year, desc(historicalComplaintsByCategory.complaintCount));
+    
+    if (result.length === 0) {
+      return getHardcodedComplaintsByCategory(years);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get complaints by category:", error);
+    return getHardcodedComplaintsByCategory(years);
+  }
+}
+
+// Get conviction examples for case studies
+export async function getHistoricalConvictionsData(years?: number[]) {
+  const db = await getDb();
+  if (!db) {
+    return getHardcodedConvictions(years);
+  }
+
+  try {
+    const conditions = [];
+    if (years && years.length > 0) {
+      conditions.push(sql`${historicalConvictions.year} IN (${sql.join(years.map(y => sql`${y}`), sql`, `)})`);
+    }
+    
+    const result = await db.select().from(historicalConvictions)
+      .where(conditions.length > 0 ? and(...conditions) : undefined)
+      .orderBy(desc(historicalConvictions.year), desc(historicalConvictions.fineOMR));
+    
+    if (result.length === 0) {
+      return getHardcodedConvictions(years);
+    }
+    
+    return result;
+  } catch (error) {
+    console.error("[Database] Failed to get convictions:", error);
+    return getHardcodedConvictions(years);
+  }
+}
+
+// Hardcoded historical stats from OSAI Annual Reports 2021-2024
+function getHardcodedHistoricalStats(years?: number[], metrics?: string[]) {
+  const allStats = [
+    // Direct Added Value (Collection & Recovery) - OMR Million
+    { year: 2021, metric: "directAddedValue", value: null, valueDecimal: "76.5", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "directAddedValue", value: null, valueDecimal: "97.8", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2022" },
+    { year: 2023, metric: "directAddedValue", value: null, valueDecimal: "177.7", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2023" },
+    { year: 2024, metric: "directAddedValue", value: null, valueDecimal: "25.0", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2024" },
+    
+    // Legal Cases Addressed
+    { year: 2021, metric: "legalCases", value: 101, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "legalCases", value: 113, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2022" },
+    { year: 2023, metric: "legalCases", value: 115, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2023" },
+    { year: 2024, metric: "legalCases", value: 72, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2024" },
+    
+    // Referred to Public Prosecution
+    { year: 2022, metric: "referredToProsecution", value: 14, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2022" },
+    { year: 2023, metric: "referredToProsecution", value: 28, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2023" },
+    
+    // Total Audits Completed
+    { year: 2021, metric: "auditsCompleted", value: 192, valueDecimal: null, unit: "Audits", category: "operations", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "auditsCompleted", value: 181, valueDecimal: null, unit: "Audits", category: "operations", source: "OSAI Annual Report 2022" },
+    
+    // Audit Reports Issued
+    { year: 2021, metric: "reportsIssued", value: 208, valueDecimal: null, unit: "Reports", category: "operations", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "reportsIssued", value: 147, valueDecimal: null, unit: "Reports", category: "operations", source: "OSAI Annual Report 2022" },
+    
+    // Total Complaints Received
+    { year: 2021, metric: "complaints", value: 505, valueDecimal: null, unit: "Complaints", category: "complaints", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "complaints", value: 587, valueDecimal: null, unit: "Complaints", category: "complaints", source: "OSAI Annual Report 2022" },
+    
+    // Maximum Imprisonment Sentence (Years)
+    { year: 2021, metric: "maxImprisonment", value: 3, valueDecimal: null, unit: "Years", category: "penalties", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "maxImprisonment", value: 10, valueDecimal: null, unit: "Years", category: "penalties", source: "OSAI Annual Report 2022" },
+    { year: 2023, metric: "maxImprisonment", value: 10, valueDecimal: null, unit: "Years", category: "penalties", source: "OSAI Annual Report 2023" },
+    
+    // Maximum Fine Imposed (OMR)
+    { year: 2021, metric: "maxFine", value: 21000, valueDecimal: null, unit: "OMR", category: "penalties", source: "OSAI Annual Report 2021" },
+    { year: 2022, metric: "maxFine", value: 78000, valueDecimal: null, unit: "OMR", category: "penalties", source: "OSAI Annual Report 2022" },
+    { year: 2023, metric: "maxFine", value: 63000, valueDecimal: null, unit: "OMR", category: "penalties", source: "OSAI Annual Report 2023" },
+  ];
+  
+  let filtered = allStats;
+  if (years && years.length > 0) {
+    filtered = filtered.filter(s => years.includes(s.year));
+  }
+  if (metrics && metrics.length > 0) {
+    filtered = filtered.filter(s => metrics.includes(s.metric));
+  }
+  
+  return filtered;
+}
+
+// Hardcoded complaints by entity
+function getHardcodedComplaintsByEntity(years?: number[]) {
+  const allData = [
+    // 2021 data
+    { year: 2021, entityNameEnglish: "Ministry of Housing & Urban Planning", entityNameArabic: "وزارة الإسكان والتخطيط العمراني", complaintCount: 111 },
+    { year: 2021, entityNameEnglish: "Municipalities Sector", entityNameArabic: "قطاع البلديات", complaintCount: 110 },
+    { year: 2021, entityNameEnglish: "Ministry of Health", entityNameArabic: "وزارة الصحة", complaintCount: 37 },
+    { year: 2021, entityNameEnglish: "Ministry of Education", entityNameArabic: "وزارة التربية والتعليم", complaintCount: 34 },
+    { year: 2021, entityNameEnglish: "Ministry of Labour", entityNameArabic: "وزارة العمل", complaintCount: 24 },
+    { year: 2021, entityNameEnglish: "Nama Holding Company", entityNameArabic: "شركة نماء القابضة", complaintCount: 16 },
+    { year: 2021, entityNameEnglish: "Ministry of Endowments", entityNameArabic: "وزارة الأوقاف", complaintCount: 11 },
+    { year: 2021, entityNameEnglish: "Civil Aviation Authority", entityNameArabic: "هيئة الطيران المدني", complaintCount: 10 },
+    { year: 2021, entityNameEnglish: "Oman Air", entityNameArabic: "الطيران العماني", complaintCount: 9 },
+    { year: 2021, entityNameEnglish: "Petroleum Development Oman", entityNameArabic: "تنمية نفط عمان", complaintCount: 6 },
+    
+    // 2022 data
+    { year: 2022, entityNameEnglish: "Ministry of Housing & Urban Planning", entityNameArabic: "وزارة الإسكان والتخطيط العمراني", complaintCount: 119 },
+    { year: 2022, entityNameEnglish: "Municipalities Sector", entityNameArabic: "قطاع البلديات", complaintCount: 93 },
+    { year: 2022, entityNameEnglish: "Ministry of Health", entityNameArabic: "وزارة الصحة", complaintCount: 31 },
+    { year: 2022, entityNameEnglish: "Nama Holding Company", entityNameArabic: "شركة نماء القابضة", complaintCount: 25 },
+    { year: 2022, entityNameEnglish: "Ministry of Education", entityNameArabic: "وزارة التربية والتعليم", complaintCount: 20 },
+    { year: 2022, entityNameEnglish: "Ministry of Endowments", entityNameArabic: "وزارة الأوقاف", complaintCount: 18 },
+    { year: 2022, entityNameEnglish: "Ministry of Labour", entityNameArabic: "وزارة العمل", complaintCount: 15 },
+    { year: 2022, entityNameEnglish: "Oman Air", entityNameArabic: "الطيران العماني", complaintCount: 11 },
+    { year: 2022, entityNameEnglish: "Oman Water & Wastewater", entityNameArabic: "عمان للمياه والصرف الصحي", complaintCount: 10 },
+    { year: 2022, entityNameEnglish: "Civil Aviation Authority", entityNameArabic: "هيئة الطيران المدني", complaintCount: 9 },
+  ];
+  
+  if (years && years.length > 0) {
+    return allData.filter(d => years.includes(d.year));
+  }
+  return allData;
+}
+
+// Hardcoded complaints by category
+function getHardcodedComplaintsByCategory(years?: number[]) {
+  const allData = [
+    // 2021 data
+    { year: 2021, categoryEnglish: "Financial & Administrative Irregularities", categoryArabic: "مخالفات مالية وإدارية", complaintCount: 405, percentageOfTotal: 80 },
+    { year: 2021, categoryEnglish: "Disruption of Citizens Interests", categoryArabic: "الإضرار بمصالح المواطنين", complaintCount: 35, percentageOfTotal: 7 },
+    { year: 2021, categoryEnglish: "Abuse of Power", categoryArabic: "إساءة استخدام السلطة", complaintCount: 24, percentageOfTotal: 5 },
+    { year: 2021, categoryEnglish: "Improper Tendering Process", categoryArabic: "مخالفات في إجراءات المناقصات", complaintCount: 22, percentageOfTotal: 4 },
+    { year: 2021, categoryEnglish: "Employee Grievances", categoryArabic: "تظلمات الموظفين", complaintCount: 19, percentageOfTotal: 4 },
+    
+    // 2022 data
+    { year: 2022, categoryEnglish: "Financial & Administrative Irregularities", categoryArabic: "مخالفات مالية وإدارية", complaintCount: 459, percentageOfTotal: 78 },
+    { year: 2022, categoryEnglish: "Disruption of Citizens Interests", categoryArabic: "الإضرار بمصالح المواطنين", complaintCount: 74, percentageOfTotal: 13 },
+    { year: 2022, categoryEnglish: "Employee Grievances", categoryArabic: "تظلمات الموظفين", complaintCount: 28, percentageOfTotal: 5 },
+    { year: 2022, categoryEnglish: "Improper Tendering Process", categoryArabic: "مخالفات في إجراءات المناقصات", complaintCount: 21, percentageOfTotal: 4 },
+    { year: 2022, categoryEnglish: "Abuse of Power", categoryArabic: "إساءة استخدام السلطة", complaintCount: 5, percentageOfTotal: 1 },
+  ];
+  
+  if (years && years.length > 0) {
+    return allData.filter(d => years.includes(d.year));
+  }
+  return allData;
+}
+
+// Hardcoded conviction examples
+function getHardcodedConvictions(years?: number[]) {
+  const allData = [
+    {
+      year: 2022,
+      entityNameEnglish: "Government Company",
+      entityNameArabic: "شركة حكومية",
+      position: "Director",
+      violationType: "Money Laundering",
+      sentenceYears: 10,
+      sentenceMonths: 0,
+      fineOMR: 51700,
+      amountInvolved: null,
+      additionalPenalties: JSON.stringify(["Deportation"]),
+      summaryEnglish: "Director at government company convicted of money laundering",
+      summaryArabic: "إدانة مدير في شركة حكومية بتهمة غسيل الأموال"
+    },
+    {
+      year: 2022,
+      entityNameEnglish: "Ministry",
+      entityNameArabic: "وزارة",
+      position: "Employee",
+      violationType: "Embezzlement",
+      sentenceYears: 5,
+      sentenceMonths: 0,
+      fineOMR: 50000,
+      amountInvolved: 8299,
+      additionalPenalties: null,
+      summaryEnglish: "Ministry employee convicted of embezzling OMR 8,299",
+      summaryArabic: "إدانة موظف وزارة باختلاس 8,299 ريال عماني"
+    },
+    {
+      year: 2022,
+      entityNameEnglish: "Ministry",
+      entityNameArabic: "وزارة",
+      position: "Female Employee",
+      violationType: "Forgery",
+      sentenceYears: 3,
+      sentenceMonths: 0,
+      fineOMR: null,
+      amountInvolved: 4146,
+      additionalPenalties: JSON.stringify(["Removal from office", "Deportation"]),
+      summaryEnglish: "Female employee convicted of forgery, embezzled OMR 4,146",
+      summaryArabic: "إدانة موظفة بالتزوير واختلاس 4,146 ريال عماني"
+    },
+    {
+      year: 2023,
+      entityNameEnglish: "Oman Fisheries Company",
+      entityNameArabic: "شركة عمان للأسماك",
+      position: "Marketing and Sales Manager",
+      violationType: "Money Laundering, Bribery, Misuse of Position",
+      sentenceYears: 10,
+      sentenceMonths: 0,
+      fineOMR: 51700,
+      amountInvolved: 19503, // USD amounts converted
+      additionalPenalties: JSON.stringify(["Permanent deportation", "Removal from office", "Confiscation of funds"]),
+      summaryEnglish: "Manager convicted of accepting bribes (USD 5,400 + USD 794), money laundering (USD 6,194), and misuse of position",
+      summaryArabic: "إدانة مدير بقبول رشاوى وغسيل أموال وإساءة استخدام المنصب"
+    },
+    {
+      year: 2024,
+      entityNameEnglish: "Environment Authority",
+      entityNameArabic: "هيئة البيئة",
+      position: "Director",
+      violationType: "Embezzlement",
+      sentenceYears: 7,
+      sentenceMonths: 0,
+      fineOMR: 150000,
+      amountInvolved: 2300000,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Director convicted of embezzling OMR 2.3 million from Environment Authority",
+      summaryArabic: "إدانة مدير باختلاس 2.3 مليون ريال من هيئة البيئة"
+    },
+    {
+      year: 2024,
+      entityNameEnglish: "Oman Investment Authority",
+      entityNameArabic: "جهاز الاستثمار العماني",
+      position: "Investment Manager",
+      violationType: "Conflict of Interest",
+      sentenceYears: 3,
+      sentenceMonths: 0,
+      fineOMR: 75000,
+      amountInvolved: null,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Investment manager convicted of conflict of interest in investment decisions",
+      summaryArabic: "إدانة مدير استثمار بتعارض المصالح في قرارات الاستثمار"
+    }
+  ];
+  
+  if (years && years.length > 0) {
+    return allData.filter(d => years.includes(d.year));
+  }
+  return allData;
+}
+
+// Get all available metrics for the comparison dashboard
+export function getAvailableMetrics() {
+  return [
+    { id: "directAddedValue", label: "Direct Added Value (Recovery)", labelArabic: "القيمة المضافة المباشرة (الاسترداد)", unit: "OMR Million", category: "financial" },
+    { id: "legalCases", label: "Legal Cases Addressed", labelArabic: "القضايا القانونية المعالجة", unit: "Cases", category: "legal" },
+    { id: "referredToProsecution", label: "Referred to Prosecution", labelArabic: "المحالة للادعاء العام", unit: "Cases", category: "legal" },
+    { id: "auditsCompleted", label: "Audits Completed", labelArabic: "عمليات التدقيق المنجزة", unit: "Audits", category: "operations" },
+    { id: "reportsIssued", label: "Reports Issued", labelArabic: "التقارير الصادرة", unit: "Reports", category: "operations" },
+    { id: "complaints", label: "Complaints Received", labelArabic: "الشكاوى المستلمة", unit: "Complaints", category: "complaints" },
+    { id: "maxImprisonment", label: "Max Imprisonment", labelArabic: "أقصى عقوبة سجن", unit: "Years", category: "penalties" },
+    { id: "maxFine", label: "Max Fine Imposed", labelArabic: "أقصى غرامة مفروضة", unit: "OMR", category: "penalties" },
+  ];
+}
+
+// Get available years for comparison
+export function getAvailableYears() {
+  return [2021, 2022, 2023, 2024];
 }

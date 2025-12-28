@@ -163,3 +163,70 @@ export const demoTrends = mysqlTable("demo_trends", {
 
 export type DemoTrend = typeof demoTrends.$inferSelect;
 export type InsertDemoTrend = typeof demoTrends.$inferInsert;
+
+
+// Historical OSAI statistics for comparative analysis (2021-2024)
+export const historicalStats = mysqlTable("historical_stats", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  metric: varchar("metric", { length: 100 }).notNull(),
+  value: int("value"),
+  valueDecimal: varchar("valueDecimal", { length: 50 }), // For decimal values like OMR millions
+  unit: varchar("unit", { length: 50 }).notNull(),
+  category: varchar("category", { length: 100 }), // Optional category grouping
+  source: varchar("source", { length: 200 }), // Source document reference
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HistoricalStat = typeof historicalStats.$inferSelect;
+export type InsertHistoricalStat = typeof historicalStats.$inferInsert;
+
+// Complaints by entity for year-over-year comparison
+export const historicalComplaintsByEntity = mysqlTable("historical_complaints_by_entity", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  entityNameArabic: varchar("entityNameArabic", { length: 300 }),
+  entityNameEnglish: varchar("entityNameEnglish", { length: 300 }).notNull(),
+  complaintCount: int("complaintCount").notNull(),
+  resolvedCount: int("resolvedCount"),
+  avgResolutionDays: int("avgResolutionDays"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HistoricalComplaintsByEntity = typeof historicalComplaintsByEntity.$inferSelect;
+export type InsertHistoricalComplaintsByEntity = typeof historicalComplaintsByEntity.$inferInsert;
+
+// Complaints by category for year-over-year comparison
+export const historicalComplaintsByCategory = mysqlTable("historical_complaints_by_category", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  categoryArabic: varchar("categoryArabic", { length: 200 }),
+  categoryEnglish: varchar("categoryEnglish", { length: 200 }).notNull(),
+  complaintCount: int("complaintCount").notNull(),
+  percentageOfTotal: int("percentageOfTotal"), // Stored as percentage * 100
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HistoricalComplaintsByCategory = typeof historicalComplaintsByCategory.$inferSelect;
+export type InsertHistoricalComplaintsByCategory = typeof historicalComplaintsByCategory.$inferInsert;
+
+// Conviction examples for case studies
+export const historicalConvictions = mysqlTable("historical_convictions", {
+  id: int("id").autoincrement().primaryKey(),
+  year: int("year").notNull(),
+  entityNameArabic: varchar("entityNameArabic", { length: 300 }),
+  entityNameEnglish: varchar("entityNameEnglish", { length: 300 }).notNull(),
+  position: varchar("position", { length: 200 }),
+  violationType: varchar("violationType", { length: 300 }).notNull(),
+  sentenceYears: int("sentenceYears"),
+  sentenceMonths: int("sentenceMonths"),
+  fineOMR: int("fineOMR"),
+  amountInvolved: int("amountInvolved"), // Amount embezzled/involved
+  additionalPenalties: text("additionalPenalties"), // JSON array
+  summaryArabic: text("summaryArabic"),
+  summaryEnglish: text("summaryEnglish"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type HistoricalConviction = typeof historicalConvictions.$inferSelect;
+export type InsertHistoricalConviction = typeof historicalConvictions.$inferInsert;
