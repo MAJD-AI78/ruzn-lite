@@ -220,3 +220,32 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Update Admin.tsx with POC demo styling
 - [x] Update Operations.tsx with POC demo styling
 - [x] Update EntityMap.tsx with POC demo styling
+
+
+## Phase 9 - OSAI Knowledge Base Integration
+
+### Document Analysis
+- [x] Extract key content from State Audit Law (Royal Decree 111/2011)
+- [x] Extract content from Protection of Public Funds Law (Royal Decree 112/2011)
+- [x] Analyze INTOSAI-P1 manual for audit standards
+- [x] Review Annual Reports (2021-2024) for trends and statistics
+- [x] Extract National Integrity Plan 2022-2030 objectives
+- [x] Review integrity influence on performance document
+
+### Knowledge Base Creation
+- [x] Create structured OSAI knowledge base file
+- [x] Document key articles and their applications
+- [x] List violation categories with legal references
+- [x] Compile complaint handling procedures
+- [x] Add real statistics from annual reports (OMR 25M recovered, 72 cases)
+
+### System Prompt Enhancement
+- [x] Update Arabic system prompt with OSAI-specific knowledge
+- [x] Update English system prompt with OSAI-specific knowledge
+- [x] Add legal citation capabilities (RD 111/2011, RD 112/2011)
+- [x] Improve risk scoring with legal basis (penalties included)
+
+### Demo Data Enhancement
+- [x] Update sample queries with real OSAI questions
+- [x] Add authentic complaint scenarios (Environment Authority, OIA, Sohar Municipality)
+- [x] Include real legal references in responses

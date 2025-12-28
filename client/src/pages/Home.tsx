@@ -44,29 +44,30 @@ interface Message {
   content: string;
 }
 
+// Sample queries based on real OSAI cases and laws
 const PRESET_QUERIES = {
   complaints: {
     arabic: [
-      "تم اكتشاف مخالفات مالية في عقود الصيانة بالوزارة",
-      "موظف يمنح عقودًا لشركة يملكها قريبه",
-      "تأخر صرف مستحقات المقاولين لأكثر من سنة"
+      "موظف في هيئة البيئة يستغل منصبه للسماح بنقل مواد الردم دون تصريح",
+      "موظف في هيئة الاستثمار يتلاعب بفواتير السفر بالتواطؤ مع وكالة سفر يملكها قريبه",
+      "موظف في بلدية صحار يجمع غرامات المخالفات نقداً دون إيداعها"
     ],
     english: [
-      "Financial irregularities discovered in ministry maintenance contracts",
-      "Employee awarding contracts to a company owned by his relative",
-      "Contractor payments delayed for over a year"
+      "Environment Authority employee permitting transport of filling materials without approval",
+      "Oman Investment Authority employee manipulating travel invoices in collusion with relative's travel agency",
+      "Sohar Municipality employee collecting violation fines in cash without depositing them"
     ]
   },
   legislative: {
     arabic: [
-      "ما هي صلاحيات جهاز الرقابة المالية؟",
-      "ما هي إجراءات قانون المناقصات الجديد؟",
-      "كيف يتم التعامل مع تضارب المصالح؟"
+      "ما هي صلاحيات جهاز الرقابة المالية وفقاً للمرسوم 111/2011؟",
+      "ما هي عقوبة استغلال المنصب حسب المادة 7 من قانون حماية المال العام؟",
+      "ما هو واجب الإبلاغ عن المخالفات وفقاً للمادة 5؟"
     ],
     english: [
-      "What are the powers of the State Audit Institution?",
-      "What are the procedures of the new Tender Law?",
-      "How is conflict of interest handled?"
+      "What are OSAI's powers under Royal Decree 111/2011?",
+      "What is the penalty for abuse of position under Article 7 of the Public Funds Law?",
+      "What is the duty to report violations under Article 5?"
     ]
   }
 };
