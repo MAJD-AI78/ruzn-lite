@@ -31,7 +31,13 @@ import {
   FileText,
   TrendingUp,
   ClipboardList,
-  Map
+  Map,
+  Paperclip,
+  Volume2,
+  VolumeX,
+  X,
+  Image,
+  FileUp
 } from "lucide-react";
 import { Link } from "wouter";
 
@@ -42,6 +48,18 @@ type MessageRole = "user" | "assistant";
 interface Message {
   role: MessageRole;
   content: string;
+  attachment?: {
+    url: string;
+    fileName: string;
+    fileType: string;
+  };
+}
+
+interface UploadedFile {
+  url: string;
+  fileName: string;
+  fileType: string;
+  preview?: string;
 }
 
 // Sample queries based on real OSAI cases and laws
@@ -98,8 +116,16 @@ const UI_TEXT = {
     operations: "مركز العمليات",
     entityMap: "خريطة الجهات",
     comparativeAnalysis: "التحليل المقارن",
+    caseLaw: "السوابق القضائية",
     voiceInput: "إدخال صوتي",
-    recording: "جاري التسجيل..."
+    recording: "جاري التسجيل...",
+    attachFile: "إرفاق ملف",
+    uploadingFile: "جاري رفع الملف...",
+    fileUploaded: "تم رفع الملف",
+    analyzingDocument: "جاري تحليل المستند...",
+    removeFile: "إزالة الملف",
+    speakResponse: "قراءة الرد",
+    stopSpeaking: "إيقاف القراءة"
   },
   english: {
     title: "Ruzn",
@@ -126,8 +152,16 @@ const UI_TEXT = {
     operations: "Operations",
     entityMap: "Entity Map",
     comparativeAnalysis: "Comparative Analysis",
+    caseLaw: "Case Law",
     voiceInput: "Voice Input",
-    recording: "Recording..."
+    recording: "Recording...",
+    attachFile: "Attach File",
+    uploadingFile: "Uploading file...",
+    fileUploaded: "File uploaded",
+    analyzingDocument: "Analyzing document...",
+    removeFile: "Remove file",
+    speakResponse: "Speak Response",
+    stopSpeaking: "Stop Speaking"
   }
 };
 
@@ -278,6 +312,11 @@ export default function Home() {
   const [showSamples, setShowSamples] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [uploadedFile, setUploadedFile] = useState<UploadedFile | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { user, isAuthenticated, logout } = useAuth();
@@ -301,6 +340,37 @@ export default function Home() {
   });
   
   const saveConversationMutation = trpc.chat.saveConversation.useMutation();
+  
+  const uploadDocumentMutation = trpc.chat.uploadDocument.useMutation({
+    onSuccess: (data) => {
+      if (data.status === 'success') {
+        setUploadedFile({
+          url: data.url,
+          fileName: data.fileName,
+          fileType: data.fileType
+        });
+        toast.success(text.fileUploaded);
+      } else {
+        toast.error(language === 'arabic' ? 'فشل رفع الملف' : 'File upload failed');
+      }
+      setIsUploading(false);
+    },
+    onError: () => {
+      toast.error(language === 'arabic' ? 'فشل رفع الملف' : 'File upload failed');
+      setIsUploading(false);
+    }
+  });
+  
+  const analyzeDocumentMutation = trpc.chat.analyzeDocument.useMutation({
+    onSuccess: (data) => {
+      if (data.status === 'success') {
+        const analysisContent = typeof data.analysis === 'string' ? data.analysis : String(data.analysis);
+        setMessages(prev => [...prev, { role: 'assistant', content: analysisContent }]);
+      } else {
+        toast.error(language === 'arabic' ? 'فشل تحليل المستند' : 'Document analysis failed');
+      }
+    }
+  });
   
   const { data: samples } = trpc.chat.getSamples.useQuery({ 
     language,
@@ -330,18 +400,125 @@ export default function Home() {
   }, [messages.length]);
   
   const handleSend = async () => {
-    if (!input.trim() || chatMutation.isPending) return;
+    if ((!input.trim() && !uploadedFile) || chatMutation.isPending || analyzeDocumentMutation.isPending) return;
     
     const userMessage = input.trim();
     setInput("");
-    setMessages(prev => [...prev, { role: "user", content: userMessage }]);
     
-    chatMutation.mutate({
-      message: userMessage,
-      language,
-      feature,
-      history: messages
-    });
+    // If there's an uploaded file, analyze it with the AI
+    if (uploadedFile) {
+      const messageWithAttachment: Message = {
+        role: "user",
+        content: userMessage || (language === 'arabic' ? 'تحليل المستند المرفق' : 'Analyze attached document'),
+        attachment: uploadedFile
+      };
+      setMessages(prev => [...prev, messageWithAttachment]);
+      
+      analyzeDocumentMutation.mutate({
+        documentUrl: uploadedFile.url,
+        documentType: uploadedFile.fileType,
+        language,
+        additionalContext: userMessage || undefined
+      });
+      
+      setUploadedFile(null);
+    } else {
+      setMessages(prev => [...prev, { role: "user", content: userMessage }]);
+      
+      chatMutation.mutate({
+        message: userMessage,
+        language,
+        feature,
+        history: messages
+      });
+    }
+  };
+  
+  // File upload handling
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    if (!isAuthenticated) {
+      toast.error(text.loginRequired);
+      return;
+    }
+    
+    // Check file type
+    const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png', 'image/jpg', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error(language === 'arabic' ? 'نوع الملف غير مدعوم. يرجى رفع PDF أو صورة' : 'File type not supported. Please upload PDF or image');
+      return;
+    }
+    
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error(language === 'arabic' ? 'حجم الملف كبير جداً. الحد الأقصى 10MB' : 'File too large. Max size is 10MB');
+      return;
+    }
+    
+    setIsUploading(true);
+    
+    // Read file as base64
+    const reader = new FileReader();
+    reader.onload = async () => {
+      const base64 = (reader.result as string).split(',')[1];
+      
+      uploadDocumentMutation.mutate({
+        fileName: file.name,
+        fileType: file.type,
+        fileData: base64,
+        language
+      });
+    };
+    reader.readAsDataURL(file);
+    
+    // Reset file input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+  
+  const removeUploadedFile = () => {
+    setUploadedFile(null);
+  };
+  
+  // Text-to-speech handling
+  const speakText = (text: string, messageIndex: number) => {
+    if ('speechSynthesis' in window) {
+      // Stop any current speech
+      window.speechSynthesis.cancel();
+      
+      if (isSpeaking && speakingMessageIndex === messageIndex) {
+        setIsSpeaking(false);
+        setSpeakingMessageIndex(null);
+        return;
+      }
+      
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = language === 'arabic' ? 'ar-SA' : 'en-US';
+      utterance.rate = 0.9;
+      
+      utterance.onstart = () => {
+        setIsSpeaking(true);
+        setSpeakingMessageIndex(messageIndex);
+      };
+      
+      utterance.onend = () => {
+        setIsSpeaking(false);
+        setSpeakingMessageIndex(null);
+      };
+      
+      utterance.onerror = () => {
+        setIsSpeaking(false);
+        setSpeakingMessageIndex(null);
+        toast.error(language === 'arabic' ? 'فشل تشغيل الصوت' : 'Speech playback failed');
+      };
+      
+      window.speechSynthesis.speak(utterance);
+    } else {
+      toast.error(language === 'arabic' ? 'المتصفح لا يدعم النطق' : 'Browser does not support speech');
+    }
   };
   
   const handlePreset = (query: string) => {
@@ -597,6 +774,12 @@ export default function Home() {
                 {text.comparativeAnalysis}
               </button>
             </Link>
+            <Link href="/case-law">
+              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
+                <Scale className="w-3 h-3" />
+                {text.caseLaw}
+              </button>
+            </Link>
             <Link href="/analytics">
               <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                 <BarChart3 className="w-3 h-3" />
@@ -747,6 +930,27 @@ export default function Home() {
                       : ""
                   }`}
                 >
+                  {/* Show attachment preview for user messages */}
+                  {msg.attachment && (
+                    <div className="mb-3 p-2 rounded-lg bg-black/20 border border-primary/20">
+                      <div className="flex items-center gap-2">
+                        {msg.attachment.fileType.startsWith('image/') ? (
+                          <Image className="w-4 h-4 text-primary" />
+                        ) : (
+                          <FileText className="w-4 h-4 text-primary" />
+                        )}
+                        <span className="text-sm text-primary truncate">{msg.attachment.fileName}</span>
+                      </div>
+                      {msg.attachment.fileType.startsWith('image/') && (
+                        <img 
+                          src={msg.attachment.url} 
+                          alt={msg.attachment.fileName}
+                          className="mt-2 max-h-48 rounded-lg object-contain"
+                        />
+                      )}
+                    </div>
+                  )}
+                  
                   {msg.role === "assistant" && feature === "complaints" && (
                     <div className="mb-2">
                       {getRiskBadge(msg.content, language)}
@@ -755,6 +959,24 @@ export default function Home() {
                   <div className="prose prose-invert prose-sm max-w-none">
                     <Streamdown>{msg.content}</Streamdown>
                   </div>
+                  
+                  {/* Speaker button for assistant messages */}
+                  {msg.role === "assistant" && (
+                    <div className="mt-3 pt-2 border-t border-primary/10">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => speakText(msg.content, idx)}
+                        className="text-xs text-muted-foreground hover:text-primary"
+                      >
+                        {isSpeaking && speakingMessageIndex === idx ? (
+                          <><VolumeX className="w-3 h-3 mr-1" /> {text.stopSpeaking}</>
+                        ) : (
+                          <><Volume2 className="w-3 h-3 mr-1" /> {text.speakResponse}</>
+                        )}
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             ))
@@ -776,6 +998,36 @@ export default function Home() {
         
         {/* Input Area */}
         <div className="sticky bottom-0 pt-4 border-t border-white/10" style={{ background: 'rgba(7,7,8,.95)', backdropFilter: 'blur(10px)' }}>
+          {/* Uploaded file preview */}
+          {uploadedFile && (
+            <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                {uploadedFile.fileType.startsWith('image/') ? (
+                  <Image className="w-5 h-5 text-primary" />
+                ) : (
+                  <FileText className="w-5 h-5 text-primary" />
+                )}
+                <span className="text-sm text-primary truncate max-w-[200px]">{uploadedFile.fileName}</span>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={removeUploadedFile}
+                className="text-red-400 hover:text-red-300 hover:bg-red-500/10"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          
+          {/* Uploading indicator */}
+          {isUploading && (
+            <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-center gap-3">
+              <Loader2 className="w-5 h-5 text-primary animate-spin" />
+              <span className="text-sm text-primary">{text.uploadingFile}</span>
+            </div>
+          )}
+          
           <div className="flex gap-2">
             <Textarea
               value={input}
@@ -786,6 +1038,26 @@ export default function Home() {
               dir={isRTL ? "rtl" : "ltr"}
             />
             <div className="flex flex-col gap-2">
+              {/* File upload button */}
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileSelect}
+                accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*"
+                className="hidden"
+              />
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isUploading || !!uploadedFile}
+                className={`h-[30px] px-3 rounded-xl ruzn-btn disabled:opacity-50`}
+                title={text.attachFile}
+              >
+                {isUploading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Paperclip className="w-4 h-4" />
+                )}
+              </button>
               <button
                 onClick={toggleRecording}
                 className={`h-[30px] px-3 rounded-xl ${isRecording ? 'ruzn-tag-high animate-pulse' : 'ruzn-btn'}`}
@@ -799,10 +1071,10 @@ export default function Home() {
               </button>
               <button
                 onClick={handleSend}
-                disabled={!input.trim() || chatMutation.isPending}
+                disabled={(!input.trim() && !uploadedFile) || chatMutation.isPending || analyzeDocumentMutation.isPending}
                 className="h-[30px] px-3 rounded-xl ruzn-btn-gold disabled:opacity-50"
               >
-                {chatMutation.isPending ? (
+                {(chatMutation.isPending || analyzeDocumentMutation.isPending) ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
@@ -814,6 +1086,12 @@ export default function Home() {
             <div className="flex items-center gap-2 mt-2 text-red-400 text-sm">
               <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
               {text.recording}
+            </div>
+          )}
+          {analyzeDocumentMutation.isPending && (
+            <div className="flex items-center gap-2 mt-2 text-primary text-sm">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              {text.analyzingDocument}
             </div>
           )}
         </div>

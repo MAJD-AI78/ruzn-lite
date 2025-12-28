@@ -13,9 +13,12 @@ import {
   getDashboardStats, generateWeeklyReport, getWeeklyReports,
   getHistoricalStats, getHistoricalComplaintsByEntityData,
   getHistoricalComplaintsByCategoryData, getHistoricalConvictionsData,
-  getAvailableMetrics, getAvailableYears
+  getAvailableMetrics, getAvailableYears,
+  searchCaseLaw, getCaseLawById, getCaseLawStats, seedCaseLawDatabase,
+  seedHistoricalData
 } from "./db";
-import { sendWeeklyReportToRecipients, getReportHtml, getReportText } from "./scheduledReports";
+import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshStatus, recordRefresh, updateRefreshConfig } from "./scheduledReports";
+import { storagePut } from "./storage";
 
 // System prompts for Ruzn-Lite OSAI - Enhanced with OSAI Knowledge Base
 const SYSTEM_PROMPTS = {
@@ -477,6 +480,134 @@ export const appRouter = router({
             status: 'error' as const
           };
         }
+      }),
+
+    // Document upload endpoint
+    uploadDocument: protectedProcedure
+      .input(z.object({
+        fileName: z.string(),
+        fileType: z.string(),
+        fileData: z.string(), // Base64 encoded file data
+        language: z.enum(['arabic', 'english']).optional().default('arabic')
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { fileName, fileType, fileData, language } = input;
+        
+        try {
+          // Decode base64 file data
+          const buffer = Buffer.from(fileData, 'base64');
+          
+          // Generate unique file key
+          const timestamp = Date.now();
+          const randomSuffix = Math.random().toString(36).substring(2, 8);
+          const fileKey = `complaints/${ctx.user.id}/${timestamp}-${randomSuffix}-${fileName}`;
+          
+          // Upload to S3
+          const { url } = await storagePut(fileKey, buffer, fileType);
+          
+          // Log upload event
+          await logAnalyticsEvent({
+            userId: ctx.user.id,
+            eventType: 'document_upload',
+            feature: 'complaints',
+            language,
+            metadata: JSON.stringify({ fileName, fileType, fileKey })
+          });
+          
+          return {
+            url,
+            fileKey,
+            fileName,
+            fileType,
+            status: 'success' as const
+          };
+        } catch (error) {
+          console.error('Document Upload Error:', error);
+          return {
+            url: '',
+            fileKey: '',
+            fileName,
+            fileType,
+            status: 'error' as const
+          };
+        }
+      }),
+
+    // Analyze uploaded document with AI
+    analyzeDocument: protectedProcedure
+      .input(z.object({
+        documentUrl: z.string().url(),
+        documentType: z.string(),
+        language: z.enum(['arabic', 'english']).optional().default('arabic'),
+        additionalContext: z.string().optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const { documentUrl, documentType, language, additionalContext } = input;
+        
+        const systemPrompt = language === 'arabic' 
+          ? SYSTEM_PROMPTS.complaints.arabic 
+          : SYSTEM_PROMPTS.complaints.english;
+        
+        const userPrompt = language === 'arabic'
+          ? `قم بتحليل هذا المستند المرفق وتصنيف أي شكوى أو مخالفة محتملة فيه.${additionalContext ? `\n\nسياق إضافي: ${additionalContext}` : ''}`
+          : `Analyze this attached document and classify any potential complaint or violation in it.${additionalContext ? `\n\nAdditional context: ${additionalContext}` : ''}`;
+        
+        try {
+          // Determine content type for LLM
+          const isImage = documentType.startsWith('image/');
+          const isPdf = documentType === 'application/pdf';
+          
+          let messages: any[] = [
+            { role: 'system', content: systemPrompt }
+          ];
+          
+          if (isImage) {
+            messages.push({
+              role: 'user',
+              content: [
+                { type: 'text', text: userPrompt },
+                { type: 'image_url', image_url: { url: documentUrl, detail: 'high' } }
+              ]
+            });
+          } else if (isPdf) {
+            messages.push({
+              role: 'user',
+              content: [
+                { type: 'text', text: userPrompt },
+                { type: 'file_url', file_url: { url: documentUrl, mime_type: 'application/pdf' } }
+              ]
+            });
+          } else {
+            // For other file types, just mention the URL
+            messages.push({
+              role: 'user',
+              content: `${userPrompt}\n\nDocument URL: ${documentUrl}`
+            });
+          }
+          
+          const response = await invokeLLM({ messages });
+          const assistantMessage = response.choices[0]?.message?.content || '';
+          
+          // Log analysis event
+          await logAnalyticsEvent({
+            userId: ctx.user.id,
+            eventType: 'document_analysis',
+            feature: 'complaints',
+            language,
+            metadata: JSON.stringify({ documentType })
+          });
+          
+          return {
+            analysis: assistantMessage,
+            status: 'success' as const
+          };
+        } catch (error) {
+          console.error('Document Analysis Error:', error);
+          return {
+            analysis: '',
+            status: 'error' as const
+          };
+        }
       })
   }),
 
@@ -654,6 +785,39 @@ export const appRouter = router({
         
         const html = getReportHtml(reports[0]);
         return { html };
+      }),
+
+    // Get auto-refresh status
+    getRefreshStatus: publicProcedure.query(() => {
+      return getRefreshStatus();
+    }),
+
+    // Update refresh configuration (admin only)
+    updateRefreshConfig: protectedProcedure
+      .input(z.object({
+        enabled: z.boolean().optional(),
+        intervalHours: z.number().min(1).max(720).optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          return { success: false, error: 'Unauthorized' };
+        }
+        const config = updateRefreshConfig(input);
+        return { success: true, config };
+      }),
+
+    // Trigger manual data refresh (admin only)
+    triggerRefresh: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          return { success: false, error: 'Unauthorized' };
+        }
+        // Seed historical data and record refresh
+        const seedResult = await seedHistoricalData();
+        if (seedResult.success) {
+          recordRefresh();
+        }
+        return seedResult;
       })
   }),
 
@@ -716,7 +880,85 @@ export const appRouter = router({
       .query(async ({ input }) => {
         const data = await getHistoricalConvictionsData(input?.years);
         return data;
+      }),
+
+    // Seed historical data (admin only)
+    seedData: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          return { success: false, message: 'Unauthorized' };
+        }
+        const result = await seedHistoricalData();
+        return result;
       })
+  }),
+
+  // Case Law Database Router
+  caseLaw: router({
+    // Search case law
+    search: publicProcedure
+      .input(z.object({
+        query: z.string().optional(),
+        year: z.number().optional(),
+        violationType: z.string().optional(),
+        entityType: z.string().optional(),
+        outcome: z.string().optional(),
+        limit: z.number().optional(),
+        offset: z.number().optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const result = await searchCaseLaw(input || {});
+        return result;
+      }),
+
+    // Get case by ID
+    getById: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input }) => {
+        const caseData = await getCaseLawById(input.id);
+        return caseData;
+      }),
+
+    // Get case law statistics
+    getStats: publicProcedure.query(async () => {
+      const stats = await getCaseLawStats();
+      return stats;
+    }),
+
+    // Seed case law database (admin only)
+    seedDatabase: protectedProcedure
+      .mutation(async ({ ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          return { success: false, count: 0, error: 'Unauthorized' };
+        }
+        const result = await seedCaseLawDatabase();
+        return result;
+      }),
+
+    // Get violation types for filtering
+    getViolationTypes: publicProcedure.query(() => {
+      return [
+        { value: 'embezzlement', labelEn: 'Embezzlement', labelAr: 'اختلاس' },
+        { value: 'bribery', labelEn: 'Bribery', labelAr: 'رشوة' },
+        { value: 'conflict_of_interest', labelEn: 'Conflict of Interest', labelAr: 'تضارب المصالح' },
+        { value: 'abuse_of_power', labelEn: 'Abuse of Power', labelAr: 'إساءة استخدام السلطة' },
+        { value: 'forgery', labelEn: 'Forgery', labelAr: 'تزوير' },
+        { value: 'tender_violation', labelEn: 'Tender Violation', labelAr: 'مخالفة قانون المناقصات' },
+        { value: 'administrative_negligence', labelEn: 'Administrative Negligence', labelAr: 'إهمال إداري' },
+        { value: 'other', labelEn: 'Other', labelAr: 'أخرى' }
+      ];
+    }),
+
+    // Get entity types for filtering
+    getEntityTypes: publicProcedure.query(() => {
+      return [
+        { value: 'ministry', labelEn: 'Ministry', labelAr: 'وزارة' },
+        { value: 'government_company', labelEn: 'Government Company', labelAr: 'شركة حكومية' },
+        { value: 'municipality', labelEn: 'Municipality', labelAr: 'بلدية' },
+        { value: 'public_authority', labelEn: 'Public Authority', labelAr: 'هيئة عامة' },
+        { value: 'other', labelEn: 'Other', labelAr: 'أخرى' }
+      ];
+    })
   })
 });
 

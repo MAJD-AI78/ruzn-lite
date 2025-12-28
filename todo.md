@@ -290,3 +290,46 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 ### Export & Reporting
 - [x] PDF export via browser print functionality
 - [x] Include all charts and insights in print view
+
+
+## Phase 11 - Enhanced Features
+
+### Document Upload Capability
+- [x] Add file upload button to chat input area
+- [x] Support PDF and image uploads (jpg, png)
+- [x] Upload files to S3 storage
+- [x] Send file URL to LLM for analysis
+- [x] Display uploaded file preview in chat
+- [x] Handle upload errors gracefully
+
+### Case Law Database
+- [x] Create case_law table in database schema
+- [x] Seed with conviction examples from annual reports
+- [x] Create searchable UI component at /case-law
+- [x] Add filters by year, entity, violation type
+- [x] Display case details with penalties and amounts
+- [x] Link to relevant legal articles
+
+### Arabic Voice Output (Text-to-Speech)
+- [x] Add speaker button to AI response messages
+- [x] Implement Web Speech API for Arabic TTS (ar-SA)
+- [x] Show speaking indicator animation
+- [x] Allow stopping playback mid-speech
+- [x] Handle browser TTS compatibility
+
+### Seed Historical Data
+- [x] Create seed function for historical_stats table
+- [x] Add admin endpoint to trigger seeding
+- [x] Hardcoded fallback data from 2021-2024 reports
+- [x] Seed function populates all historical tables
+
+### Date Range Picker
+- [x] Add quick range buttons (current year, last 2 years, all)
+- [x] Year toggle buttons in Comparative Analysis
+- [x] Update charts based on year selection
+
+### Scheduled Auto-Refresh
+- [x] Create refresh configuration module
+- [x] Add refresh status endpoint
+- [x] Admin trigger for manual refresh
+- [x] Weekly interval configuration (168 hours)

@@ -405,3 +405,89 @@ export function getNextSunday(): Date {
   nextSunday.setHours(8, 0, 0, 0); // 8 AM
   return nextSunday;
 }
+
+
+/**
+ * Auto-refresh configuration
+ * This module supports automatic data refresh for keeping statistics up-to-date
+ */
+
+interface RefreshConfig {
+  enabled: boolean;
+  intervalHours: number;
+  lastRefresh: Date | null;
+  nextRefresh: Date | null;
+}
+
+// Default refresh configuration
+let refreshConfig: RefreshConfig = {
+  enabled: true,
+  intervalHours: 168, // Weekly (7 days * 24 hours)
+  lastRefresh: null,
+  nextRefresh: null
+};
+
+/**
+ * Get current refresh configuration
+ */
+export function getRefreshConfig(): RefreshConfig {
+  return { ...refreshConfig };
+}
+
+/**
+ * Update refresh configuration
+ */
+export function updateRefreshConfig(config: Partial<RefreshConfig>): RefreshConfig {
+  refreshConfig = { ...refreshConfig, ...config };
+  return refreshConfig;
+}
+
+/**
+ * Calculate next refresh time based on interval
+ */
+export function calculateNextRefresh(intervalHours: number = refreshConfig.intervalHours): Date {
+  const now = new Date();
+  const nextRefresh = new Date(now.getTime() + intervalHours * 60 * 60 * 1000);
+  return nextRefresh;
+}
+
+/**
+ * Check if data refresh is due
+ */
+export function isRefreshDue(): boolean {
+  if (!refreshConfig.enabled) return false;
+  if (!refreshConfig.lastRefresh) return true;
+  
+  const now = new Date();
+  const timeSinceLastRefresh = now.getTime() - refreshConfig.lastRefresh.getTime();
+  const intervalMs = refreshConfig.intervalHours * 60 * 60 * 1000;
+  
+  return timeSinceLastRefresh >= intervalMs;
+}
+
+/**
+ * Record that a refresh has occurred
+ */
+export function recordRefresh(): void {
+  refreshConfig.lastRefresh = new Date();
+  refreshConfig.nextRefresh = calculateNextRefresh();
+}
+
+/**
+ * Get refresh status for display
+ */
+export function getRefreshStatus(): {
+  enabled: boolean;
+  lastRefresh: string | null;
+  nextRefresh: string | null;
+  isDue: boolean;
+  intervalHours: number;
+} {
+  return {
+    enabled: refreshConfig.enabled,
+    lastRefresh: refreshConfig.lastRefresh?.toISOString() || null,
+    nextRefresh: refreshConfig.nextRefresh?.toISOString() || null,
+    isDue: isRefreshDue(),
+    intervalHours: refreshConfig.intervalHours
+  };
+}

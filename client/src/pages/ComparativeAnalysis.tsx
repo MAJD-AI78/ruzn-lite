@@ -509,7 +509,7 @@ export default function ComparativeAnalysis() {
             {/* Year Selection */}
             <div>
               <label className="block text-sm text-[#d6b36a] mb-2">{UI_TEXT.selectYears}</label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 flex-wrap">
                 {(availableYears || [2021, 2022, 2023, 2024]).map((year: number) => (
                   <button
                     key={year}
@@ -523,6 +523,27 @@ export default function ComparativeAnalysis() {
                     {year}
                   </button>
                 ))}
+              </div>
+              {/* Quick Range Buttons */}
+              <div className="flex gap-2 mt-2">
+                <button
+                  onClick={() => setSelectedYears([2024])}
+                  className="px-2 py-1 rounded text-xs bg-[#1a1a1c] text-gray-400 hover:bg-[#2a2a2c]"
+                >
+                  السنة الحالية
+                </button>
+                <button
+                  onClick={() => setSelectedYears([2023, 2024])}
+                  className="px-2 py-1 rounded text-xs bg-[#1a1a1c] text-gray-400 hover:bg-[#2a2a2c]"
+                >
+                  آخر سنتين
+                </button>
+                <button
+                  onClick={() => setSelectedYears([2021, 2022, 2023, 2024])}
+                  className="px-2 py-1 rounded text-xs bg-[#1a1a1c] text-gray-400 hover:bg-[#2a2a2c]"
+                >
+                  كل السنوات
+                </button>
               </div>
             </div>
 

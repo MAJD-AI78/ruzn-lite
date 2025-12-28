@@ -8,7 +8,8 @@ import {
   statusHistory, InsertStatusHistory, weeklyReports, InsertWeeklyReport,
   historicalStats, InsertHistoricalStat, historicalComplaintsByEntity,
   InsertHistoricalComplaintsByEntity, historicalComplaintsByCategory,
-  InsertHistoricalComplaintsByCategory, historicalConvictions, InsertHistoricalConviction
+  InsertHistoricalComplaintsByCategory, historicalConvictions, InsertHistoricalConviction,
+  caseLaw, InsertCaseLaw
 } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
@@ -1202,4 +1203,543 @@ export function getAvailableMetrics() {
 // Get available years for comparison
 export function getAvailableYears() {
   return [2021, 2022, 2023, 2024];
+}
+
+
+// ============================================
+// CASE LAW DATABASE FUNCTIONS
+// ============================================
+
+// Search case law by various criteria
+export async function searchCaseLaw(params: {
+  query?: string;
+  year?: number;
+  violationType?: string;
+  entityType?: string;
+  outcome?: string;
+  limit?: number;
+  offset?: number;
+}) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot search case law: database not available");
+    return { cases: [], total: 0 };
+  }
+  
+  try {
+    const conditions = [];
+    
+    if (params.year) {
+      conditions.push(eq(caseLaw.year, params.year));
+    }
+    
+    if (params.violationType) {
+      conditions.push(eq(caseLaw.violationType, params.violationType as any));
+    }
+    
+    if (params.entityType) {
+      conditions.push(eq(caseLaw.entityType, params.entityType as any));
+    }
+    
+    if (params.outcome) {
+      conditions.push(eq(caseLaw.outcome, params.outcome as any));
+    }
+    
+    // For text search, we'll use LIKE on multiple fields
+    if (params.query) {
+      const searchPattern = `%${params.query}%`;
+      conditions.push(
+        sql`(${caseLaw.entityNameEnglish} LIKE ${searchPattern} 
+          OR ${caseLaw.entityNameArabic} LIKE ${searchPattern}
+          OR ${caseLaw.summaryEnglish} LIKE ${searchPattern}
+          OR ${caseLaw.summaryArabic} LIKE ${searchPattern}
+          OR ${caseLaw.accusedPosition} LIKE ${searchPattern}
+          OR ${caseLaw.violationTypeEnglish} LIKE ${searchPattern}
+          OR ${caseLaw.violationTypeArabic} LIKE ${searchPattern})`
+      );
+    }
+    
+    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+    
+    // Get total count
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(caseLaw)
+      .where(whereClause);
+    
+    const total = Number(countResult[0]?.count || 0);
+    
+    // Get paginated results
+    const limit = params.limit || 20;
+    const offset = params.offset || 0;
+    
+    let query = db
+      .select()
+      .from(caseLaw)
+      .where(whereClause)
+      .orderBy(desc(caseLaw.year), desc(caseLaw.amountInvolved))
+      .limit(limit)
+      .offset(offset);
+    
+    const cases = await query;
+    
+    return { cases, total };
+  } catch (error) {
+    console.error("[Database] Error searching case law:", error);
+    return { cases: [], total: 0 };
+  }
+}
+
+// Get case law by ID
+export async function getCaseLawById(id: number) {
+  const db = await getDb();
+  if (!db) return null;
+  
+  try {
+    const result = await db.select().from(caseLaw).where(eq(caseLaw.id, id)).limit(1);
+    return result[0] || null;
+  } catch (error) {
+    console.error("[Database] Error getting case law by ID:", error);
+    return null;
+  }
+}
+
+// Get case law statistics
+export async function getCaseLawStats() {
+  const db = await getDb();
+  if (!db) {
+    return {
+      totalCases: 0,
+      totalAmountInvolved: 0,
+      totalAmountRecovered: 0,
+      totalFines: 0,
+      avgSentenceYears: 0,
+      byViolationType: [],
+      byYear: [],
+      byOutcome: []
+    };
+  }
+  
+  try {
+    // Total cases
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(caseLaw);
+    const totalCases = Number(totalResult[0]?.count || 0);
+    
+    // Aggregate amounts
+    const amountsResult = await db
+      .select({
+        totalInvolved: sql<number>`COALESCE(SUM(amountInvolved), 0)`,
+        totalRecovered: sql<number>`COALESCE(SUM(amountRecovered), 0)`,
+        totalFines: sql<number>`COALESCE(SUM(fineOMR), 0)`,
+        avgSentence: sql<number>`COALESCE(AVG(sentenceYears + sentenceMonths/12), 0)`
+      })
+      .from(caseLaw);
+    
+    // By violation type
+    const byViolationType = await db
+      .select({
+        type: caseLaw.violationType,
+        count: sql<number>`count(*)`
+      })
+      .from(caseLaw)
+      .groupBy(caseLaw.violationType);
+    
+    // By year
+    const byYear = await db
+      .select({
+        year: caseLaw.year,
+        count: sql<number>`count(*)`
+      })
+      .from(caseLaw)
+      .groupBy(caseLaw.year)
+      .orderBy(caseLaw.year);
+    
+    // By outcome
+    const byOutcome = await db
+      .select({
+        outcome: caseLaw.outcome,
+        count: sql<number>`count(*)`
+      })
+      .from(caseLaw)
+      .groupBy(caseLaw.outcome);
+    
+    return {
+      totalCases,
+      totalAmountInvolved: Number(amountsResult[0]?.totalInvolved || 0),
+      totalAmountRecovered: Number(amountsResult[0]?.totalRecovered || 0),
+      totalFines: Number(amountsResult[0]?.totalFines || 0),
+      avgSentenceYears: Number(amountsResult[0]?.avgSentence || 0),
+      byViolationType: byViolationType.map(v => ({ type: v.type, count: Number(v.count) })),
+      byYear: byYear.map(y => ({ year: y.year, count: Number(y.count) })),
+      byOutcome: byOutcome.map(o => ({ outcome: o.outcome, count: Number(o.count) }))
+    };
+  } catch (error) {
+    console.error("[Database] Error getting case law stats:", error);
+    return {
+      totalCases: 0,
+      totalAmountInvolved: 0,
+      totalAmountRecovered: 0,
+      totalFines: 0,
+      avgSentenceYears: 0,
+      byViolationType: [],
+      byYear: [],
+      byOutcome: []
+    };
+  }
+}
+
+// Add new case law entry
+export async function addCaseLaw(data: InsertCaseLaw) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot add case law: database not available");
+    return null;
+  }
+  
+  try {
+    const result = await db.insert(caseLaw).values(data);
+    return result;
+  } catch (error) {
+    console.error("[Database] Error adding case law:", error);
+    return null;
+  }
+}
+
+// Seed case law database with historical data
+export async function seedCaseLawDatabase() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot seed case law: database not available");
+    return { success: false, count: 0 };
+  }
+  
+  const caseLawData: InsertCaseLaw[] = [
+    // 2021 Cases
+    {
+      year: 2021,
+      entityNameEnglish: "Oman Telecommunications Company",
+      entityNameArabic: "شركة عمان للاتصالات",
+      entityType: "government_company",
+      violationType: "embezzlement",
+      violationTypeEnglish: "Embezzlement of Public Funds",
+      violationTypeArabic: "اختلاس أموال عامة",
+      accusedPosition: "Finance Manager",
+      accusedPositionArabic: "مدير مالي",
+      legalArticles: JSON.stringify(["Article 7 - RD 112/2011", "Article 4 - RD 111/2011"]),
+      sentenceYears: 5,
+      sentenceMonths: 0,
+      fineOMR: 50000,
+      amountInvolved: 320000,
+      amountRecovered: 280000,
+      additionalPenalties: JSON.stringify(["Removal from office", "Travel ban"]),
+      summaryEnglish: "Finance manager convicted of embezzling OMR 320,000 through fraudulent invoices",
+      summaryArabic: "إدانة مدير مالي باختلاس 320,000 ريال عماني عبر فواتير مزورة",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2021"
+    },
+    {
+      year: 2021,
+      entityNameEnglish: "Ministry of Health",
+      entityNameArabic: "وزارة الصحة",
+      entityType: "ministry",
+      violationType: "tender_violation",
+      violationTypeEnglish: "Tender Law Violation",
+      violationTypeArabic: "مخالفة قانون المناقصات",
+      accusedPosition: "Procurement Director",
+      accusedPositionArabic: "مدير المشتريات",
+      legalArticles: JSON.stringify(["Article 12 - Tender Law", "Article 5 - RD 112/2011"]),
+      sentenceYears: 3,
+      sentenceMonths: 6,
+      fineOMR: 25000,
+      amountInvolved: 150000,
+      amountRecovered: 150000,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Procurement director convicted of awarding contracts to family-owned company",
+      summaryArabic: "إدانة مدير مشتريات بمنح عقود لشركة مملوكة لعائلته",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2021"
+    },
+    // 2022 Cases
+    {
+      year: 2022,
+      entityNameEnglish: "Government Company",
+      entityNameArabic: "شركة حكومية",
+      entityType: "government_company",
+      violationType: "bribery",
+      violationTypeEnglish: "Money Laundering and Bribery",
+      violationTypeArabic: "غسيل أموال ورشوة",
+      accusedPosition: "Director",
+      accusedPositionArabic: "مدير",
+      legalArticles: JSON.stringify(["Article 7 - RD 112/2011", "Anti-Money Laundering Law"]),
+      sentenceYears: 12,
+      sentenceMonths: 0,
+      fineOMR: 100000,
+      amountInvolved: 500000,
+      amountRecovered: 350000,
+      additionalPenalties: JSON.stringify(["Permanent deportation", "Asset confiscation"]),
+      summaryEnglish: "Director convicted of money laundering involving OMR 500,000",
+      summaryArabic: "إدانة مدير بغسيل أموال بقيمة 500,000 ريال عماني",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2022"
+    },
+    {
+      year: 2022,
+      entityNameEnglish: "Ministry",
+      entityNameArabic: "وزارة",
+      entityType: "ministry",
+      violationType: "embezzlement",
+      violationTypeEnglish: "Embezzlement",
+      violationTypeArabic: "اختلاس",
+      accusedPosition: "Employee",
+      accusedPositionArabic: "موظف",
+      legalArticles: JSON.stringify(["Article 7 - RD 112/2011"]),
+      sentenceYears: 5,
+      sentenceMonths: 0,
+      fineOMR: 50000,
+      amountInvolved: 8299,
+      amountRecovered: 8299,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Ministry employee convicted of embezzling OMR 8,299",
+      summaryArabic: "إدانة موظف وزارة باختلاس 8,299 ريال عماني",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2022"
+    },
+    {
+      year: 2022,
+      entityNameEnglish: "Ministry",
+      entityNameArabic: "وزارة",
+      entityType: "ministry",
+      violationType: "forgery",
+      violationTypeEnglish: "Forgery and Embezzlement",
+      violationTypeArabic: "تزوير واختلاس",
+      accusedPosition: "Female Employee",
+      accusedPositionArabic: "موظفة",
+      legalArticles: JSON.stringify(["Article 7 - RD 112/2011", "Forgery Articles"]),
+      sentenceYears: 3,
+      sentenceMonths: 0,
+      fineOMR: 0,
+      amountInvolved: 4146,
+      amountRecovered: 4146,
+      additionalPenalties: JSON.stringify(["Removal from office", "Deportation"]),
+      summaryEnglish: "Female employee convicted of forgery, embezzled OMR 4,146",
+      summaryArabic: "إدانة موظفة بالتزوير واختلاس 4,146 ريال عماني",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2022"
+    },
+    // 2023 Cases
+    {
+      year: 2023,
+      entityNameEnglish: "Oman Fisheries Company",
+      entityNameArabic: "شركة عمان للأسماك",
+      entityType: "government_company",
+      violationType: "bribery",
+      violationTypeEnglish: "Money Laundering, Bribery, Misuse of Position",
+      violationTypeArabic: "غسيل أموال، رشوة، إساءة استخدام المنصب",
+      accusedPosition: "Marketing and Sales Manager",
+      accusedPositionArabic: "مدير التسويق والمبيعات",
+      legalArticles: JSON.stringify(["Article 7 - RD 112/2011", "Article 4 - RD 111/2011", "Anti-Money Laundering Law"]),
+      sentenceYears: 10,
+      sentenceMonths: 0,
+      fineOMR: 51700,
+      amountInvolved: 19503,
+      amountRecovered: 15000,
+      additionalPenalties: JSON.stringify(["Permanent deportation", "Removal from office", "Confiscation of funds"]),
+      summaryEnglish: "Manager convicted of accepting bribes (USD 5,400 + USD 794), money laundering (USD 6,194), and misuse of position",
+      summaryArabic: "إدانة مدير بقبول رشاوى وغسيل أموال وإساءة استخدام المنصب",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2023"
+    },
+    {
+      year: 2023,
+      entityNameEnglish: "Muscat Municipality",
+      entityNameArabic: "بلدية مسقط",
+      entityType: "municipality",
+      violationType: "abuse_of_power",
+      violationTypeEnglish: "Abuse of Power",
+      violationTypeArabic: "إساءة استخدام السلطة",
+      accusedPosition: "Department Head",
+      accusedPositionArabic: "رئيس قسم",
+      legalArticles: JSON.stringify(["Article 4 - RD 111/2011"]),
+      sentenceYears: 2,
+      sentenceMonths: 0,
+      fineOMR: 15000,
+      amountInvolved: 0,
+      amountRecovered: 0,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Department head convicted of abuse of power in permit approvals",
+      summaryArabic: "إدانة رئيس قسم بإساءة استخدام السلطة في منح التصاريح",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2023"
+    },
+    // 2024 Cases
+    {
+      year: 2024,
+      entityNameEnglish: "Environment Authority",
+      entityNameArabic: "هيئة البيئة",
+      entityType: "public_authority",
+      violationType: "embezzlement",
+      violationTypeEnglish: "Embezzlement of Public Funds",
+      violationTypeArabic: "اختلاس أموال عامة",
+      accusedPosition: "Director",
+      accusedPositionArabic: "مدير",
+      legalArticles: JSON.stringify(["Article 7 - RD 112/2011", "Article 4 - RD 111/2011"]),
+      sentenceYears: 7,
+      sentenceMonths: 0,
+      fineOMR: 150000,
+      amountInvolved: 2300000,
+      amountRecovered: 1800000,
+      additionalPenalties: JSON.stringify(["Removal from office", "Asset confiscation"]),
+      summaryEnglish: "Director convicted of embezzling OMR 2.3 million from Environment Authority",
+      summaryArabic: "إدانة مدير باختلاس 2.3 مليون ريال من هيئة البيئة",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2024"
+    },
+    {
+      year: 2024,
+      entityNameEnglish: "Oman Investment Authority",
+      entityNameArabic: "جهاز الاستثمار العماني",
+      entityType: "public_authority",
+      violationType: "conflict_of_interest",
+      violationTypeEnglish: "Conflict of Interest",
+      violationTypeArabic: "تعارض المصالح",
+      accusedPosition: "Investment Manager",
+      accusedPositionArabic: "مدير استثمار",
+      legalArticles: JSON.stringify(["Article 5 - RD 112/2011"]),
+      sentenceYears: 3,
+      sentenceMonths: 0,
+      fineOMR: 75000,
+      amountInvolved: 0,
+      amountRecovered: 0,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Investment manager convicted of conflict of interest in investment decisions",
+      summaryArabic: "إدانة مدير استثمار بتعارض المصالح في قرارات الاستثمار",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2024"
+    },
+    {
+      year: 2024,
+      entityNameEnglish: "Sohar Municipality",
+      entityNameArabic: "بلدية صحار",
+      entityType: "municipality",
+      violationType: "tender_violation",
+      violationTypeEnglish: "Tender Law Violation",
+      violationTypeArabic: "مخالفة قانون المناقصات",
+      accusedPosition: "Contracts Officer",
+      accusedPositionArabic: "مسؤول العقود",
+      legalArticles: JSON.stringify(["Article 12 - Tender Law"]),
+      sentenceYears: 4,
+      sentenceMonths: 0,
+      fineOMR: 30000,
+      amountInvolved: 450000,
+      amountRecovered: 450000,
+      additionalPenalties: JSON.stringify(["Removal from office"]),
+      summaryEnglish: "Contracts officer convicted of manipulating tender process worth OMR 450,000",
+      summaryArabic: "إدانة مسؤول عقود بالتلاعب في مناقصة بقيمة 450,000 ريال",
+      outcome: "convicted",
+      sourceReport: "Annual Report 2024"
+    }
+  ];
+  
+  try {
+    // Clear existing data first
+    await db.delete(caseLaw);
+    
+    // Insert all case law entries
+    for (const entry of caseLawData) {
+      await db.insert(caseLaw).values(entry);
+    }
+    
+    return { success: true, count: caseLawData.length };
+  } catch (error) {
+    console.error("[Database] Error seeding case law:", error);
+    return { success: false, count: 0 };
+  }
+}
+
+
+// Seed historical data into the database
+export async function seedHistoricalData() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot seed historical data: database not available");
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    // Seed historical stats
+    const statsData = getHardcodedHistoricalStats();
+    await db.delete(historicalStats);
+    for (const stat of statsData) {
+      await db.insert(historicalStats).values({
+        year: stat.year,
+        metric: stat.metric,
+        value: stat.value,
+        valueDecimal: stat.valueDecimal,
+        unit: stat.unit,
+        category: stat.category,
+        source: stat.source
+      });
+    }
+
+    // Seed complaints by entity
+    const entityData = getHardcodedComplaintsByEntity();
+    await db.delete(historicalComplaintsByEntity);
+    for (const entity of entityData) {
+      await db.insert(historicalComplaintsByEntity).values({
+        year: entity.year,
+        entityNameEnglish: entity.entityNameEnglish,
+        entityNameArabic: entity.entityNameArabic,
+        complaintCount: entity.complaintCount
+      });
+    }
+
+    // Seed complaints by category
+    const categoryData = getHardcodedComplaintsByCategory();
+    await db.delete(historicalComplaintsByCategory);
+    for (const category of categoryData) {
+      await db.insert(historicalComplaintsByCategory).values({
+        year: category.year,
+        categoryEnglish: category.categoryEnglish,
+        categoryArabic: category.categoryArabic,
+        complaintCount: category.complaintCount,
+        percentageOfTotal: category.percentageOfTotal
+      });
+    }
+
+    // Seed convictions
+    const convictionsData = getHardcodedConvictions();
+    await db.delete(historicalConvictions);
+    for (const conviction of convictionsData) {
+      await db.insert(historicalConvictions).values({
+        year: conviction.year,
+        entityNameEnglish: conviction.entityNameEnglish,
+        entityNameArabic: conviction.entityNameArabic,
+        position: conviction.position,
+        violationType: conviction.violationType,
+        sentenceYears: conviction.sentenceYears,
+        sentenceMonths: conviction.sentenceMonths,
+        fineOMR: conviction.fineOMR,
+        amountInvolved: conviction.amountInvolved,
+        additionalPenalties: conviction.additionalPenalties,
+        summaryEnglish: conviction.summaryEnglish,
+        summaryArabic: conviction.summaryArabic
+      });
+    }
+
+    return { 
+      success: true, 
+      message: "Historical data seeded successfully",
+      counts: {
+        stats: statsData.length,
+        entities: entityData.length,
+        categories: categoryData.length,
+        convictions: convictionsData.length
+      }
+    };
+  } catch (error) {
+    console.error("[Database] Error seeding historical data:", error);
+    return { success: false, message: String(error) };
+  }
 }

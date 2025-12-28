@@ -134,7 +134,7 @@ export type InsertLegislativeDocument = typeof legislativeDocuments.$inferInsert
 export const analyticsEvents = mysqlTable("analytics_events", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
-  eventType: mysqlEnum("eventType", ["chat_message", "complaint_analyzed", "legislative_query", "pdf_export", "voice_input"]).notNull(),
+  eventType: mysqlEnum("eventType", ["chat_message", "complaint_analyzed", "legislative_query", "pdf_export", "voice_input", "document_upload", "document_analysis"]).notNull(),
   feature: mysqlEnum("feature", ["complaints", "legislative"]).notNull(),
   language: mysqlEnum("language", ["arabic", "english"]).notNull(),
   category: varchar("category", { length: 100 }),
@@ -230,3 +230,36 @@ export const historicalConvictions = mysqlTable("historical_convictions", {
 
 export type HistoricalConviction = typeof historicalConvictions.$inferSelect;
 export type InsertHistoricalConviction = typeof historicalConvictions.$inferInsert;
+
+
+// Case law database for searchable archive of OSAI convictions
+export const caseLaw = mysqlTable("case_law", {
+  id: int("id").autoincrement().primaryKey(),
+  caseNumber: varchar("caseNumber", { length: 50 }),
+  year: int("year").notNull(),
+  entityNameArabic: varchar("entityNameArabic", { length: 300 }),
+  entityNameEnglish: varchar("entityNameEnglish", { length: 300 }).notNull(),
+  entityType: mysqlEnum("entityType", ["ministry", "government_company", "municipality", "public_authority", "other"]).default("other"),
+  violationType: mysqlEnum("violationType", ["embezzlement", "bribery", "conflict_of_interest", "abuse_of_power", "forgery", "tender_violation", "administrative_negligence", "other"]).notNull(),
+  violationTypeArabic: varchar("violationTypeArabic", { length: 200 }),
+  violationTypeEnglish: varchar("violationTypeEnglish", { length: 200 }),
+  accusedPosition: varchar("accusedPosition", { length: 200 }),
+  accusedPositionArabic: varchar("accusedPositionArabic", { length: 200 }),
+  legalArticles: text("legalArticles"), // JSON array of relevant articles
+  sentenceYears: int("sentenceYears"),
+  sentenceMonths: int("sentenceMonths"),
+  fineOMR: int("fineOMR"),
+  amountInvolved: int("amountInvolved"),
+  amountRecovered: int("amountRecovered"),
+  additionalPenalties: text("additionalPenalties"), // JSON array (dismissal, travel ban, etc.)
+  summaryArabic: text("summaryArabic"),
+  summaryEnglish: text("summaryEnglish"),
+  detailsArabic: text("detailsArabic"),
+  detailsEnglish: text("detailsEnglish"),
+  outcome: mysqlEnum("outcome", ["convicted", "acquitted", "pending", "settled"]).default("convicted"),
+  sourceReport: varchar("sourceReport", { length: 100 }), // e.g., "Annual Report 2024"
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type CaseLaw = typeof caseLaw.$inferSelect;
+export type InsertCaseLaw = typeof caseLaw.$inferInsert;
