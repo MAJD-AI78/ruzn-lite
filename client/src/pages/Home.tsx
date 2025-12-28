@@ -1,5 +1,9 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import DemoWalkthrough, { useWalkthrough } from "@/components/DemoWalkthrough";
+import MobileBottomNav from "@/components/MobileBottomNav";
+import PullToRefreshIndicator from "@/components/PullToRefreshIndicator";
+import { usePullToRefresh } from "@/hooks/usePullToRefresh";
+import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -326,6 +330,30 @@ export default function Home() {
   
   const { user, isAuthenticated, logout } = useAuth();
   const { shouldShow: showWalkthrough, setShouldShow: setShowWalkthrough, resetWalkthrough } = useWalkthrough();
+  const haptic = useHapticFeedback();
+  
+  // Pull-to-refresh for chat history
+  const utils = trpc.useUtils();
+  const handleRefresh = useCallback(async () => {
+    // Refresh dashboard stats and samples
+    await Promise.all([
+      utils.dashboard.getStats.invalidate(),
+      utils.chat.getSamples.invalidate()
+    ]);
+    haptic.triggerSuccess();
+  }, [utils, haptic]);
+  
+  const {
+    pullDistance,
+    isRefreshing,
+    containerRef: pullRefreshContainerRef,
+    handleTouchStart,
+    handleTouchMove,
+    handleTouchEnd
+  } = usePullToRefresh({
+    onRefresh: handleRefresh,
+    threshold: 80
+  });
   
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
@@ -408,6 +436,7 @@ export default function Home() {
   const handleSend = async () => {
     if ((!input.trim() && !uploadedFile) || chatMutation.isPending || analyzeDocumentMutation.isPending || isStreaming) return;
     
+    haptic.triggerLight(); // Haptic feedback on send
     const userMessage = input.trim();
     setInput("");
     
@@ -589,6 +618,7 @@ export default function Home() {
   };
   
   const handlePreset = (query: string) => {
+    haptic.triggerLight(); // Haptic feedback on preset selection
     setInput(query);
   };
   
@@ -600,6 +630,7 @@ export default function Home() {
   };
   
   const toggleLanguage = () => {
+    haptic.triggerLight(); // Haptic feedback on language toggle
     setLanguage(prev => prev === "arabic" ? "english" : "arabic");
   };
   
@@ -619,18 +650,23 @@ export default function Home() {
     });
   };
   
-  const handleClearChat = () => {
-    setMessages([]);
-  };
-  
   const handleLoadSample = (sampleText: string) => {
+    haptic.triggerLight(); // Haptic feedback on sample load
     setInput(sampleText);
     setShowSamples(false);
     toast.success(text.samplesLoaded);
   };
   
   const handleLogout = () => {
+    haptic.triggerMedium(); // Haptic feedback on logout
     logout();
+  };
+  
+  const handleClearChat = () => {
+    haptic.triggerWarning(); // Haptic feedback on clear chat
+    setMessages([]);
+    setStreamingContent("");
+    setIsStreaming(false);
   };
   
   // Voice input handling
@@ -700,6 +736,7 @@ export default function Home() {
   };
   
   const toggleRecording = () => {
+    haptic.triggerMedium(); // Haptic feedback on recording toggle
     if (isRecording) {
       stopRecording();
     } else {
@@ -717,9 +754,20 @@ export default function Home() {
       />
       
     <div 
-      className="min-h-screen flex flex-col bg-background"
+      ref={pullRefreshContainerRef}
+      className="min-h-screen flex flex-col bg-background pb-20 md:pb-0"
       dir={isRTL ? "rtl" : "ltr"}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
     >
+      {/* Pull to Refresh Indicator */}
+      <PullToRefreshIndicator
+        pullDistance={pullDistance}
+        isRefreshing={isRefreshing}
+        threshold={80}
+        language={language}
+      />
       {/* Header */}
       <header className="border-b border-white/10 bg-black/35 backdrop-blur-md sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
@@ -1220,6 +1268,12 @@ export default function Home() {
           </p>
         </div>
       </footer>
+      
+      {/* Mobile Bottom Navigation */}
+      <MobileBottomNav 
+        language={language} 
+        isAdmin={user?.role === 'admin'}
+      />
     </div>
     </>
   );

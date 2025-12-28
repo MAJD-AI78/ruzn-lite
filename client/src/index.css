@@ -340,6 +340,11 @@
     display: none;
   }
   
+  /* Safe area padding for iOS devices with notch/home indicator */
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+  
   .text-gold-gradient {
     background: linear-gradient(135deg, #d6b36a 0%, #f4d03f 50%, #d6b36a 100%);
     -webkit-background-clip: text;
