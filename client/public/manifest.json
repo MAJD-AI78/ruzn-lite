@@ -1,0 +1,68 @@
+{
+  "name": "Ruzn | رُزن - AI for Governance & Compliance",
+  "short_name": "Ruzn",
+  "description": "منصة ذكية لتحليل البلاغات والاستشارات القانونية. Intelligent platform for complaint analysis and legal advisory powered by AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#070708",
+  "theme_color": "#0a0a0c",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "ar",
+  "dir": "rtl",
+  "categories": ["business", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "/ruzn-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ruzn-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/ruzn-logo.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/ruzn-screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "Ruzn Dashboard"
+    },
+    {
+      "src": "/ruzn-screenshot-narrow.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ruzn Mobile View"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Complaints Triage",
+      "short_name": "Complaints",
+      "description": "تصنيف وتحليل الشكاوى",
+      "url": "/home?feature=complaints",
+      "icons": [{ "src": "/ruzn-logo.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "Legislative Intelligence",
+      "short_name": "Legislative",
+      "description": "الاستشارات القانونية",
+      "url": "/home?feature=legislative",
+      "icons": [{ "src": "/ruzn-logo.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
+}

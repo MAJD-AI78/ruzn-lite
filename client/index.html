@@ -3,7 +3,7 @@
 
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5, user-scalable=yes" />
     
     <!-- Google Site Verification -->
     <meta name="google-site-verification" content="Sy_fnJADO5GCYqY6dzwtNhWJDDriCeQQtqYKcTvfc9g" />
@@ -17,16 +17,30 @@
     <meta name="robots" content="index, follow" />
     <meta name="language" content="Arabic, English" />
     
-    <!-- Favicon -->
+    <!-- PWA Meta Tags -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ruzn" />
+    <meta name="application-name" content="Ruzn" />
+    <meta name="format-detection" content="telephone=no" />
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- Favicon & Icons -->
     <link rel="icon" type="image/png" href="/ruzn-logo.png" />
-    <link rel="apple-touch-icon" href="/ruzn-logo.png" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/ruzn-icon-192.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/ruzn-icon-512.png" />
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://ruzn.ai/" />
     <meta property="og:title" content="Ruzn | رُزن - AI for Governance & Compliance" />
     <meta property="og:description" content="منصة ذكية لتحليل البلاغات والاستشارات القانونية. Intelligent platform for complaint analysis and legal advisory." />
-    <meta property="og:image" content="https://ruzn.ai/ruzn-og-image.png" />
+    <meta property="og:image" content="https://ruzn.ai/ruzn-icon-512.png" />
     <meta property="og:locale" content="ar_OM" />
     <meta property="og:locale:alternate" content="en_US" />
     
@@ -35,7 +49,7 @@
     <meta property="twitter:url" content="https://ruzn.ai/" />
     <meta property="twitter:title" content="Ruzn | رُزن - AI for Governance & Compliance" />
     <meta property="twitter:description" content="منصة ذكية لتحليل البلاغات والاستشارات القانونية. Intelligent platform for complaint analysis and legal advisory." />
-    <meta property="twitter:image" content="https://ruzn.ai/ruzn-og-image.png" />
+    <meta property="twitter:image" content="https://ruzn.ai/ruzn-icon-512.png" />
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://ruzn.ai/" />
@@ -43,6 +57,7 @@
     <!-- Theme Color -->
     <meta name="theme-color" content="#0a0a0c" />
     <meta name="msapplication-TileColor" content="#0a0a0c" />
+    <meta name="msapplication-TileImage" content="/ruzn-icon-192.png" />
     
     <!-- Google Fonts - Tajawal for Arabic -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -81,6 +96,21 @@
       defer
       src="%VITE_ANALYTICS_ENDPOINT%/umami"
       data-website-id="%VITE_ANALYTICS_WEBSITE_ID%"></script>
+    
+    <!-- Service Worker Registration -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('[PWA] Service Worker registered:', registration.scope);
+            })
+            .catch((error) => {
+              console.log('[PWA] Service Worker registration failed:', error);
+            });
+        });
+      }
+    </script>
   </body>
 
 </html>

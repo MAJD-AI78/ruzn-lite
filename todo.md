@@ -413,3 +413,20 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Support bilingual streaming (Arabic/English)
 - [x] Extract risk score from streamed response
 - [x] Send high-risk notifications for streaming responses
+
+
+## Phase 15 - Security & PWA Implementation
+
+### Security Improvements
+- [x] Add security headers (CSP, X-Frame-Options, etc.)
+- [x] Ensure HTTPS redirect is configured (HSTS header added)
+- [x] Add HSTS header for secure connections
+- [x] Review and fix any mixed content issues
+
+### PWA (Progressive Web App)
+- [x] Create manifest.json with app metadata
+- [x] Create service worker for offline caching
+- [x] Add PWA meta tags to index.html
+- [x] Generate app icons in multiple sizes (192x192, 512x512)
+- [x] Configure installability prompt
+- [ ] Test PWA on mobile devices
