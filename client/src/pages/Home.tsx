@@ -123,6 +123,7 @@ const UI_TEXT = {
     comparativeAnalysis: "التحليل المقارن",
     caseLaw: "السوابق القضائية",
     complaintRegistry: "سجل البلاغات",
+    knowledgeBase: "قاعدة المعرفة",
     voiceInput: "إدخال صوتي",
     recording: "جاري التسجيل...",
     attachFile: "إرفاق ملف",
@@ -160,6 +161,7 @@ const UI_TEXT = {
     comparativeAnalysis: "Comparative Analysis",
     caseLaw: "Case Law",
     complaintRegistry: "Complaint Registry",
+    knowledgeBase: "Knowledge Base",
     voiceInput: "Voice Input",
     recording: "Recording...",
     attachFile: "Attach File",
@@ -926,6 +928,12 @@ export default function Home() {
                 <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
                   <FileText className="w-3 h-3" />
                   {text.complaintRegistry}
+                </button>
+              </Link>
+              <Link href="/knowledge-base">
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <Database className="w-3 h-3" />
+                  {text.knowledgeBase}
                 </button>
               </Link>
               <Link href="/analytics">

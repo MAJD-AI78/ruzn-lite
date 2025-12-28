@@ -14,6 +14,7 @@ import Landing from "./pages/Landing";
 import ComparativeAnalysis from "./pages/ComparativeAnalysis";
 import CaseLaw from "./pages/CaseLaw";
 import ComplaintRegistry from "./pages/ComplaintRegistry";
+import KnowledgeBase from "./pages/KnowledgeBase";
 
 function ProtectedRouter() {
   return (
@@ -26,6 +27,7 @@ function ProtectedRouter() {
       <Route path="/comparative-analysis" component={ComparativeAnalysis} />
             <Route path="/case-law" component={CaseLaw} />
       <Route path="/complaint-registry" component={ComplaintRegistry} />
+      <Route path="/knowledge-base" component={KnowledgeBase} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

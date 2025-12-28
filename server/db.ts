@@ -2297,6 +2297,303 @@ Strategic Goals:
         category: "Legal Framework",
         sourceFile: "OSAI_Authorities.pdf",
         penalties: JSON.stringify({})
+      },
+      // Annual Report 2023 Statistics
+      {
+        documentType: "report",
+        titleEnglish: "OSAI Annual Report 2023 - Key Statistics",
+        titleArabic: "التقرير السنوي لجهاز الرقابة 2023 - الإحصائيات الرئيسية",
+        referenceNumber: "AR-2023",
+        contentEnglish: `OSAI Annual Report 2023 - Key Statistics and Findings
+
+Complaints Received: 587
+- Financial & Administrative Irregularities: 459 (78%)
+- Disruption of Citizens Interests: 74 (13%)
+- Employee Grievances: 28 (5%)
+- Improper Tendering: 21 (4%)
+- Abuse of Power: 5 (1%)
+
+Top Entities by Complaints:
+1. Ministry of Housing & Urban Planning: 119
+2. Municipalities Sector: 93
+3. Ministry of Health: 31
+4. Nama Holding Company: 25
+5. Ministry of Education: 20
+
+Convictions:
+- Total cases referred to prosecution: 47
+- Convictions obtained: 38
+- Total fines imposed: OMR 2.3 million
+- Total amounts recovered: OMR 4.7 million`,
+        contentArabic: `التقرير السنوي لجهاز الرقابة 2023 - الإحصائيات والنتائج الرئيسية
+
+الشكاوى المستلمة: 587
+- مخالفات مالية وإدارية: 459 (78%)
+- الإضرار بمصالح المواطنين: 74 (13%)
+- تظلمات الموظفين: 28 (5%)
+- مخالفات المناقصات: 21 (4%)
+- إساءة استخدام السلطة: 5 (1%)
+
+أكثر الجهات شكاوى:
+1. وزارة الإسكان والتخطيط العمراني: 119
+2. قطاع البلديات: 93
+3. وزارة الصحة: 31
+4. شركة نماء القابضة: 25
+5. وزارة التربية والتعليم: 20
+
+الإدانات:
+- إجمالي القضايا المحالة للادعاء: 47
+- الإدانات: 38
+- إجمالي الغرامات: 2.3 مليون ر.ع.
+- إجمالي المبالغ المستردة: 4.7 مليون ر.ع.`,
+        summaryEnglish: "2023 annual statistics on complaints, convictions, and recovered amounts",
+        summaryArabic: "إحصائيات 2023 السنوية للشكاوى والإدانات والمبالغ المستردة",
+        keywords: JSON.stringify(["annual report", "statistics", "2023", "complaints", "تقرير سنوي", "إحصائيات", "شكاوى"]),
+        category: "Annual Reports",
+        sourceFile: "OSAI_Annual_Report_2023.pdf",
+        penalties: JSON.stringify({})
+      },
+      // Whistleblower Protection
+      {
+        documentType: "regulation",
+        titleEnglish: "Whistleblower Protection Guidelines",
+        titleArabic: "إرشادات حماية المبلغين عن المخالفات",
+        referenceNumber: "WB-PROT-001",
+        contentEnglish: `Whistleblower Protection Framework
+
+Protection Measures:
+1. Identity Protection - Complainant identity kept strictly confidential
+2. Employment Protection - No retaliation against whistleblowers
+3. Legal Protection - Immunity from civil liability for good-faith reports
+4. Financial Rewards - Up to 10% of recovered amounts for substantiated reports
+
+Reporting Channels:
+- OSAI Hotline: 1800-OSAI (1800-6724)
+- Online Portal: www.osai.gov.om/report
+- In-person at OSAI headquarters
+- Written submission via registered mail
+
+Anonymous Reporting:
+- Anonymous reports accepted and investigated
+- No requirement to disclose identity
+- Follow-up via secure reference number`,
+        contentArabic: `إطار حماية المبلغين عن المخالفات
+
+تدابير الحماية:
+1. حماية الهوية - الحفاظ على سرية هوية المبلغ
+2. حماية وظيفية - عدم الانتقام من المبلغين
+3. حماية قانونية - حصانة من المسؤولية المدنية للبلاغات بحسن نية
+4. مكافآت مالية - حتى 10% من المبالغ المستردة للبلاغات الموثقة
+
+قنوات الإبلاغ:
+- الخط الساخن: 1800-OSAI (1800-6724)
+- البوابة الإلكترونية: www.osai.gov.om/report
+- شخصياً في مقر الجهاز
+- بريد مسجل
+
+الإبلاغ المجهول:
+- يتم قبول البلاغات المجهولة والتحقيق فيها
+- لا يشترط الكشف عن الهوية
+- المتابعة عبر رقم مرجعي آمن`,
+        summaryEnglish: "Guidelines for protecting whistleblowers and reporting channels",
+        summaryArabic: "إرشادات حماية المبلغين وقنوات الإبلاغ",
+        keywords: JSON.stringify(["whistleblower", "protection", "reporting", "anonymous", "مبلغ", "حماية", "إبلاغ"]),
+        category: "Whistleblower Protection",
+        sourceFile: "Whistleblower_Protection_Guidelines.pdf",
+        penalties: JSON.stringify({})
+      },
+      // Tender Law Summary
+      {
+        documentType: "legal_article",
+        titleEnglish: "Government Tender Law - Key Provisions",
+        titleArabic: "قانون المناقصات الحكومية - الأحكام الرئيسية",
+        referenceNumber: "TENDER-LAW-001",
+        contentEnglish: `Government Tender Law - Key Provisions
+
+Tender Thresholds:
+- Direct Purchase: Up to OMR 5,000
+- Limited Tender: OMR 5,001 - OMR 50,000
+- Public Tender: Above OMR 50,000
+
+Prohibited Practices:
+1. Bid rigging or collusion between bidders
+2. Splitting contracts to avoid tender requirements
+3. Favoritism in evaluation or award
+4. Conflicts of interest in tender committees
+5. Disclosure of confidential bid information
+
+Penalties for Violations:
+- Debarment from government contracts (1-5 years)
+- Criminal prosecution under RD 112/2011
+- Contract cancellation and recovery of payments
+- Personal liability for tender committee members`,
+        contentArabic: `قانون المناقصات الحكومية - الأحكام الرئيسية
+
+حدود المناقصات:
+- الشراء المباشر: حتى 5,000 ر.ع.
+- المناقصة المحدودة: 5,001 - 50,000 ر.ع.
+- المناقصة العامة: أكثر من 50,000 ر.ع.
+
+الممارسات المحظورة:
+1. التواطؤ بين المتنافسين
+2. تجزئة العقود لتجنب المناقصة
+3. المحاباة في التقييم أو الترسية
+4. تضارب المصالح في لجان المناقصات
+5. إفشاء معلومات العطاءات السرية
+
+عقوبات المخالفات:
+- الحرمان من العقود الحكومية (1-5 سنوات)
+- الملاحقة الجنائية بموجب المرسوم 112/2011
+- إلغاء العقد واسترداد المبالغ
+- المسؤولية الشخصية لأعضاء لجان المناقصات`,
+        summaryEnglish: "Key provisions of government tender law including thresholds and penalties",
+        summaryArabic: "الأحكام الرئيسية لقانون المناقصات بما فيها الحدود والعقوبات",
+        keywords: JSON.stringify(["tender", "procurement", "bidding", "contracts", "مناقصات", "عقود", "مشتريات"]),
+        category: "Procurement",
+        sourceFile: "Tender_Law_Summary.pdf",
+        penalties: JSON.stringify({
+          bidRigging: { debarment: "1-5 years", criminal: true },
+          contractSplitting: { debarment: "1-3 years" },
+          favoritism: { debarment: "2-5 years", criminal: true }
+        })
+      },
+      // Asset Disclosure Requirements
+      {
+        documentType: "regulation",
+        titleEnglish: "Asset Disclosure Requirements for Public Officials",
+        titleArabic: "متطلبات الإفصاح عن الذمة المالية للمسؤولين الحكوميين",
+        referenceNumber: "ASSET-DISC-001",
+        contentEnglish: `Asset Disclosure Requirements
+
+Who Must Disclose:
+- Ministers and Undersecretaries
+- Heads of government agencies
+- Members of tender committees
+- Financial controllers and auditors
+- Employees in sensitive positions
+
+What Must Be Disclosed:
+1. Real estate (land, buildings)
+2. Vehicles and boats
+3. Bank accounts and investments
+4. Business ownership and shares
+5. Debts and liabilities
+6. Spouse and dependent children's assets
+
+Disclosure Timeline:
+- Upon appointment: Within 60 days
+- Annual update: By January 31
+- Upon leaving office: Within 60 days
+
+Penalties for Non-Compliance:
+- Warning for first offense
+- Suspension for repeated violations
+- Referral to prosecution for false declarations`,
+        contentArabic: `متطلبات الإفصاح عن الذمة المالية
+
+الملزمون بالإفصاح:
+- الوزراء والوكلاء
+- رؤساء الجهات الحكومية
+- أعضاء لجان المناقصات
+- المراقبون الماليون والمدققون
+- الموظفون في المناصب الحساسة
+
+ما يجب الإفصاح عنه:
+1. العقارات (أراضي، مباني)
+2. المركبات والقوارب
+3. الحسابات البنكية والاستثمارات
+4. ملكية الشركات والأسهم
+5. الديون والالتزامات
+6. أصول الزوج/ة والأبناء المعالين
+
+مواعيد الإفصاح:
+- عند التعيين: خلال 60 يوماً
+- التحديث السنوي: بحلول 31 يناير
+- عند ترك المنصب: خلال 60 يوماً
+
+عقوبات عدم الامتثال:
+- إنذار للمخالفة الأولى
+- إيقاف للمخالفات المتكررة
+- إحالة للادعاء للإقرارات الكاذبة`,
+        summaryEnglish: "Requirements for asset disclosure by public officials",
+        summaryArabic: "متطلبات الإفصاح عن الذمة المالية للمسؤولين",
+        keywords: JSON.stringify(["asset disclosure", "financial declaration", "public officials", "ذمة مالية", "إفصاح", "مسؤولين"]),
+        category: "Compliance",
+        sourceFile: "Asset_Disclosure_Requirements.pdf",
+        penalties: JSON.stringify({})
+      },
+      // Investigation Procedures
+      {
+        documentType: "procedure",
+        titleEnglish: "OSAI Investigation Procedures Manual",
+        titleArabic: "دليل إجراءات التحقيق لجهاز الرقابة",
+        referenceNumber: "INV-PROC-001",
+        contentEnglish: `OSAI Investigation Procedures
+
+Phase 1: Initial Assessment (1-3 days)
+- Review complaint for completeness
+- Verify jurisdiction and authority
+- Assign case number and investigator
+- Determine urgency level
+
+Phase 2: Preliminary Investigation (7-14 days)
+- Gather initial evidence
+- Interview complainant (if identified)
+- Request documents from entity
+- Assess validity of allegations
+
+Phase 3: Full Investigation (30-90 days)
+- Conduct on-site inspections
+- Interview witnesses and accused
+- Forensic analysis if needed
+- Document all findings
+
+Phase 4: Reporting (14 days)
+- Prepare investigation report
+- Include recommendations
+- Submit for review and approval
+- Notify relevant parties
+
+Phase 5: Follow-up
+- Monitor implementation of recommendations
+- Refer criminal matters to prosecution
+- Track recovery of funds`,
+        contentArabic: `إجراءات التحقيق لجهاز الرقابة
+
+المرحلة 1: التقييم الأولي (1-3 أيام)
+- مراجعة اكتمال الشكوى
+- التحقق من الاختصاص والصلاحية
+- تعيين رقم القضية والمحقق
+- تحديد مستوى الاستعجال
+
+المرحلة 2: التحقيق الأولي (7-14 يوم)
+- جمع الأدلة الأولية
+- مقابلة المشتكي (إن كان معروفاً)
+- طلب الوثائق من الجهة
+- تقييم صحة الادعاءات
+
+المرحلة 3: التحقيق الكامل (30-90 يوم)
+- إجراء التفتيش الميداني
+- مقابلة الشهود والمتهمين
+- التحليل الجنائي إن لزم
+- توثيق جميع النتائج
+
+المرحلة 4: إعداد التقرير (14 يوم)
+- إعداد تقرير التحقيق
+- تضمين التوصيات
+- الرفع للمراجعة والاعتماد
+- إخطار الأطراف المعنية
+
+المرحلة 5: المتابعة
+- متابعة تنفيذ التوصيات
+- إحالة القضايا الجنائية للادعاء
+- تتبع استرداد الأموال`,
+        summaryEnglish: "Step-by-step investigation procedures from complaint to resolution",
+        summaryArabic: "إجراءات التحقيق خطوة بخطوة من الشكوى إلى الحل",
+        keywords: JSON.stringify(["investigation", "procedures", "phases", "timeline", "تحقيق", "إجراءات", "مراحل"]),
+        category: "Procedures",
+        sourceFile: "Investigation_Procedures_Manual.pdf",
+        penalties: JSON.stringify({})
       }
     ];
 
@@ -2326,5 +2623,68 @@ export async function getAllKnowledge() {
   } catch (error) {
     console.error("[Database] Failed to get all knowledge:", error);
     return [];
+  }
+}
+
+
+// Create a new knowledge base entry
+export async function createKnowledgeEntry(input: {
+  documentType: string;
+  titleEnglish: string;
+  titleArabic?: string;
+  referenceNumber?: string;
+  contentEnglish: string;
+  contentArabic?: string;
+  summaryEnglish?: string;
+  summaryArabic?: string;
+  keywords?: string[];
+  category?: string;
+  sourceFile?: string;
+}) {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    const result = await db.insert(knowledgeBase).values({
+      documentType: input.documentType as any,
+      titleEnglish: input.titleEnglish,
+      titleArabic: input.titleArabic || null,
+      referenceNumber: input.referenceNumber || null,
+      contentEnglish: input.contentEnglish,
+      contentArabic: input.contentArabic || null,
+      summaryEnglish: input.summaryEnglish || null,
+      summaryArabic: input.summaryArabic || null,
+      keywords: input.keywords ? JSON.stringify(input.keywords) : null,
+      category: input.category || null,
+      sourceFile: input.sourceFile || null,
+      penalties: JSON.stringify({})
+    });
+
+    return { 
+      success: true, 
+      message: "Knowledge entry created successfully",
+      id: (result as any).insertId || (result as any)[0]?.insertId
+    };
+  } catch (error) {
+    console.error("[Database] Error creating knowledge entry:", error);
+    return { success: false, message: String(error) };
+  }
+}
+
+// Delete a knowledge base entry
+export async function deleteKnowledgeEntry(id: number) {
+  const db = await getDb();
+  if (!db) {
+    return { success: false, message: "Database not available" };
+  }
+
+  try {
+    await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
+    return { success: true, message: "Knowledge entry deleted successfully" };
+  } catch (error) {
+    console.error("[Database] Error deleting knowledge entry:", error);
+    return { success: false, message: String(error) };
   }
 }

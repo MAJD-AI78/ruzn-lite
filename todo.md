@@ -472,3 +472,13 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Seed with OSAI legal documents (RD 111/2011, RD 112/2011, etc.)
 - [x] Integrate knowledge base search into AI chat flow
 - [x] Add tRPC endpoints for knowledge base management
+
+
+## Phase 20 - Knowledge Base Expansion & UI
+
+### Features
+- [x] Add more OSAI documents (annual reports, circulars, guidelines)
+- [x] Create Knowledge Base UI page for browsing documents
+- [x] Add search functionality to Knowledge Base page
+- [x] Create admin document upload interface
+- [ ] Support PDF/text file parsing for document upload (future enhancement)

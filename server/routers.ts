@@ -2,6 +2,7 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
 import { transcribeAudio } from "./_core/voiceTranscription";
 import { z } from "zod";
@@ -18,7 +19,8 @@ import {
   seedHistoricalData,
   saveRegistryComplaint, getRegistryComplaints, assignComplaint,
   getAssignedComplaints, getAssignmentStats,
-  searchKnowledgeBase, seedKnowledgeBase, getAllKnowledge
+  searchKnowledgeBase, seedKnowledgeBase, getAllKnowledge,
+  createKnowledgeEntry, deleteKnowledgeEntry
 } from "./db";
 import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshStatus, recordRefresh, updateRefreshConfig } from "./scheduledReports";
 import { storagePut } from "./storage";
@@ -1109,6 +1111,41 @@ export const appRouter = router({
     seed: publicProcedure
       .mutation(async () => {
         const result = await seedKnowledgeBase();
+        return result;
+      }),
+
+    // Create new knowledge entry (admin only)
+    create: protectedProcedure
+      .input(z.object({
+        documentType: z.enum(['royal_decree', 'regulation', 'policy', 'guideline', 'report', 'legal_article', 'procedure']),
+        titleEnglish: z.string().min(1),
+        titleArabic: z.string().optional(),
+        referenceNumber: z.string().optional(),
+        contentEnglish: z.string().min(1),
+        contentArabic: z.string().optional(),
+        summaryEnglish: z.string().optional(),
+        summaryArabic: z.string().optional(),
+        keywords: z.array(z.string()).optional(),
+        category: z.string().optional(),
+        sourceFile: z.string().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        // Only admins can create entries
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can add documents' });
+        }
+        const result = await createKnowledgeEntry(input);
+        return result;
+      }),
+
+    // Delete knowledge entry (admin only)
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can delete documents' });
+        }
+        const result = await deleteKnowledgeEntry(input.id);
         return result;
       })
   })
