@@ -724,35 +724,35 @@ export default function Home() {
       <header className="border-b border-white/10 bg-black/35 backdrop-blur-md sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <img 
                 src="/ruzn-logo.png" 
                 alt="Ruzn Logo" 
-                className="h-12 w-12 object-contain"
+                className="h-8 w-8 sm:h-12 sm:w-12 object-contain"
               />
               <div>
-                <h1 className="text-2xl font-extrabold" style={{ background: 'linear-gradient(90deg, rgba(214,179,106,.95), rgba(184,146,77,.85))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
+                <h1 className="text-lg sm:text-2xl font-extrabold" style={{ background: 'linear-gradient(90deg, rgba(214,179,106,.95), rgba(184,146,77,.85))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
                   {text.title}
                 </h1>
-                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>
+                <p className="text-xs sm:text-sm hidden sm:block" style={{ color: 'rgba(255,255,255,.70)' }}>
                   {text.subtitle}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {/* User Auth Display */}
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm flex items-center gap-1" style={{ color: 'rgba(214,179,106,.95)' }}>
+                  <span className="text-xs sm:text-sm flex items-center gap-1" style={{ color: 'rgba(214,179,106,.95)' }}>
                     <User className="w-4 h-4" />
-                    {user?.name || 'OSAI Staff'}
+                    <span className="hidden sm:inline">{user?.name || 'OSAI Staff'}</span>
                   </span>
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="ruzn-btn text-xs"
+                    className="ruzn-btn text-xs p-2"
                   >
                     <LogOut className="w-4 h-4" />
                   </Button>
@@ -762,10 +762,10 @@ export default function Home() {
                   variant="outline"
                   size="sm"
                   onClick={() => window.location.href = getLoginUrl()}
-                  className="gap-2 ruzn-btn-gold"
+                  className="gap-1 sm:gap-2 ruzn-btn-gold text-xs sm:text-sm px-2 sm:px-3"
                 >
                   <LogIn className="w-4 h-4" />
-                  {text.login}
+                  <span className="hidden sm:inline">{text.login}</span>
                 </Button>
               )}
               
@@ -773,17 +773,17 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 onClick={toggleLanguage}
-                className="gap-2 ruzn-btn"
+                className="gap-1 sm:gap-2 ruzn-btn text-xs sm:text-sm px-2 sm:px-3"
               >
                 <Globe className="w-4 h-4" />
-                {language === "arabic" ? "English" : "العربية"}
+                <span className="hidden sm:inline">{language === "arabic" ? "English" : "العربية"}</span>
               </Button>
               
               <Button
                 variant="outline"
                 size="sm"
                 onClick={resetWalkthrough}
-                className="gap-2 ruzn-btn"
+                className="ruzn-btn p-2"
                 title={language === 'arabic' ? 'جولة تعريفية' : 'Tour'}
               >
                 <Sparkles className="w-4 h-4" />
@@ -809,14 +809,14 @@ export default function Home() {
             </button>
           </div>
           
-          {/* Action Buttons */}
-          <div className="flex gap-2 mt-3">
+          {/* Action Buttons - Primary Actions */}
+          <div className="flex flex-wrap gap-2 mt-3">
             <button
               onClick={() => setShowSamples(!showSamples)}
               className="ruzn-btn text-xs flex items-center gap-1"
             >
               <Database className="w-3 h-3" />
-              {text.loadSamples}
+              <span className="hidden sm:inline">{text.loadSamples}</span>
             </button>
             <button
               onClick={handleExportPdf}
@@ -828,7 +828,7 @@ export default function Home() {
               ) : (
                 <Download className="w-3 h-3" />
               )}
-              {text.exportPdf}
+              <span className="hidden sm:inline">{text.exportPdf}</span>
             </button>
             <button
               onClick={handleClearChat}
@@ -836,55 +836,58 @@ export default function Home() {
               className="ruzn-btn text-xs flex items-center gap-1 disabled:opacity-50"
             >
               <Trash2 className="w-3 h-3" />
-              {text.clearChat}
+              <span className="hidden sm:inline">{text.clearChat}</span>
             </button>
-            
-            {/* Navigation Links */}
-            <div className="flex-1" />
-            <Link href="/operations">
-              <button className="ruzn-btn-gold text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                <ClipboardList className="w-3 h-3" />
-                {text.operations}
-              </button>
-            </Link>
-            <Link href="/entity-map">
-              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                <Map className="w-3 h-3" />
-                {text.entityMap}
-              </button>
-            </Link>
-            <Link href="/comparative-analysis">
-              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                <TrendingUp className="w-3 h-3" />
-                {text.comparativeAnalysis}
-              </button>
-            </Link>
-            <Link href="/case-law">
-              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                <Scale className="w-3 h-3" />
-                {text.caseLaw}
-              </button>
-            </Link>
-            <Link href="/complaint-registry">
-              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                <FileText className="w-3 h-3" />
-                {text.complaintRegistry}
-              </button>
-            </Link>
-            <Link href="/analytics">
-              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                <BarChart3 className="w-3 h-3" />
-                {text.analytics}
-              </button>
-            </Link>
-            {user?.role === 'admin' && (
-              <Link href="/admin">
-                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
-                  <Settings className="w-3 h-3" />
-                  {text.admin}
+          </div>
+          
+          {/* Navigation Links - Horizontally scrollable on mobile */}
+          <div className="mt-3 -mx-4 px-4 overflow-x-auto scrollbar-hide">
+            <div className="flex gap-2 pb-2 min-w-max">
+              <Link href="/operations">
+                <button className="ruzn-btn-gold text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <ClipboardList className="w-3 h-3" />
+                  {text.operations}
                 </button>
               </Link>
-            )}
+              <Link href="/entity-map">
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <Map className="w-3 h-3" />
+                  {text.entityMap}
+                </button>
+              </Link>
+              <Link href="/comparative-analysis">
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <TrendingUp className="w-3 h-3" />
+                  {text.comparativeAnalysis}
+                </button>
+              </Link>
+              <Link href="/case-law">
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <Scale className="w-3 h-3" />
+                  {text.caseLaw}
+                </button>
+              </Link>
+              <Link href="/complaint-registry">
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <FileText className="w-3 h-3" />
+                  {text.complaintRegistry}
+                </button>
+              </Link>
+              <Link href="/analytics">
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                  <BarChart3 className="w-3 h-3" />
+                  {text.analytics}
+                </button>
+              </Link>
+              {user?.role === 'admin' && (
+                <Link href="/admin">
+                  <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl whitespace-nowrap">
+                    <Settings className="w-3 h-3" />
+                    {text.admin}
+                  </button>
+                </Link>
+              )}
+            </div>
           </div>
           
           {/* Sample Complaints Panel */}
@@ -919,59 +922,59 @@ export default function Home() {
       {/* Dashboard Widgets */}
       {dashboardStats && (
         <div className="container max-w-5xl mx-auto px-4 py-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 gap-2 sm:gap-3 md:grid-cols-4">
             <div className="ruzn-kpi">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-blue-500/10">
-                  <FileText className="w-5 h-5 text-blue-400" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-blue-500/10">
+                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'arabic' ? 'شكاوى اليوم' : "Today's Complaints"}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'شكاوى اليوم' : "Today's"}
                   </p>
-                  <p className="text-xl font-bold text-foreground">{dashboardStats.todayComplaints || 0}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{dashboardStats.todayComplaints || 0}</p>
                 </div>
               </div>
             </div>
             
             <div className="ruzn-kpi">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-yellow-500/10">
-                  <Clock className="w-5 h-5 text-yellow-400" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-yellow-500/10">
+                  <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'arabic' ? 'قيد المراجعة' : 'Pending Review'}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'قيد المراجعة' : 'Pending'}
                   </p>
-                  <p className="text-xl font-bold text-foreground">{dashboardStats.pendingReviews || 0}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{dashboardStats.pendingReviews || 0}</p>
                 </div>
               </div>
             </div>
             
             <div className="ruzn-kpi">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-red-500/10">
-                  <AlertTriangle className="w-5 h-5 text-red-400" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-red-500/10">
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 text-red-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
                     {language === 'arabic' ? 'عالي الخطورة' : 'High Risk'}
                   </p>
-                  <p className="text-xl font-bold text-foreground">{dashboardStats.highRiskAwaiting || 0}</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{dashboardStats.highRiskAwaiting || 0}</p>
                 </div>
               </div>
             </div>
             
             <div className="ruzn-kpi">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <TrendingUp className="w-5 h-5 text-primary" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className="p-1.5 sm:p-2 rounded-lg bg-primary/10">
+                  <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-xs text-muted-foreground">
-                    {language === 'arabic' ? 'وقت الاستجابة' : 'Avg Response'}
+                  <p className="text-[10px] sm:text-xs text-muted-foreground">
+                    {language === 'arabic' ? 'وقت الاستجابة' : 'Response'}
                   </p>
-                  <p className="text-xl font-bold text-foreground">{dashboardStats.avgResponseTime?.toFixed(0) || 0}h</p>
+                  <p className="text-lg sm:text-xl font-bold text-foreground">{dashboardStats.avgResponseTime?.toFixed(0) || 0}h</p>
                 </div>
               </div>
             </div>
@@ -980,26 +983,26 @@ export default function Home() {
       )}
       
       {/* Main Chat Area */}
-      <main className="flex-1 container max-w-5xl mx-auto px-4 py-6 flex flex-col">
+      <main className="flex-1 container max-w-5xl mx-auto px-3 sm:px-4 py-4 sm:py-6 flex flex-col">
         {/* Messages */}
         <div className="flex-1 space-y-4 mb-4 overflow-y-auto">
           {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <div className="w-24 h-24 mb-6 rounded-full bg-primary/10 flex items-center justify-center glow-gold">
-                <Sparkles className="w-12 h-12 text-primary" />
+            <div className="flex flex-col items-center justify-center h-full text-center py-6 sm:py-12">
+              <div className="w-16 h-16 sm:w-24 sm:h-24 mb-4 sm:mb-6 rounded-full bg-primary/10 flex items-center justify-center glow-gold">
+                <Sparkles className="w-8 h-8 sm:w-12 sm:h-12 text-primary" />
               </div>
-              <h2 className="text-2xl font-bold mb-2">{text.welcome}</h2>
-              <p className="text-muted-foreground mb-8">{text.welcomeDesc}</p>
+              <h2 className="text-xl sm:text-2xl font-bold mb-2">{text.welcome}</h2>
+              <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-8 px-4">{text.welcomeDesc}</p>
               
               {/* Preset Queries */}
-              <div className="w-full max-w-md">
+              <div className="w-full max-w-md px-2">
                 <p className="text-sm text-muted-foreground mb-3">{text.presetTitle}</p>
                 <div className="space-y-2">
                   {presets.map((query, idx) => (
                     <Button
                       key={idx}
                       variant="outline"
-                      className="w-full justify-start text-start h-auto py-3 px-4 border-primary/20 hover:border-primary/50 hover:bg-primary/5"
+                      className="w-full justify-start text-start h-auto py-2 sm:py-3 px-3 sm:px-4 text-xs sm:text-sm border-primary/20 hover:border-primary/50 hover:bg-primary/5"
                       onClick={() => handlePreset(query)}
                     >
                       {query}
@@ -1015,7 +1018,7 @@ export default function Home() {
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`ruzn-card max-w-[85%] p-4 ${
+                  className={`ruzn-card max-w-[90%] sm:max-w-[85%] p-3 sm:p-4 ${
                     msg.role === "user"
                       ? "bg-[rgba(214,179,106,.18)] border-[rgba(214,179,106,.35)]"
                       : ""
@@ -1076,7 +1079,7 @@ export default function Home() {
           {/* Streaming response display */}
           {isStreaming && streamingContent && (
             <div className="flex justify-start">
-              <div className="ruzn-card max-w-[85%] p-4">
+              <div className="ruzn-card max-w-[90%] sm:max-w-[85%] p-3 sm:p-4">
                 {feature === "complaints" && (
                   <div className="mb-2">
                     {getRiskBadge(streamingContent, language)}
@@ -1109,7 +1112,7 @@ export default function Home() {
         </div>
         
         {/* Input Area */}
-        <div className="sticky bottom-0 pt-4 border-t border-white/10" style={{ background: 'rgba(7,7,8,.95)', backdropFilter: 'blur(10px)' }}>
+        <div className="sticky bottom-0 pt-3 sm:pt-4 border-t border-white/10" style={{ background: 'rgba(7,7,8,.95)', backdropFilter: 'blur(10px)' }}>
           {/* Uploaded file preview */}
           {uploadedFile && (
             <div className="mb-3 p-3 rounded-xl bg-primary/10 border border-primary/30 flex items-center justify-between">
@@ -1146,10 +1149,10 @@ export default function Home() {
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={text.placeholder}
-              className="min-h-[60px] max-h-[120px] resize-none ruzn-input"
+              className="min-h-[50px] sm:min-h-[60px] max-h-[100px] sm:max-h-[120px] resize-none ruzn-input text-sm sm:text-base"
               dir={isRTL ? "rtl" : "ltr"}
             />
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-1.5 sm:gap-2">
               {/* File upload button */}
               <input
                 type="file"
@@ -1161,35 +1164,35 @@ export default function Home() {
               <button
                 onClick={() => fileInputRef.current?.click()}
                 disabled={isUploading || !!uploadedFile}
-                className={`h-[30px] px-3 rounded-xl ruzn-btn disabled:opacity-50`}
+                className={`h-[28px] sm:h-[30px] px-2 sm:px-3 rounded-xl ruzn-btn disabled:opacity-50`}
                 title={text.attachFile}
               >
                 {isUploading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                 ) : (
-                  <Paperclip className="w-4 h-4" />
+                  <Paperclip className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
               </button>
               <button
                 onClick={toggleRecording}
-                className={`h-[30px] px-3 rounded-xl ${isRecording ? 'ruzn-tag-high animate-pulse' : 'ruzn-btn'}`}
+                className={`h-[28px] sm:h-[30px] px-2 sm:px-3 rounded-xl ${isRecording ? 'ruzn-tag-high animate-pulse' : 'ruzn-btn'}`}
                 title={text.voiceInput}
               >
                 {isRecording ? (
-                  <MicOff className="w-4 h-4" />
+                  <MicOff className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 ) : (
-                  <Mic className="w-4 h-4" />
+                  <Mic className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                 )}
               </button>
               <button
                 onClick={handleSend}
                 disabled={(!input.trim() && !uploadedFile) || chatMutation.isPending || analyzeDocumentMutation.isPending}
-                className="h-[30px] px-3 rounded-xl ruzn-btn-gold disabled:opacity-50"
+                className="h-[28px] sm:h-[30px] px-2 sm:px-3 rounded-xl ruzn-btn-gold disabled:opacity-50"
               >
                 {(chatMutation.isPending || analyzeDocumentMutation.isPending) ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 animate-spin" />
                 ) : (
-                  <Send className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
+                  <Send className={`w-3.5 h-3.5 sm:w-4 sm:h-4 ${isRTL ? "rotate-180" : ""}`} />
                 )}
               </button>
             </div>

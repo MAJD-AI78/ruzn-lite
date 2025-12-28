@@ -331,6 +331,15 @@
 
 /* Ruzn Custom Utilities */
 @layer utilities {
+  /* Hide scrollbar for horizontal scroll areas */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
   .text-gold-gradient {
     background: linear-gradient(135deg, #d6b36a 0%, #f4d03f 50%, #d6b36a 100%);
     -webkit-background-clip: text;
