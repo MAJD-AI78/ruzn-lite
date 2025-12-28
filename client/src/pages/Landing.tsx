@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -10,12 +10,18 @@ import {
   Scale,
   Lock,
   ArrowRight,
-  Globe,
   Sparkles,
   CheckCircle,
   Mail,
   Building2,
-  Users
+  Users,
+  Layers,
+  Radar,
+  ScrollText,
+  BarChart3,
+  ServerCog,
+  Network,
+  Globe,
 } from "lucide-react";
 
 type Language = "arabic" | "english";
@@ -23,27 +29,100 @@ type Language = "arabic" | "english";
 const UI_TEXT = {
   arabic: {
     title: "رُزن",
-    tagline: "الذكاء الاصطناعي للحوكمة والامتثال",
-    subtitle: "منصة ذكية لتحليل البلاغات والاستشارات القانونية",
-    description: "نظام متقدم يعتمد على الذكاء الاصطناعي لمساعدة المؤسسات الحكومية والخاصة في إدارة الشكاوى وتحليل المخاطر والامتثال التنظيمي.",
-    features: {
-      complaints: {
-        title: "تحليل البلاغات",
-        desc: "تصنيف وتحليل الشكاوى تلقائياً مع تقييم درجة الخطورة"
-      },
-      legal: {
-        title: "الاستشارات القانونية",
-        desc: "مساعد ذكي للاستفسارات القانونية والتنظيمية"
-      },
-      analytics: {
-        title: "لوحة التحليلات",
-        desc: "تقارير شاملة ورؤى تحليلية لاتخاذ القرارات"
-      },
-      security: {
-        title: "أمان البيانات",
-        desc: "حماية متقدمة للبيانات مع التشفير الكامل"
-      }
+    tagline: "ذكاء سيادي للحوكمة والنزاهة والامتثال",
+    subtitle:
+      "منصة ذكاء تشغيلي تجمع البلاغات والامتثال والبحث القانوني في طبقة واحدة قابلة للتدقيق",
+    description:
+      "رُزن هو نظام ذكاء اصطناعي متقدم يدعم الجهات والمؤسسات في تحويل البيانات المعقدة إلى قرارات واضحة وقابلة للتوثيق — مع الحفاظ على السيادة والخصوصية والحَوكمة.",
+    // NEW: value bullets (public-safe)
+    valueBullets: [
+      "مخرجات قابلة للتفسير وليست صندوقاً أسود",
+      "دعم قرار (Human-in-the-loop) — القرار النهائي بيد المختص",
+      "أثر تدقيقي كامل (Audit Trail) وحزم أدلة قابلة للتصدير",
+      "إتاحة التشغيل محلياً/سيادياً وبيئات عالية الحساسية عند الحاجة",
+    ],
+    sections: {
+      capabilities: "قدرات رُزن الأساسية",
+      howItWorks: "كيف يعمل رُزن",
+      productPath: "مسار المنتج: رُزن لايت → رُزن-ASI",
+      governance: "حوكمة وثقة",
+      clients: "القطاعات المستهدفة",
+      contact: "تواصل معنا",
     },
+    capabilities: [
+      {
+        icon: "complaints",
+        title: "ذكاء البلاغات والتقارير",
+        desc: "تصنيف وفرز تلقائي، تقييم مخاطر، إحالة ذكية، وحزم حالة جاهزة للمحققين."
+      },
+      {
+        icon: "integrity",
+        title: "تحليلات النزاهة والمخاطر",
+        desc: "اكتشاف أنماط المخاطر، مؤشرات التلاعب/تضارب المصالح، وبؤر المخاطر عبر الجهات."
+      },
+      {
+        icon: "legal",
+        title: "ذكاء قانوني وتشريعي سيادي",
+        desc: "بحث وتفسير قانوني/تنظيمي، مقارنة نصوص، وإعداد ملخصات أثر وامتثال قابلة للتوثيق."
+      },
+      {
+        icon: "briefs",
+        title: "لوحات مؤشرات وتقارير قيادية",
+        desc: "لوحة تنفيذية + موجز يومي/أسبوعي قابل للطباعة للمسؤولين وصانعي القرار."
+      },
+    ],
+    how: [
+      {
+        title: "١) إدخال بيانات من قنوات متعددة",
+        desc: "استقبال بلاغات/مستندات/مراسلات/سجلات — ثم توحيدها ضمن نموذج بيانات منضبط."
+      },
+      {
+        title: "٢) فرز وتحليل وإسناد",
+        desc: "توليد تصنيف + درجة مخاطر + مؤشرات + إحالة مقترحة، مع تفسير واضح لأسباب القرار."
+      },
+      {
+        title: "٣) حزمة أدلة + أثر تدقيقي",
+        desc: "إنشاء Case Pack: ملخص، مؤشرات، توصيات، وروابط/مرفقات — مع سجل كامل للأحداث."
+      },
+      {
+        title: "٤) لوحة قيادة + موجز يومي",
+        desc: "تحويل النتائج إلى لوحات مؤشرات وبؤر مخاطر وإجراءات مقترحة قابلة للتنفيذ."
+      },
+    ],
+    productPath: {
+      lite: {
+        title: "رُزن لايت (Proof-of-Value)",
+        desc: "نطاق بسيط وسريع لإثبات الأثر خلال أيام ببيانات منضبطة ومؤشرات قابلة للقياس."
+      },
+      asi: {
+        title: "رُزن-ASI (المنصة الكاملة)",
+        desc: "أتمتة متعددة الدوائر، تكاملات أعمق، إدارة سياسات، قدرات بحث قانوني موسعة، وتشغيل سيادي."
+      },
+      note:
+        "المبدأ: نبدأ صغيراً — نثبت الأثر — ثم نوسع النطاق بثقة وبحوكمة."
+    },
+    governance: [
+      {
+        icon: "sov",
+        title: "سيادة التشغيل",
+        desc: "خيارات تشغيل محلي/سيادي، وملاءمة لبيئات عالية الحساسية عند الحاجة."
+      },
+      {
+        icon: "audit",
+        title: "قابل للتدقيق",
+        desc: "كل مخرج يتضمن أسباباً، مؤشرات، وسجل أحداث — لتقليل المخاطر وتعزيز الثقة."
+      },
+      {
+        icon: "safe",
+        title: "دعم قرار لا اتهام",
+        desc: "رُزن يرشّح ويصنف ويقترح — لكنه لا يستبدل الحكم المهني ولا يصدر أحكاماً."
+      },
+      {
+        icon: "deploy",
+        title: "قابل للنشر بسرعة",
+        desc: "حزمة PoV سريعة، ثم قابلية توسع تدريجية حسب السياسات والحوكمة."
+      },
+    ],
     accessSection: {
       title: "الوصول للمنصة",
       subtitle: "أدخل رمز الوصول للدخول إلى النظام",
@@ -62,32 +141,103 @@ const UI_TEXT = {
       poweredBy: "مدعوم من أكيوتيريوم تكنولوجيز",
       rights: "جميع الحقوق محفوظة"
     },
-    clients: "عملاؤنا المحتملون",
-    clientTypes: ["الجهات الحكومية", "المؤسسات المالية", "الشركات الكبرى"]
+    clients: "القطاعات المستهدفة",
+    clientTypes: ["الجهات الحكومية", "المؤسسات المالية", "الشركات الكبرى", "القطاعات المنظمة"]
   },
   english: {
     title: "Ruzn",
-    tagline: "AI for Governance & Compliance",
-    subtitle: "Intelligent Platform for Complaint Analysis & Legal Advisory",
-    description: "An advanced AI-powered system helping government and private organizations manage complaints, analyze risks, and ensure regulatory compliance.",
-    features: {
-      complaints: {
-        title: "Complaint Analysis",
-        desc: "Automatic classification and analysis with risk scoring"
-      },
-      legal: {
-        title: "Legal Advisory",
-        desc: "AI assistant for legal and regulatory inquiries"
-      },
-      analytics: {
-        title: "Analytics Dashboard",
-        desc: "Comprehensive reports and insights for decision-making"
-      },
-      security: {
-        title: "Data Security",
-        desc: "Advanced data protection with full encryption"
-      }
+    tagline: "Sovereign Intelligence for Governance, Integrity & Compliance",
+    subtitle:
+      "An auditable operations layer unifying complaints, compliance signals, and legal intelligence",
+    description:
+      "Ruzn is an advanced AI system that turns complex institutional data into clear, defensible decisions—built around sovereignty, privacy, and governance.",
+    valueBullets: [
+      "Explainable outputs (not black-box magic)",
+      "Human-in-the-loop decision support",
+      "Exportable evidence packs + full audit trail",
+      "On-prem / sovereign deployment options for sensitive environments",
+    ],
+    sections: {
+      capabilities: "Core Capabilities",
+      howItWorks: "How Ruzn Works",
+      productPath: "Product Path: Ruzn-Lite → Ruzn-ASI",
+      governance: "Governance & Trust",
+      clients: "Who It’s For",
+      contact: "Contact",
     },
+    capabilities: [
+      {
+        icon: "complaints",
+        title: "Complaints & Reports Intelligence",
+        desc: "Auto classification, risk scoring, smart routing, and investigator-ready case packs."
+      },
+      {
+        icon: "integrity",
+        title: "Integrity & Risk Analytics",
+        desc: "Pattern detection, conflict-of-interest signals, and entity hotspot monitoring."
+      },
+      {
+        icon: "legal",
+        title: "Sovereign Legal & Legislative Intelligence",
+        desc: "Legal/regulatory research, text comparison, and defensible compliance briefs."
+      },
+      {
+        icon: "briefs",
+        title: "Executive Dashboards & Briefing",
+        desc: "Leadership dashboards + printable daily/weekly decision briefs."
+      },
+    ],
+    how: [
+      {
+        title: "1) Multi-channel intake",
+        desc: "Ingest complaints/documents/messages/records, then normalize into a governed schema."
+      },
+      {
+        title: "2) Triage + analysis + routing",
+        desc: "Generate classification, risk score, evidence flags, and suggested routing—with rationale."
+      },
+      {
+        title: "3) Evidence pack + audit trail",
+        desc: "Produce case packs: summaries, signals, recommended actions, and full event logs."
+      },
+      {
+        title: "4) Dashboards + daily briefs",
+        desc: "Convert results into KPIs, hotspots, and leadership-ready briefings."
+      },
+    ],
+    productPath: {
+      lite: {
+        title: "Ruzn-Lite (Proof of Value)",
+        desc: "A minimal, fast deployment to prove impact in days with measurable KPIs."
+      },
+      asi: {
+        title: "Ruzn-ASI (Full Platform)",
+        desc: "Multi-directorate workflows, deeper integrations, policy governance, and sovereign-scale deployment."
+      },
+      note: "Start small → prove impact → scale safely under governance."
+    },
+    governance: [
+      {
+        icon: "sov",
+        title: "Sovereign deployment",
+        desc: "On-prem / sovereign options designed for high-sensitivity environments."
+      },
+      {
+        icon: "audit",
+        title: "Auditable by design",
+        desc: "Every output includes rationale, flags, and traceable event logs."
+      },
+      {
+        icon: "safe",
+        title: "Decision support, not accusation",
+        desc: "Ruzn recommends and prioritizes—professionals remain the authority."
+      },
+      {
+        icon: "deploy",
+        title: "Rapid rollout",
+        desc: "Fast PoV package with a controlled scale-up roadmap."
+      },
+    ],
     accessSection: {
       title: "Platform Access",
       subtitle: "Enter your access code to enter the system",
@@ -106,8 +256,8 @@ const UI_TEXT = {
       poweredBy: "Powered by Acuterium Technologies",
       rights: "All Rights Reserved"
     },
-    clients: "Potential Clients",
-    clientTypes: ["Government Entities", "Financial Institutions", "Large Corporations"]
+    clients: "Who It’s For",
+    clientTypes: ["Government Entities", "Financial Institutions", "Large Corporations", "Regulated Sectors"]
   }
 };
 
@@ -119,17 +269,18 @@ export default function Landing({ onAccessGranted }: LandingProps) {
   const [language, setLanguage] = useState<Language>("arabic");
   const [accessCode, setAccessCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
-  
+
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
-  
+
   // Access code from environment or hardcoded for demo
+  // NOTE: requested: do not change password request flow
   const VALID_ACCESS_CODE = "RUZN2024";
-  
+
   const handleAccessSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsVerifying(true);
-    
+
     setTimeout(() => {
       if (accessCode.toUpperCase() === VALID_ACCESS_CODE) {
         toast.success(text.accessSection.success);
@@ -142,65 +293,159 @@ export default function Landing({ onAccessGranted }: LandingProps) {
       setIsVerifying(false);
     }, 500);
   };
-  
+
+  const bgStyle = useMemo(
+    () => ({
+      background:
+        "radial-gradient(1200px 600px at 60% 18%, rgba(214,179,106,.16), transparent 55%)," +
+        "radial-gradient(900px 500px at 20% 80%, rgba(96,165,250,.10), transparent 60%)," +
+        "linear-gradient(180deg, #050506, #0a0a0c)",
+    }),
+    []
+  );
+
   return (
-    <div 
+    <div
       className="min-h-screen text-foreground"
       dir={isRTL ? "rtl" : "ltr"}
+      style={bgStyle}
     >
+      {/* Global font + subtle glass tokens (matches ruzn-lite_poc_osai_demo_bilingual.html vibe) */}
+      <style>
+        {`
+          :root{
+            --ruzn-bg:#070708;
+            --ruzn-text: rgba(255,255,255,.92);
+            --ruzn-muted: rgba(255,255,255,.70);
+            --ruzn-stroke: rgba(255,255,255,.10);
+            --ruzn-gold: #d6b36a;
+            --ruzn-gold2: #b8924d;
+            --ruzn-shadow: 0 18px 60px rgba(0,0,0,.55);
+          }
+          .ruzn-font { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial; }
+          [dir="rtl"] .ruzn-font { font-family: "Noto Naskh Arabic","Noto Kufi Arabic","Geeza Pro","Tahoma","Arial",sans-serif; }
+          .ruzn-glass {
+            background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.03));
+            border: 1px solid rgba(255,255,255,.10);
+            box-shadow: var(--ruzn-shadow);
+            backdrop-filter: blur(10px);
+          }
+          .ruzn-glass-soft {
+            background: rgba(255,255,255,.04);
+            border: 1px solid rgba(255,255,255,.08);
+            backdrop-filter: blur(10px);
+          }
+          .ruzn-gold-gradient {
+            background: linear-gradient(90deg, rgba(214,179,106,.95), rgba(184,146,77,.85));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+          }
+        `}
+      </style>
+
       {/* Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/30">
-        <div className="container max-w-6xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <header className="fixed top-0 left-0 right-0 z-50 bg-black/35 backdrop-blur-md border-b border-white/10">
+        <div className="container max-w-6xl mx-auto px-4 py-4 ruzn-font">
+          <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-3">
-              <img 
-                src="/ruzn-logo.png" 
-                alt="Ruzn Logo" 
+              <img
+                src="/ruzn-logo.png"
+                alt="Ruzn Logo"
                 className="h-10 w-10 object-contain"
               />
-              <span className="text-2xl font-bold text-gold-gradient">{text.title}</span>
+              <span className="text-2xl font-extrabold ruzn-gold-gradient">
+                {text.title}
+              </span>
             </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setLanguage(language === "arabic" ? "english" : "arabic")}
-              className="gap-2 border-primary/30"
-            >
-              <Globe className="w-4 h-4" />
-              {language === "arabic" ? "English" : "العربية"}
-            </Button>
+
+            {/* Language toggle styled like the POC segmented control */}
+            <div className="flex items-center gap-2">
+              <div className="ruzn-glass-soft rounded-full p-1 flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setLanguage("arabic")}
+                  className={`px-3 py-1.5 rounded-full text-xs transition ${
+                    language === "arabic"
+                      ? "bg-[rgba(214,179,106,.12)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] font-extrabold"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  العربية
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setLanguage("english")}
+                  className={`px-3 py-1.5 rounded-full text-xs transition ${
+                    language === "english"
+                      ? "bg-[rgba(214,179,106,.12)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] font-extrabold"
+                      : "text-white/70 hover:text-white"
+                  }`}
+                >
+                  English
+                </button>
+              </div>
+
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setLanguage(language === "arabic" ? "english" : "arabic")
+                }
+                className="gap-2 border-white/15 bg-white/5 hover:bg-white/10"
+              >
+                <Globe className="w-4 h-4" />
+                {language === "arabic" ? "EN" : "AR"}
+              </Button>
+            </div>
           </div>
         </div>
       </header>
-      
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container max-w-6xl mx-auto text-center">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-6">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm text-primary">{text.tagline}</span>
+
+      {/* Hero */}
+      <section className="pt-32 pb-14 px-4">
+        <div className="container max-w-6xl mx-auto text-center ruzn-font">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-6">
+            <Sparkles className="w-4 h-4 text-[rgba(214,179,106,.95)]" />
+            <span className="text-sm text-[rgba(214,179,106,.95)]">
+              {text.tagline}
+            </span>
           </div>
-          
-          <h1 className="text-4xl md:text-6xl font-bold mb-6 text-gold-gradient">
+
+          <h1 className="text-4xl md:text-6xl font-extrabold mb-6 ruzn-gold-gradient">
             {text.title}
           </h1>
-          
-          <p className="text-xl md:text-2xl text-muted-foreground mb-4">
+
+          <p className="text-xl md:text-2xl text-white/85 mb-4">
             {text.subtitle}
           </p>
-          
-          <p className="text-base text-muted-foreground/80 max-w-2xl mx-auto mb-12">
+
+          <p className="text-base text-white/70 max-w-3xl mx-auto mb-10 leading-relaxed">
             {text.description}
           </p>
-          
-          {/* Access Code Form */}
-          <Card className="max-w-md mx-auto p-6 bg-card/50 border-primary/20">
+
+          {/* Value bullets */}
+          <div className="max-w-3xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-3 mb-10">
+            {text.valueBullets.map((b, i) => (
+              <div
+                key={i}
+                className="ruzn-glass-soft rounded-2xl px-4 py-3 text-white/80 flex items-start gap-3"
+              >
+                <CheckCircle className="w-5 h-5 text-[rgba(214,179,106,.95)] mt-0.5" />
+                <span className="text-sm leading-relaxed">{b}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Access Code Form — DO NOT CHANGE FLOW */}
+          <Card className="max-w-md mx-auto p-6 ruzn-glass border-[rgba(214,179,106,.25)]">
             <div className="flex items-center gap-2 mb-4 justify-center">
-              <Lock className="w-5 h-5 text-primary" />
-              <h3 className="font-semibold">{text.accessSection.title}</h3>
+              <Lock className="w-5 h-5 text-[rgba(214,179,106,.95)]" />
+              <h3 className="font-bold text-white/90">
+                {text.accessSection.title}
+              </h3>
             </div>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm text-white/70 mb-4">
               {text.accessSection.subtitle}
             </p>
             <form onSubmit={handleAccessSubmit} className="flex gap-2">
@@ -209,12 +454,12 @@ export default function Landing({ onAccessGranted }: LandingProps) {
                 value={accessCode}
                 onChange={(e) => setAccessCode(e.target.value)}
                 placeholder={text.accessSection.placeholder}
-                className="flex-1 bg-background/50 border-primary/20"
+                className="flex-1 bg-black/30 border-white/15 text-white placeholder:text-white/40 focus-visible:ring-[rgba(214,179,106,.35)]"
               />
-              <Button 
-                type="submit" 
+              <Button
+                type="submit"
                 disabled={isVerifying || !accessCode}
-                className="gap-2"
+                className="gap-2 bg-[rgba(214,179,106,.18)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] hover:bg-[rgba(214,179,106,.26)]"
               >
                 {text.accessSection.button}
                 <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
@@ -223,79 +468,231 @@ export default function Landing({ onAccessGranted }: LandingProps) {
           </Card>
         </div>
       </section>
-      
-      {/* Features Section */}
-      <section className="py-20 px-4 bg-muted/10">
-        <div className="container max-w-6xl mx-auto">
+
+      {/* Capabilities */}
+      <section className="py-16 px-4">
+        <div className="container max-w-6xl mx-auto ruzn-font">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white/90">
+              {text.sections.capabilities}
+            </h2>
+            <p className="text-white/65 mt-2">
+              {language === "arabic"
+                ? "طبقة ذكاء واحدة لعمليات عالية الحساسية — مع حوكمة قابلة للتدقيق."
+                : "One intelligence layer for high-stakes operations—auditable under governance."}
+            </p>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <FeatureCard
+            <CapabilityCard
               icon={<FileSearch className="w-8 h-8" />}
-              title={text.features.complaints.title}
-              description={text.features.complaints.desc}
+              title={text.capabilities[0].title}
+              description={text.capabilities[0].desc}
             />
-            <FeatureCard
-              icon={<Scale className="w-8 h-8" />}
-              title={text.features.legal.title}
-              description={text.features.legal.desc}
+            <CapabilityCard
+              icon={<Radar className="w-8 h-8" />}
+              title={text.capabilities[1].title}
+              description={text.capabilities[1].desc}
             />
-            <FeatureCard
-              icon={<Brain className="w-8 h-8" />}
-              title={text.features.analytics.title}
-              description={text.features.analytics.desc}
+            <CapabilityCard
+              icon={<ScrollText className="w-8 h-8" />}
+              title={text.capabilities[2].title}
+              description={text.capabilities[2].desc}
             />
-            <FeatureCard
-              icon={<Shield className="w-8 h-8" />}
-              title={text.features.security.title}
-              description={text.features.security.desc}
+            <CapabilityCard
+              icon={<BarChart3 className="w-8 h-8" />}
+              title={text.capabilities[3].title}
+              description={text.capabilities[3].desc}
             />
           </div>
         </div>
       </section>
-      
-      {/* Clients Section */}
-      <section className="py-20 px-4">
-        <div className="container max-w-6xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-8 text-primary">{text.clients}</h2>
-          <div className="flex flex-wrap justify-center gap-8">
+
+      {/* How it Works */}
+      <section className="py-16 px-4">
+        <div className="container max-w-6xl mx-auto ruzn-font">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white/90">
+              {text.sections.howItWorks}
+            </h2>
+            <p className="text-white/65 mt-2">
+              {language === "arabic"
+                ? "تصميم تشغيلي: من الإدخال إلى الحزمة إلى التقرير — بدون ضجيج."
+                : "Operational design: intake → case pack → brief. No noise."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {text.how.map((step, i) => (
+              <Card
+                key={i}
+                className="p-6 ruzn-glass border-white/10"
+              >
+                <div className="flex items-start gap-4">
+                  <div className="h-11 w-11 rounded-2xl flex items-center justify-center border border-[rgba(214,179,106,.25)] bg-[rgba(214,179,106,.10)]">
+                    <Layers className="w-5 h-5 text-[rgba(214,179,106,.95)]" />
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-white/90 mb-2">
+                      {step.title}
+                    </h3>
+                    <p className="text-sm text-white/70 leading-relaxed">
+                      {step.desc}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Product Path */}
+      <section className="py-16 px-4">
+        <div className="container max-w-6xl mx-auto ruzn-font">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white/90">
+              {text.sections.productPath}
+            </h2>
+            <p className="text-white/65 mt-2">{text.productPath.note}</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card className="p-6 ruzn-glass border-[rgba(214,179,106,.20)]">
+              <div className="flex items-start gap-4">
+                <div className="h-11 w-11 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5">
+                  <ServerCog className="w-5 h-5 text-[rgba(214,179,106,.95)]" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-white/90">
+                    {text.productPath.lite.title}
+                  </h3>
+                  <p className="text-sm text-white/70 mt-2 leading-relaxed">
+                    {text.productPath.lite.desc}
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6 ruzn-glass border-white/10">
+              <div className="flex items-start gap-4">
+                <div className="h-11 w-11 rounded-2xl flex items-center justify-center border border-white/10 bg-white/5">
+                  <Network className="w-5 h-5 text-[rgba(214,179,106,.95)]" />
+                </div>
+                <div>
+                  <h3 className="font-extrabold text-white/90">
+                    {text.productPath.asi.title}
+                  </h3>
+                  <p className="text-sm text-white/70 mt-2 leading-relaxed">
+                    {text.productPath.asi.desc}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          </div>
+
+          <div className="mt-6 text-center text-white/70 text-sm">
+            {language === "arabic"
+              ? "رُزن جزء من منظومة Acuterium: منصة سيادية للذكاء والتنسيق الآمن عبر القطاعات المنظمة."
+              : "Ruzn is part of the Acuterium ecosystem: sovereign-grade intelligence and secure orchestration for regulated sectors."}
+          </div>
+        </div>
+      </section>
+
+      {/* Governance & Trust */}
+      <section className="py-16 px-4">
+        <div className="container max-w-6xl mx-auto ruzn-font">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl md:text-3xl font-extrabold text-white/90">
+              {text.sections.governance}
+            </h2>
+            <p className="text-white/65 mt-2">
+              {language === "arabic"
+                ? "الثقة تُبنى بالحوكمة والأثر التدقيقي، لا بالشعارات."
+                : "Trust comes from governance and auditability—not slogans."}
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {text.governance.map((g, i) => (
+              <Card key={i} className="p-6 ruzn-glass border-white/10">
+                <div className="flex items-start gap-4">
+                  <div className="h-11 w-11 rounded-2xl flex items-center justify-center border border-[rgba(214,179,106,.25)] bg-[rgba(214,179,106,.10)]">
+                    {g.icon === "sov" && <Globe className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                    {g.icon === "audit" && <FileSearch className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                    {g.icon === "safe" && <Shield className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                    {g.icon === "deploy" && <ArrowRight className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                  </div>
+                  <div>
+                    <h3 className="font-extrabold text-white/90 mb-2">
+                      {g.title}
+                    </h3>
+                    <p className="text-sm text-white/70 leading-relaxed">
+                      {g.desc}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Clients */}
+      <section className="py-16 px-4">
+        <div className="container max-w-6xl mx-auto text-center ruzn-font">
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-8 text-white/90">
+            {text.sections.clients}
+          </h2>
+
+          <div className="flex flex-wrap justify-center gap-4">
             {text.clientTypes.map((client, index) => (
-              <div key={index} className="flex items-center gap-3 px-6 py-3 rounded-xl bg-muted/20 border border-border/30">
-                {index === 0 && <Building2 className="w-5 h-5 text-primary" />}
-                {index === 1 && <Scale className="w-5 h-5 text-primary" />}
-                {index === 2 && <Users className="w-5 h-5 text-primary" />}
-                <span className="text-muted-foreground">{client}</span>
+              <div
+                key={index}
+                className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-white/5 border border-white/10"
+              >
+                {index === 0 && <Building2 className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                {index === 1 && <Scale className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                {index === 2 && <Users className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                {index === 3 && <Brain className="w-5 h-5 text-[rgba(214,179,106,.95)]" />}
+                <span className="text-white/75">{client}</span>
               </div>
             ))}
           </div>
         </div>
       </section>
-      
-      {/* Contact Section */}
-      <section className="py-20 px-4 bg-muted/10">
-        <div className="container max-w-6xl mx-auto text-center">
-          <h2 className="text-2xl font-bold mb-4">{text.contact.title}</h2>
-          <p className="text-muted-foreground mb-6">{text.contact.subtitle}</p>
-          
+
+      {/* Contact */}
+      <section className="py-16 px-4">
+        <div className="container max-w-6xl mx-auto text-center ruzn-font">
+          <h2 className="text-2xl md:text-3xl font-extrabold mb-4 text-white/90">
+            {text.contact.title}
+          </h2>
+          <p className="text-white/70 mb-6">{text.contact.subtitle}</p>
+
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <a 
+            <a
               href={`mailto:${text.contact.email}`}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-primary/10 border border-primary/20 hover:bg-primary/20 transition-colors"
+              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-white/5 border border-white/10 hover:bg-white/10 transition-colors"
             >
-              <Mail className="w-5 h-5 text-primary" />
-              <span>{text.contact.email}</span>
+              <Mail className="w-5 h-5 text-[rgba(214,179,106,.95)]" />
+              <span className="text-white/85">{text.contact.email}</span>
             </a>
-            
-            <Button className="gap-2">
+
+            <Button
+              className="gap-2 bg-[rgba(214,179,106,.18)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] hover:bg-[rgba(214,179,106,.26)]"
+            >
               <CheckCircle className="w-4 h-4" />
               {text.contact.cta}
             </Button>
           </div>
         </div>
       </section>
-      
+
       {/* Footer */}
-      <footer className="py-8 px-4 border-t border-border/30">
-        <div className="container max-w-6xl mx-auto text-center">
-          <p className="text-sm text-muted-foreground">
+      <footer className="py-8 px-4 border-t border-white/10">
+        <div className="container max-w-6xl mx-auto text-center ruzn-font">
+          <p className="text-sm text-white/60">
             {text.footer.poweredBy} • © 2024 {text.footer.rights}
           </p>
         </div>
@@ -304,12 +701,20 @@ export default function Landing({ onAccessGranted }: LandingProps) {
   );
 }
 
-function FeatureCard({ icon, title, description }: { icon: React.ReactNode; title: string; description: string }) {
+function CapabilityCard({
+  icon,
+  title,
+  description,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
   return (
-    <Card className="p-6 bg-card/30 border-border/30 hover:border-primary/30 transition-colors">
-      <div className="text-primary mb-4">{icon}</div>
-      <h3 className="font-semibold mb-2">{title}</h3>
-      <p className="text-sm text-muted-foreground">{description}</p>
+    <Card className="p-6 ruzn-glass border-white/10 hover:border-[rgba(214,179,106,.25)] transition-colors">
+      <div className="text-[rgba(214,179,106,.95)] mb-4">{icon}</div>
+      <h3 className="font-extrabold mb-2 text-white/90">{title}</h3>
+      <p className="text-sm text-white/70 leading-relaxed">{description}</p>
     </Card>
   );
 }
