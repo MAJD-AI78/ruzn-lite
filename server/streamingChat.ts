@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { invokeLLMStream, Message } from './_core/llm';
 import { logAnalyticsEvent } from './db';
 import { notifyOwner } from './_core/notification';
+import { shouldSearchWeb, searchAndScrape, formatSearchResultsForAI } from './webSearch';
 
 // System prompts for streaming (simplified version)
 const SYSTEM_PROMPTS = {
@@ -89,8 +90,39 @@ export async function handleStreamingChat(req: Request, res: Response) {
       }
     }
 
-    // Add current message
-    messages.push({ role: 'user', content: message });
+    // Check if web search is needed
+    let webSearchContext = '';
+    if (shouldSearchWeb(message)) {
+      try {
+        // Send searching status to client
+        res.write(`data: ${JSON.stringify({ type: 'status', status: 'searching' })}
+
+`);
+        
+        const { searchResults, scrapedContent } = await searchAndScrape(message);
+        
+        if (searchResults.length > 0) {
+          webSearchContext = '\n\n--- Web Search Results ---\n';
+          webSearchContext += formatSearchResultsForAI(searchResults);
+          
+          if (scrapedContent?.success && scrapedContent.content) {
+            webSearchContext += `\n--- Detailed Content from ${scrapedContent.title || scrapedContent.url} ---\n`;
+            webSearchContext += scrapedContent.content.substring(0, 2000);
+          }
+          webSearchContext += '\n--- End of Web Search Results ---\n';
+          webSearchContext += '\nUse the above web search results to inform your response. Cite sources when using this information.';
+        }
+      } catch (searchError) {
+        console.error('[WebSearch] Error during search:', searchError);
+        // Continue without web search results
+      }
+    }
+
+    // Add current message with web search context if available
+    const userMessageWithContext = webSearchContext 
+      ? `${message}\n\n${webSearchContext}`
+      : message;
+    messages.push({ role: 'user', content: userMessageWithContext });
 
     // Log analytics event
     if (userId) {

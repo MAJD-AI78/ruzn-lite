@@ -325,6 +325,7 @@ export default function Home() {
   const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const [isSearchingWeb, setIsSearchingWeb] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -497,14 +498,19 @@ export default function Home() {
             if (line.startsWith('data: ')) {
               try {
                 const data = JSON.parse(line.slice(6));
-                if (data.type === 'chunk' && data.content) {
+                if (data.type === 'status' && data.status === 'searching') {
+                  setIsSearchingWeb(true);
+                } else if (data.type === 'chunk' && data.content) {
+                  setIsSearchingWeb(false);
                   accumulatedContent += data.content;
                   setStreamingContent(accumulatedContent);
                 } else if (data.type === 'done') {
                   // Stream complete, add final message
+                  setIsSearchingWeb(false);
                   setMessages(prev => [...prev, { role: "assistant", content: accumulatedContent }]);
                   setStreamingContent("");
                 } else if (data.type === 'error') {
+                  setIsSearchingWeb(false);
                   throw new Error(data.error);
                 }
               } catch (e) {
@@ -526,6 +532,7 @@ export default function Home() {
       } finally {
         setIsStreaming(false);
         setStreamingContent("");
+        setIsSearchingWeb(false);
       }
     }
   };
@@ -1122,6 +1129,18 @@ export default function Home() {
                 </div>
               </div>
             ))
+          )}
+          
+          {/* Web search indicator */}
+          {isSearchingWeb && (
+            <div className="flex justify-start">
+              <div className="ruzn-card p-4">
+                <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,.70)' }}>
+                  <Globe className="w-4 h-4 animate-pulse" />
+                  <span>{language === "arabic" ? "جاري البحث في الإنترنت..." : "Searching the web..."}</span>
+                </div>
+              </div>
+            </div>
           )}
           
           {/* Streaming response display */}

@@ -455,3 +455,12 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Add mobile bottom navigation bar (fixed tab bar for thumb access)
 - [x] Implement pull-to-refresh gesture for chat history
 - [x] Add haptic feedback for button interactions using Vibration API
+
+
+## Phase 18 - Web Scraping & Live Information
+
+### Features
+- [x] Create web scraping utility module for fetching live data
+- [x] Integrate web search capability into AI chat flow
+- [x] Add trigger detection for when to search online
+- [x] Support Arabic and English search queries
