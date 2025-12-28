@@ -309,3 +309,52 @@ export const documentVersions = mysqlTable("document_versions", {
 
 export type DocumentVersion = typeof documentVersions.$inferSelect;
 export type InsertDocumentVersion = typeof documentVersions.$inferInsert;
+
+
+// User Documents - Secure storage for user-uploaded documents
+// Each user can only access their own documents
+export const userDocuments = mysqlTable("user_documents", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull(), // Owner of the document
+  
+  // Document metadata
+  title: varchar("title", { length: 500 }).notNull(),
+  titleArabic: varchar("titleArabic", { length: 500 }),
+  description: text("description"),
+  descriptionArabic: text("descriptionArabic"),
+  
+  // File information
+  fileName: varchar("fileName", { length: 255 }).notNull(),
+  fileType: mysqlEnum("fileType", ["pdf", "doc", "docx", "txt", "image"]).notNull(),
+  fileSize: int("fileSize").notNull(), // Size in bytes
+  fileUrl: varchar("fileUrl", { length: 1000 }).notNull(), // S3 URL
+  fileKey: varchar("fileKey", { length: 500 }).notNull(), // S3 key for deletion
+  
+  // Content (extracted from PDF/text files)
+  extractedContent: text("extractedContent"),
+  extractedContentArabic: text("extractedContentArabic"),
+  
+  // Classification
+  category: mysqlEnum("category", [
+    "complaint",
+    "evidence",
+    "legal_document",
+    "report",
+    "correspondence",
+    "other"
+  ]).default("other").notNull(),
+  
+  // Tags for organization
+  tags: text("tags"), // JSON array of tags
+  
+  // Access control
+  isPrivate: boolean("isPrivate").default(true).notNull(), // Private by default
+  sharedWith: text("sharedWith"), // JSON array of user IDs who can access
+  
+  // Timestamps
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type UserDocument = typeof userDocuments.$inferSelect;
+export type InsertUserDocument = typeof userDocuments.$inferInsert;

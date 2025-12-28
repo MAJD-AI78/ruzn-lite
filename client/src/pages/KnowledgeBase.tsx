@@ -59,11 +59,42 @@ export default function KnowledgeBase() {
   const [isPdfUploadOpen, setIsPdfUploadOpen] = useState(false);
   const [versionHistoryId, setVersionHistoryId] = useState<number | null>(null);
   
+  // New filter/sort state
+  const [sortBy, setSortBy] = useState<'date' | 'title'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
+  const [dateFilter, setDateFilter] = useState<'all' | 'year' | 'month' | 'week'>('all');
+  
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
 
-  // Fetch all knowledge base entries
-  const { data: allEntries, isLoading, refetch } = trpc.knowledge.getAll.useQuery();
+  // Calculate date range based on filter
+  const getDateRange = () => {
+    if (dateFilter === 'all') return {};
+    const now = new Date();
+    let dateFrom: Date;
+    switch (dateFilter) {
+      case 'week':
+        dateFrom = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'month':
+        dateFrom = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+        break;
+      case 'year':
+        dateFrom = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+        break;
+      default:
+        return {};
+    }
+    return { dateFrom: dateFrom.toISOString() };
+  };
+
+  // Fetch all knowledge base entries with sorting
+  const { data: allEntries, isLoading, refetch } = trpc.knowledge.getAll.useQuery({
+    category: selectedType as any,
+    sortBy,
+    sortOrder,
+    limit: 100
+  });
   
   // Seed mutation for admins
   const seedMutation = trpc.knowledge.seed.useMutation({
@@ -253,6 +284,63 @@ export default function KnowledgeBase() {
                 <span className="ml-1">{language === "arabic" ? config.labelAr : config.label}</span>
               </Button>
             ))}
+          </div>
+          
+          {/* Sorting and Date Filter Controls */}
+          <div className="flex flex-wrap items-center gap-4 pt-2 border-t border-white/10">
+            {/* Sort By */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/60 text-sm">{language === "arabic" ? "ترتيب حسب:" : "Sort by:"}</span>
+              <Select value={sortBy} onValueChange={(v) => setSortBy(v as 'date' | 'title')}>
+                <SelectTrigger className="w-[120px] bg-white/5 border-white/10 text-white h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a1a24] border-white/10">
+                  <SelectItem value="date" className="text-white hover:bg-white/10">
+                    {language === "arabic" ? "التاريخ" : "Date"}
+                  </SelectItem>
+                  <SelectItem value="title" className="text-white hover:bg-white/10">
+                    {language === "arabic" ? "العنوان" : "Title"}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
+                className="text-white/60 hover:text-white p-1 h-8"
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </Button>
+            </div>
+            
+            {/* Date Filter */}
+            <div className="flex items-center gap-2">
+              <span className="text-white/60 text-sm">{language === "arabic" ? "الفترة:" : "Period:"}</span>
+              <div className="flex rounded-lg overflow-hidden border border-white/20">
+                {(['all', 'year', 'month', 'week'] as const).map((period) => (
+                  <button
+                    key={period}
+                    onClick={() => setDateFilter(period)}
+                    className={`px-2 py-1 text-xs transition-colors ${
+                      dateFilter === period 
+                        ? "bg-amber-500 text-black" 
+                        : "bg-transparent text-white/70 hover:text-white hover:bg-white/10"
+                    }`}
+                  >
+                    {language === "arabic" 
+                      ? { all: "الكل", year: "سنة", month: "شهر", week: "أسبوع" }[period]
+                      : { all: "All", year: "Year", month: "Month", week: "Week" }[period]
+                    }
+                  </button>
+                ))}
+              </div>
+            </div>
+            
+            {/* Results count */}
+            <div className="ml-auto text-white/40 text-sm">
+              {filteredEntries.length} {language === "arabic" ? "وثيقة" : "documents"}
+            </div>
           </div>
         </div>
 

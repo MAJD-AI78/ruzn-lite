@@ -1093,22 +1093,91 @@ export const appRouter = router({
 
   // Knowledge Base Router
   knowledge: router({
-    // Search knowledge base
+    // Search knowledge base with filtering and sorting
     search: protectedProcedure
       .input(z.object({
         query: z.string(),
-        language: z.enum(['arabic', 'english']).optional()
+        language: z.enum(['arabic', 'english']).optional(),
+        category: z.enum(['law', 'regulation', 'policy', 'procedure', 'report', 'guideline']).optional(),
+        dateFrom: z.string().optional(), // ISO date string
+        dateTo: z.string().optional(),
+        sortBy: z.enum(['date', 'title', 'relevance']).optional().default('relevance'),
+        sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+        limit: z.number().min(1).max(50).optional().default(10)
       }))
       .query(async ({ input }) => {
-        const results = await searchKnowledgeBase(input.query, { language: input.language || 'english' });
-        return results;
+        const results = await searchKnowledgeBase(input.query, { 
+          language: input.language || 'english',
+          category: input.category,
+          limit: input.limit
+        });
+        
+        // Apply date filtering if specified
+        let filtered = results;
+        if (input.dateFrom || input.dateTo) {
+          filtered = results.filter((r: any) => {
+            const entryDate = r.entry?.effectiveDate || r.entry?.createdAt;
+            if (!entryDate) return true;
+            const date = new Date(entryDate);
+            if (input.dateFrom && date < new Date(input.dateFrom)) return false;
+            if (input.dateTo && date > new Date(input.dateTo)) return false;
+            return true;
+          });
+        }
+        
+        // Apply sorting
+        if (input.sortBy === 'date') {
+          filtered.sort((a: any, b: any) => {
+            const dateA = new Date(a.entry?.effectiveDate || a.entry?.createdAt || 0).getTime();
+            const dateB = new Date(b.entry?.effectiveDate || b.entry?.createdAt || 0).getTime();
+            return input.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+          });
+        } else if (input.sortBy === 'title') {
+          filtered.sort((a: any, b: any) => {
+            const titleA = (a.entry?.title || '').toLowerCase();
+            const titleB = (b.entry?.title || '').toLowerCase();
+            return input.sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
+          });
+        }
+        // 'relevance' is default from searchKnowledgeBase
+        
+        return filtered;
       }),
 
-    // Get all knowledge entries
+    // Get all knowledge entries with filtering and sorting
     getAll: protectedProcedure
-      .query(async () => {
-        const entries = await getAllKnowledge();
-        return entries;
+      .input(z.object({
+        category: z.enum(['law', 'regulation', 'policy', 'procedure', 'report', 'guideline']).optional(),
+        sortBy: z.enum(['date', 'title']).optional().default('date'),
+        sortOrder: z.enum(['asc', 'desc']).optional().default('desc'),
+        limit: z.number().min(1).max(100).optional().default(50),
+        offset: z.number().min(0).optional().default(0)
+      }).optional())
+      .query(async ({ input }) => {
+        const options = input || {};
+        const entries = await getAllKnowledge({
+          category: options.category,
+          limit: options.limit,
+          offset: options.offset
+        });
+        
+        // Apply sorting
+        let sorted = Array.isArray(entries) ? entries : (entries.entries || []);
+        if (options.sortBy === 'title') {
+          sorted = [...sorted].sort((a: any, b: any) => {
+            const titleA = (a.title || '').toLowerCase();
+            const titleB = (b.title || '').toLowerCase();
+            return options.sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
+          });
+        } else if (options.sortBy === 'date') {
+          sorted = [...sorted].sort((a: any, b: any) => {
+            const dateA = new Date(a.effectiveDate || a.updatedAt || a.createdAt || 0).getTime();
+            const dateB = new Date(b.effectiveDate || b.updatedAt || b.createdAt || 0).getTime();
+            return options.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+          });
+        }
+        
+        return { entries: sorted, total: Array.isArray(entries) ? entries.length : (entries.total || sorted.length) };
       }),
 
     // Seed knowledge base
@@ -1276,6 +1345,302 @@ export const appRouter = router({
             message: `Failed to process PDF: ${error instanceof Error ? error.message : 'Unknown error'}` 
           });
         }
+      })
+  }),
+
+  // User Documents Router - Secure document upload and management
+  userDocuments: router({
+    // Upload a new document
+    upload: protectedProcedure
+      .input(z.object({
+        title: z.string().min(1).max(500),
+        titleArabic: z.string().max(500).optional(),
+        description: z.string().optional(),
+        descriptionArabic: z.string().optional(),
+        fileName: z.string().min(1).max(255),
+        fileData: z.string(), // Base64 encoded file
+        fileType: z.enum(['pdf', 'doc', 'docx', 'txt', 'image']),
+        category: z.enum(['complaint', 'evidence', 'legal_document', 'report', 'correspondence', 'other']).default('other'),
+        tags: z.array(z.string()).optional(),
+        isPrivate: z.boolean().default(true)
+      }))
+      .mutation(async ({ input, ctx }) => {
+        try {
+          // Decode base64 file
+          const fileBuffer = Buffer.from(input.fileData, 'base64');
+          const fileSize = fileBuffer.length;
+          
+          // Validate file size (max 10MB)
+          if (fileSize > 10 * 1024 * 1024) {
+            throw new TRPCError({ code: 'BAD_REQUEST', message: 'File size exceeds 10MB limit' });
+          }
+          
+          // Generate unique file key
+          const timestamp = Date.now();
+          const sanitizedFileName = input.fileName.replace(/[^a-zA-Z0-9.-]/g, '_');
+          const fileKey = `user-documents/${ctx.user.id}/${timestamp}-${sanitizedFileName}`;
+          
+          // Determine content type
+          const contentTypeMap: Record<string, string> = {
+            pdf: 'application/pdf',
+            doc: 'application/msword',
+            docx: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            txt: 'text/plain',
+            image: 'image/jpeg'
+          };
+          const contentType = contentTypeMap[input.fileType] || 'application/octet-stream';
+          
+          // Upload to S3
+          const { url: fileUrl } = await storagePut(fileKey, fileBuffer, contentType);
+          
+          // Extract text content if PDF or text file
+          let extractedContent = null;
+          let extractedContentArabic = null;
+          
+          if (input.fileType === 'pdf') {
+            try {
+              const parsed = await parsePDF(fileBuffer);
+              const isArabic = isArabicText(parsed.text);
+              if (isArabic) {
+                extractedContentArabic = parsed.text;
+              } else {
+                extractedContent = parsed.text;
+              }
+            } catch (e) {
+              console.warn('[UserDocuments] PDF parsing failed:', e);
+            }
+          } else if (input.fileType === 'txt') {
+            const text = fileBuffer.toString('utf-8');
+            const isArabic = isArabicText(text);
+            if (isArabic) {
+              extractedContentArabic = text;
+            } else {
+              extractedContent = text;
+            }
+          }
+          
+          // Insert into database
+          const db = await import('./db').then(m => m.getDb());
+          const { userDocuments } = await import('../drizzle/schema');
+          
+          const [result] = await db.insert(userDocuments).values({
+            userId: ctx.user.id,
+            title: input.title,
+            titleArabic: input.titleArabic || null,
+            description: input.description || null,
+            descriptionArabic: input.descriptionArabic || null,
+            fileName: input.fileName,
+            fileType: input.fileType,
+            fileSize,
+            fileUrl,
+            fileKey,
+            extractedContent,
+            extractedContentArabic,
+            category: input.category,
+            tags: input.tags ? JSON.stringify(input.tags) : null,
+            isPrivate: input.isPrivate,
+            sharedWith: null
+          });
+          
+          return {
+            id: result.insertId,
+            fileUrl,
+            fileSize,
+            extractedContent: !!extractedContent || !!extractedContentArabic
+          };
+        } catch (error) {
+          console.error('[UserDocuments] Upload error:', error);
+          if (error instanceof TRPCError) throw error;
+          throw new TRPCError({ 
+            code: 'INTERNAL_SERVER_ERROR', 
+            message: `Failed to upload document: ${error instanceof Error ? error.message : 'Unknown error'}` 
+          });
+        }
+      }),
+
+    // Get user's own documents
+    getMyDocuments: protectedProcedure
+      .input(z.object({
+        category: z.enum(['complaint', 'evidence', 'legal_document', 'report', 'correspondence', 'other']).optional(),
+        limit: z.number().min(1).max(100).default(50),
+        offset: z.number().min(0).default(0)
+      }).optional())
+      .query(async ({ input, ctx }) => {
+        const options = input || {};
+        const db = await import('./db').then(m => m.getDb());
+        const { userDocuments } = await import('../drizzle/schema');
+        const { eq, and, desc } = await import('drizzle-orm');
+        
+        const conditions = [eq(userDocuments.userId, ctx.user.id)];
+        if (options.category) {
+          conditions.push(eq(userDocuments.category, options.category));
+        }
+        
+        const documents = await db
+          .select()
+          .from(userDocuments)
+          .where(and(...conditions))
+          .orderBy(desc(userDocuments.createdAt))
+          .limit(options.limit || 50)
+          .offset(options.offset || 0);
+        
+        // Get total count
+        const { sql } = await import('drizzle-orm');
+        const [countResult] = await db
+          .select({ count: sql<number>`count(*)` })
+          .from(userDocuments)
+          .where(and(...conditions));
+        
+        return {
+          documents,
+          total: countResult?.count || 0
+        };
+      }),
+
+    // Get a single document by ID (with access control)
+    getById: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .query(async ({ input, ctx }) => {
+        const db = await import('./db').then(m => m.getDb());
+        const { userDocuments } = await import('../drizzle/schema');
+        const { eq, and, or, like } = await import('drizzle-orm');
+        
+        const [document] = await db
+          .select()
+          .from(userDocuments)
+          .where(eq(userDocuments.id, input.id))
+          .limit(1);
+        
+        if (!document) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+        }
+        
+        // Check access: owner, shared with user, or admin
+        const isOwner = document.userId === ctx.user.id;
+        const isAdmin = ctx.user.role === 'admin';
+        const isShared = document.sharedWith && 
+          JSON.parse(document.sharedWith).includes(ctx.user.id);
+        
+        if (!isOwner && !isAdmin && !isShared && document.isPrivate) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' });
+        }
+        
+        return document;
+      }),
+
+    // Delete a document (owner only)
+    delete: protectedProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await import('./db').then(m => m.getDb());
+        const { userDocuments } = await import('../drizzle/schema');
+        const { eq, and } = await import('drizzle-orm');
+        
+        // First check ownership
+        const [document] = await db
+          .select()
+          .from(userDocuments)
+          .where(eq(userDocuments.id, input.id))
+          .limit(1);
+        
+        if (!document) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+        }
+        
+        // Only owner or admin can delete
+        if (document.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the owner can delete this document' });
+        }
+        
+        // Delete from database
+        await db
+          .delete(userDocuments)
+          .where(eq(userDocuments.id, input.id));
+        
+        // Note: S3 file deletion would require additional implementation
+        // For now, we just remove the database record
+        
+        return { success: true };
+      }),
+
+    // Update document metadata (owner only)
+    update: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        title: z.string().min(1).max(500).optional(),
+        titleArabic: z.string().max(500).optional(),
+        description: z.string().optional(),
+        descriptionArabic: z.string().optional(),
+        category: z.enum(['complaint', 'evidence', 'legal_document', 'report', 'correspondence', 'other']).optional(),
+        tags: z.array(z.string()).optional(),
+        isPrivate: z.boolean().optional()
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await import('./db').then(m => m.getDb());
+        const { userDocuments } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        
+        // First check ownership
+        const [document] = await db
+          .select()
+          .from(userDocuments)
+          .where(eq(userDocuments.id, input.id))
+          .limit(1);
+        
+        if (!document) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+        }
+        
+        if (document.userId !== ctx.user.id && ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the owner can update this document' });
+        }
+        
+        const { id, tags, ...updates } = input;
+        const updateData: any = { ...updates };
+        if (tags !== undefined) {
+          updateData.tags = JSON.stringify(tags);
+        }
+        
+        await db
+          .update(userDocuments)
+          .set(updateData)
+          .where(eq(userDocuments.id, id));
+        
+        return { success: true };
+      }),
+
+    // Share document with other users (owner only)
+    share: protectedProcedure
+      .input(z.object({
+        id: z.number(),
+        userIds: z.array(z.number())
+      }))
+      .mutation(async ({ input, ctx }) => {
+        const db = await import('./db').then(m => m.getDb());
+        const { userDocuments } = await import('../drizzle/schema');
+        const { eq } = await import('drizzle-orm');
+        
+        // First check ownership
+        const [document] = await db
+          .select()
+          .from(userDocuments)
+          .where(eq(userDocuments.id, input.id))
+          .limit(1);
+        
+        if (!document) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Document not found' });
+        }
+        
+        if (document.userId !== ctx.user.id) {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Only the owner can share this document' });
+        }
+        
+        await db
+          .update(userDocuments)
+          .set({ sharedWith: JSON.stringify(input.userIds) })
+          .where(eq(userDocuments.id, input.id));
+        
+        return { success: true };
       })
   })
 });

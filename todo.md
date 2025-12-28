@@ -527,3 +527,29 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [ ] Pass: pnpm security:audit, pnpm preflight, pnpm lint, pnpm test, pnpm build
 - [ ] Create branch fix/qa-guardrails-pass
 - [ ] Push to GitHub and open PR
+
+
+## Phase 23 - Developer Experience & User Documents
+
+### Format Scripts
+- [x] Add pnpm format script (Prettier write)
+- [x] Add pnpm format:check script (Prettier check)
+- [ ] Update CI to run format:check
+
+### CI/CD Configuration
+- [x] Update codex-guardrails.yml to run on pull requests (already configured)
+- [ ] Add format check to CI workflow (frozen file - cannot modify)
+- [x] Ensure all guardrails run automatically (already configured)
+
+### Enhanced Knowledge Base Search
+- [x] Add filtering by category/type
+- [x] Add filtering by date range
+- [x] Add sorting options (date, title, relevance)
+- [x] Update KnowledgeBase UI with filter/sort controls
+
+### Secure User Document Upload
+- [x] Create user_documents table in schema
+- [x] Add document upload endpoint with S3 storage
+- [x] Implement access control (users can only see their own docs)
+- [ ] Add document management UI (view, delete, download)
+- [x] Support PDF and text file uploads
