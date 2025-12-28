@@ -361,33 +361,34 @@ export default function EntityMap() {
     <div 
       className="min-h-screen text-foreground flex flex-col"
       dir={isRTL ? "rtl" : "ltr"}
+      style={{
+        background: 'radial-gradient(1200px 600px at 60% 18%, rgba(214,179,106,.16), transparent 55%), radial-gradient(900px 500px at 20% 80%, rgba(96,165,250,.10), transparent 60%), linear-gradient(180deg, #050506, #0a0a0c)'
+      }}
     >
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/35 backdrop-blur-md sticky top-0 z-50">
         <div className="container max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div className="flex items-center gap-4">
               <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-2">
+                <button className="ruzn-btn text-sm flex items-center gap-2">
                   <ArrowLeft className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
                   {text.backToChat}
-                </Button>
+                </button>
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-primary">{text.title}</h1>
-                <p className="text-sm text-muted-foreground">{text.subtitle}</p>
+                <h1 className="text-xl font-extrabold" style={{ color: 'rgba(214,179,106,.95)' }}>{text.title}</h1>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.subtitle}</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setLanguage(language === "arabic" ? "english" : "arabic")}
-                className="border-primary/30"
+                className="ruzn-btn text-sm"
               >
                 {language === "arabic" ? "EN" : "عربي"}
-              </Button>
+              </button>
             </div>
           </div>
         </div>

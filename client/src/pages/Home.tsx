@@ -466,7 +466,7 @@ export default function Home() {
       dir={isRTL ? "rtl" : "ltr"}
     >
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/35 backdrop-blur-md sticky top-0 z-50">
         <div className="container max-w-5xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -476,10 +476,10 @@ export default function Home() {
                 className="h-12 w-12 object-contain"
               />
               <div>
-                <h1 className="text-2xl font-bold text-gold-gradient">
+                <h1 className="text-2xl font-extrabold" style={{ background: 'linear-gradient(90deg, rgba(214,179,106,.95), rgba(184,146,77,.85))', WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent' }}>
                   {text.title}
                 </h1>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>
                   {text.subtitle}
                 </p>
               </div>
@@ -489,7 +489,7 @@ export default function Home() {
               {/* User Auth Display */}
               {isAuthenticated ? (
                 <div className="flex items-center gap-2">
-                  <span className="text-sm text-primary flex items-center gap-1">
+                  <span className="text-sm flex items-center gap-1" style={{ color: 'rgba(214,179,106,.95)' }}>
                     <User className="w-4 h-4" />
                     {user?.name || 'OSAI Staff'}
                   </span>
@@ -497,7 +497,7 @@ export default function Home() {
                     variant="ghost"
                     size="sm"
                     onClick={handleLogout}
-                    className="text-muted-foreground hover:text-foreground"
+                    className="ruzn-btn text-xs"
                   >
                     <LogOut className="w-4 h-4" />
                   </Button>
@@ -507,7 +507,7 @@ export default function Home() {
                   variant="outline"
                   size="sm"
                   onClick={() => window.location.href = getLoginUrl()}
-                  className="gap-2 border-primary/30"
+                  className="gap-2 ruzn-btn-gold"
                 >
                   <LogIn className="w-4 h-4" />
                   {text.login}
@@ -518,7 +518,7 @@ export default function Home() {
                 variant="outline"
                 size="sm"
                 onClick={toggleLanguage}
-                className="gap-2 border-primary/30 hover:border-primary"
+                className="gap-2 ruzn-btn"
               >
                 <Globe className="w-4 h-4" />
                 {language === "arabic" ? "English" : "العربية"}
@@ -528,41 +528,35 @@ export default function Home() {
           
           {/* Feature Toggle */}
           <div className="flex gap-2 mt-4">
-            <Button
-              variant={feature === "complaints" ? "default" : "outline"}
+            <button
               onClick={() => setFeature("complaints")}
-              className={`gap-2 flex-1 ${feature === "complaints" ? "glow-gold" : "border-primary/30"}`}
+              className={`ruzn-tab flex-1 flex items-center justify-center gap-2 py-3 ${feature === "complaints" ? "active" : ""}`}
             >
               <FileSearch className="w-4 h-4" />
               {text.complaints}
-            </Button>
-            <Button
-              variant={feature === "legislative" ? "default" : "outline"}
+            </button>
+            <button
               onClick={() => setFeature("legislative")}
-              className={`gap-2 flex-1 ${feature === "legislative" ? "glow-gold" : "border-primary/30"}`}
+              className={`ruzn-tab flex-1 flex items-center justify-center gap-2 py-3 ${feature === "legislative" ? "active" : ""}`}
             >
               <Scale className="w-4 h-4" />
               {text.legislative}
-            </Button>
+            </button>
           </div>
           
           {/* Action Buttons */}
           <div className="flex gap-2 mt-3">
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => setShowSamples(!showSamples)}
-              className="gap-1 border-primary/20 text-xs"
+              className="ruzn-btn text-xs flex items-center gap-1"
             >
               <Database className="w-3 h-3" />
               {text.loadSamples}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            </button>
+            <button
               onClick={handleExportPdf}
               disabled={messages.length === 0 || exportPdfMutation.isPending}
-              className="gap-1 border-primary/20 text-xs"
+              className="ruzn-btn text-xs flex items-center gap-1 disabled:opacity-50"
             >
               {exportPdfMutation.isPending ? (
                 <Loader2 className="w-3 h-3 animate-spin" />
@@ -570,60 +564,42 @@ export default function Home() {
                 <Download className="w-3 h-3" />
               )}
               {text.exportPdf}
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
+            </button>
+            <button
               onClick={handleClearChat}
               disabled={messages.length === 0}
-              className="gap-1 border-primary/20 text-xs"
+              className="ruzn-btn text-xs flex items-center gap-1 disabled:opacity-50"
             >
               <Trash2 className="w-3 h-3" />
               {text.clearChat}
-            </Button>
+            </button>
             
             {/* Navigation Links */}
             <div className="flex-1" />
             <Link href="/operations">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 border-primary/20 text-xs"
-              >
+              <button className="ruzn-btn-gold text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                 <ClipboardList className="w-3 h-3" />
                 {text.operations}
-              </Button>
+              </button>
             </Link>
             <Link href="/entity-map">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 border-primary/20 text-xs"
-              >
+              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                 <Map className="w-3 h-3" />
                 {text.entityMap}
-              </Button>
+              </button>
             </Link>
             <Link href="/analytics">
-              <Button
-                variant="outline"
-                size="sm"
-                className="gap-1 border-primary/20 text-xs"
-              >
+              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                 <BarChart3 className="w-3 h-3" />
                 {text.analytics}
-              </Button>
+              </button>
             </Link>
             {user?.role === 'admin' && (
               <Link href="/admin">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="gap-1 border-primary/20 text-xs"
-                >
+                <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                   <Settings className="w-3 h-3" />
                   {text.admin}
-                </Button>
+                </button>
               </Link>
             )}
           </div>
@@ -661,7 +637,7 @@ export default function Home() {
       {dashboardStats && (
         <div className="container max-w-5xl mx-auto px-4 py-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="ruzn-kpi">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-blue-500/10">
                   <FileText className="w-5 h-5 text-blue-400" />
@@ -673,9 +649,9 @@ export default function Home() {
                   <p className="text-xl font-bold text-foreground">{dashboardStats.todayComplaints || 0}</p>
                 </div>
               </div>
-            </Card>
+            </div>
             
-            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="ruzn-kpi">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-yellow-500/10">
                   <Clock className="w-5 h-5 text-yellow-400" />
@@ -687,9 +663,9 @@ export default function Home() {
                   <p className="text-xl font-bold text-foreground">{dashboardStats.pendingReviews || 0}</p>
                 </div>
               </div>
-            </Card>
+            </div>
             
-            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="ruzn-kpi">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-red-500/10">
                   <AlertTriangle className="w-5 h-5 text-red-400" />
@@ -701,9 +677,9 @@ export default function Home() {
                   <p className="text-xl font-bold text-foreground">{dashboardStats.highRiskAwaiting || 0}</p>
                 </div>
               </div>
-            </Card>
+            </div>
             
-            <Card className="p-4 bg-card/50 border-primary/20 hover:border-primary/40 transition-colors">
+            <div className="ruzn-kpi">
               <div className="flex items-center gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <TrendingUp className="w-5 h-5 text-primary" />
@@ -715,7 +691,7 @@ export default function Home() {
                   <p className="text-xl font-bold text-foreground">{dashboardStats.avgResponseTime?.toFixed(0) || 0}h</p>
                 </div>
               </div>
-            </Card>
+            </div>
           </div>
         </div>
       )}
@@ -755,11 +731,11 @@ export default function Home() {
                 key={idx}
                 className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}
               >
-                <Card
-                  className={`max-w-[85%] p-4 ${
+                <div
+                  className={`ruzn-card max-w-[85%] p-4 ${
                     msg.role === "user"
-                      ? "bg-primary text-primary-foreground"
-                      : "bg-card border-primary/20"
+                      ? "bg-[rgba(214,179,106,.18)] border-[rgba(214,179,106,.35)]"
+                      : ""
                   }`}
                 >
                   {msg.role === "assistant" && feature === "complaints" && (
@@ -770,19 +746,19 @@ export default function Home() {
                   <div className="prose prose-invert prose-sm max-w-none">
                     <Streamdown>{msg.content}</Streamdown>
                   </div>
-                </Card>
+                </div>
               </div>
             ))
           )}
           
           {chatMutation.isPending && (
             <div className="flex justify-start">
-              <Card className="bg-card border-primary/20 p-4">
-                <div className="flex items-center gap-2 text-muted-foreground">
+              <div className="ruzn-card p-4">
+                <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,.70)' }}>
                   <Loader2 className="w-4 h-4 animate-spin" />
                   <span>{language === "arabic" ? "جاري التحليل..." : "Analyzing..."}</span>
                 </div>
-              </Card>
+              </div>
             </div>
           )}
           
@@ -790,21 +766,20 @@ export default function Home() {
         </div>
         
         {/* Input Area */}
-        <div className="sticky bottom-0 bg-background pt-4 border-t border-border/50">
+        <div className="sticky bottom-0 pt-4 border-t border-white/10" style={{ background: 'rgba(7,7,8,.95)', backdropFilter: 'blur(10px)' }}>
           <div className="flex gap-2">
             <Textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={text.placeholder}
-              className="min-h-[60px] max-h-[120px] resize-none bg-card border-primary/20 focus:border-primary"
+              className="min-h-[60px] max-h-[120px] resize-none ruzn-input"
               dir={isRTL ? "rtl" : "ltr"}
             />
             <div className="flex flex-col gap-2">
-              <Button
+              <button
                 onClick={toggleRecording}
-                variant={isRecording ? "destructive" : "outline"}
-                className={`h-[30px] px-3 ${isRecording ? 'animate-pulse' : 'border-primary/30 hover:border-primary'}`}
+                className={`h-[30px] px-3 rounded-xl ${isRecording ? 'ruzn-tag-high animate-pulse' : 'ruzn-btn'}`}
                 title={text.voiceInput}
               >
                 {isRecording ? (
@@ -812,18 +787,18 @@ export default function Home() {
                 ) : (
                   <Mic className="w-4 h-4" />
                 )}
-              </Button>
-              <Button
+              </button>
+              <button
                 onClick={handleSend}
                 disabled={!input.trim() || chatMutation.isPending}
-                className="h-[30px] px-3 glow-gold"
+                className="h-[30px] px-3 rounded-xl ruzn-btn-gold disabled:opacity-50"
               >
                 {chatMutation.isPending ? (
                   <Loader2 className="w-4 h-4 animate-spin" />
                 ) : (
                   <Send className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
                 )}
-              </Button>
+              </button>
             </div>
           </div>
           {isRecording && (
@@ -836,9 +811,9 @@ export default function Home() {
       </main>
       
       {/* Footer */}
-      <footer className="border-t border-border/50 py-4">
+      <footer className="border-t border-white/10 py-4">
         <div className="container max-w-5xl mx-auto px-4 text-center">
-          <p className="text-sm text-muted-foreground">
+          <p className="text-sm" style={{ color: 'rgba(255,255,255,.50)' }}>
             {text.poweredBy}
           </p>
         </div>

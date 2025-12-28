@@ -154,39 +154,40 @@ export default function Analytics() {
   
   return (
     <div 
-      className="min-h-screen bg-background text-foreground flex flex-col"
+      className="min-h-screen text-foreground flex flex-col"
       dir={isRTL ? "rtl" : "ltr"}
+      style={{
+        background: 'radial-gradient(1200px 600px at 60% 18%, rgba(214,179,106,.16), transparent 55%), radial-gradient(900px 500px at 20% 80%, rgba(96,165,250,.10), transparent 60%), linear-gradient(180deg, #050506, #0a0a0c)'
+      }}
     >
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/35 backdrop-blur-md sticky top-0 z-50">
         <div className="container max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-2">
+                <button className="ruzn-btn text-sm flex items-center gap-2">
                   <ArrowLeft className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
                   {text.backToChat}
-                </Button>
+                </button>
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-primary">{text.title}</h1>
-                <p className="text-sm text-muted-foreground">{text.subtitle}</p>
+                <h1 className="text-xl font-extrabold" style={{ color: 'rgba(214,179,106,.95)' }}>{text.title}</h1>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.subtitle}</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setLanguage(language === "arabic" ? "english" : "arabic")}
-                className="border-primary/30"
+                className="ruzn-btn text-sm"
               >
                 {language === "arabic" ? "EN" : "عربي"}
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2 border-primary/30">
+              </button>
+              <button className="ruzn-btn-gold text-sm flex items-center gap-2">
                 <Download className="w-4 h-4" />
                 {text.exportReport}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -206,80 +207,80 @@ export default function Analytics() {
           <>
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-kpi p-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-primary/10">
-                    <FileText className="w-6 h-6 text-primary" />
+                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(214,179,106,.10)', border: '1px solid rgba(214,179,106,.25)' }}>
+                    <FileText className="w-6 h-6" style={{ color: 'rgba(214,179,106,.95)' }} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{text.totalComplaints}</p>
-                    <p className="text-3xl font-bold text-primary">{processedData.totalComplaints.toLocaleString()}</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.totalComplaints}</p>
+                    <p className="ruzn-kpi-value text-3xl">{processedData.totalComplaints.toLocaleString()}</p>
                   </div>
                 </div>
-              </Card>
+              </div>
               
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-kpi p-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-yellow-500/10">
-                    <TrendingUp className="w-6 h-6 text-yellow-500" />
+                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(251,191,36,.10)', border: '1px solid rgba(251,191,36,.25)' }}>
+                    <TrendingUp className="w-6 h-6" style={{ color: 'rgba(251,191,36,.95)' }} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{text.avgRiskScore}</p>
-                    <p className="text-3xl font-bold text-yellow-500">{processedData.avgRiskScore}/100</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.avgRiskScore}</p>
+                    <p className="text-3xl font-extrabold" style={{ color: 'rgba(251,191,36,.95)' }}>{processedData.avgRiskScore}/100</p>
                   </div>
                 </div>
-              </Card>
+              </div>
               
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-kpi p-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-red-500/10">
-                    <AlertTriangle className="w-6 h-6 text-red-500" />
+                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(255,107,107,.10)', border: '1px solid rgba(255,107,107,.25)' }}>
+                    <AlertTriangle className="w-6 h-6" style={{ color: 'rgba(255,107,107,.95)' }} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{text.highRiskCount}</p>
-                    <p className="text-3xl font-bold text-red-500">{processedData.highRiskCount?.toLocaleString() || 0}</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.highRiskCount}</p>
+                    <p className="text-3xl font-extrabold" style={{ color: 'rgba(255,107,107,.95)' }}>{processedData.highRiskCount?.toLocaleString() || 0}</p>
                   </div>
                 </div>
-              </Card>
+              </div>
               
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-kpi p-6">
                 <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-full bg-green-500/10">
-                    <Users className="w-6 h-6 text-green-500" />
+                  <div className="p-3 rounded-2xl" style={{ background: 'rgba(74,222,128,.10)', border: '1px solid rgba(74,222,128,.25)' }}>
+                    <Users className="w-6 h-6" style={{ color: 'rgba(74,222,128,.95)' }} />
                   </div>
                   <div>
-                    <p className="text-sm text-muted-foreground">{text.activeUsers}</p>
-                    <p className="text-3xl font-bold text-green-500">{processedData.activeUsers}</p>
+                    <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.activeUsers}</p>
+                    <p className="text-3xl font-extrabold" style={{ color: 'rgba(74,222,128,.95)' }}>{processedData.activeUsers}</p>
                   </div>
                 </div>
-              </Card>
+              </div>
             </div>
             
             {/* Additional Stats Row */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-              <Card className="p-4 bg-card border-primary/20">
+              <div className="ruzn-card p-4">
                 <div className="flex items-center gap-3">
-                  <FileDown className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">{text.pdfExports}:</span>
-                  <span className="font-bold text-primary">{processedData.totalPdfExports}</span>
+                  <FileDown className="w-5 h-5" style={{ color: 'rgba(214,179,106,.95)' }} />
+                  <span className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.pdfExports}:</span>
+                  <span className="font-extrabold" style={{ color: 'rgba(214,179,106,.95)' }}>{processedData.totalPdfExports}</span>
                 </div>
-              </Card>
-              <Card className="p-4 bg-card border-primary/20">
+              </div>
+              <div className="ruzn-card p-4">
                 <div className="flex items-center gap-3">
-                  <Mic className="w-5 h-5 text-primary" />
-                  <span className="text-sm text-muted-foreground">{text.voiceInputs}:</span>
-                  <span className="font-bold text-primary">{processedData.totalVoiceInputs}</span>
+                  <Mic className="w-5 h-5" style={{ color: 'rgba(214,179,106,.95)' }} />
+                  <span className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.voiceInputs}:</span>
+                  <span className="font-extrabold" style={{ color: 'rgba(214,179,106,.95)' }}>{processedData.totalVoiceInputs}</span>
                 </div>
-              </Card>
+              </div>
             </div>
             
             {/* Charts Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
               {/* Category Distribution */}
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-card p-6">
                 <div className="flex items-center gap-2 mb-6">
-                  <PieChart className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-semibold">{text.categoryDistribution}</h3>
+                  <PieChart className="w-5 h-5" style={{ color: 'rgba(214,179,106,.95)' }} />
+                  <h3 className="text-lg font-extrabold" style={{ color: 'rgba(255,255,255,.92)' }}>{text.categoryDistribution}</h3>
                 </div>
                 <div className="space-y-4">
                   {processedData.categoryDistribution.length > 0 ? (
@@ -304,13 +305,13 @@ export default function Analytics() {
                     <p className="text-muted-foreground text-center py-4">{text.noData}</p>
                   )}
                 </div>
-              </Card>
+              </div>
               
               {/* Risk Distribution */}
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-card p-6">
                 <div className="flex items-center gap-2 mb-6">
-                  <BarChart3 className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-semibold">{text.riskDistribution}</h3>
+                  <BarChart3 className="w-5 h-5" style={{ color: 'rgba(214,179,106,.95)' }} />
+                  <h3 className="text-lg font-extrabold" style={{ color: 'rgba(255,255,255,.92)' }}>{text.riskDistribution}</h3>
                 </div>
                 <div className="space-y-6">
                   {processedData.riskDistribution.length > 0 ? (
@@ -346,15 +347,15 @@ export default function Analytics() {
                     <p className="text-muted-foreground text-center py-4">{text.noData}</p>
                   )}
                 </div>
-              </Card>
+              </div>
             </div>
             
             {/* Monthly Trends */}
             {processedData.trends && processedData.trends.length > 0 && (
-              <Card className="p-6 bg-card border-primary/20">
+              <div className="ruzn-card p-6">
                 <div className="flex items-center gap-2 mb-6">
-                  <TrendingUp className="w-5 h-5 text-primary" />
-                  <h3 className="text-lg font-semibold">{text.monthlyTrends}</h3>
+                  <TrendingUp className="w-5 h-5" style={{ color: 'rgba(214,179,106,.95)' }} />
+                  <h3 className="text-lg font-extrabold" style={{ color: 'rgba(255,255,255,.92)' }}>{text.monthlyTrends}</h3>
                 </div>
                 <div className="overflow-x-auto">
                   <div className="flex gap-4 min-w-max pb-4">
@@ -375,18 +376,18 @@ export default function Analytics() {
                     ))}
                   </div>
                 </div>
-              </Card>
+              </div>
             )}
           </>
         ) : (
-          <div className="flex items-center justify-center h-64 text-muted-foreground">
+          <div className="flex items-center justify-center h-64" style={{ color: 'rgba(255,255,255,.50)' }}>
             {text.noData}
           </div>
         )}
       </main>
       
       {/* Footer */}
-      <footer className="border-t border-border/50 py-4 text-center text-sm text-muted-foreground">
+      <footer className="border-t border-white/10 py-4 text-center text-sm" style={{ color: 'rgba(255,255,255,.50)' }}>
         <p>مدعوم من أكيوتيريوم تكنولوجيز | Powered by Acuterium Technologies</p>
       </footer>
     </div>

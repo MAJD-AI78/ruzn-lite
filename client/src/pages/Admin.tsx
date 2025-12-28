@@ -418,54 +418,55 @@ export default function Admin() {
   
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen bg-background text-foreground flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"}>
-        <Card className="p-8 bg-card border-primary/20 text-center max-w-md">
-          <Shield className="w-16 h-16 text-primary mx-auto mb-4" />
-          <h2 className="text-xl font-bold mb-2">{text.unauthorized}</h2>
-          <p className="text-muted-foreground mb-4">{text.adminOnly}</p>
+      <div className="min-h-screen text-foreground flex items-center justify-center" dir={isRTL ? "rtl" : "ltr"} style={{ background: 'radial-gradient(1200px 600px at 60% 18%, rgba(214,179,106,.16), transparent 55%), radial-gradient(900px 500px at 20% 80%, rgba(96,165,250,.10), transparent 60%), linear-gradient(180deg, #050506, #0a0a0c)' }}>
+        <div className="ruzn-card p-8 text-center max-w-md">
+          <Shield className="w-16 h-16 mx-auto mb-4" style={{ color: 'rgba(214,179,106,.95)' }} />
+          <h2 className="text-xl font-extrabold mb-2" style={{ color: 'rgba(255,255,255,.92)' }}>{text.unauthorized}</h2>
+          <p className="mb-4" style={{ color: 'rgba(255,255,255,.70)' }}>{text.adminOnly}</p>
           <Link href="/">
-            <Button className="glow-gold">{text.backToChat}</Button>
+            <button className="ruzn-btn-gold px-6 py-2 rounded-xl">{text.backToChat}</button>
           </Link>
-        </Card>
+        </div>
       </div>
     );
   }
   
   return (
     <div 
-      className="min-h-screen bg-background text-foreground flex flex-col"
+      className="min-h-screen text-foreground flex flex-col"
       dir={isRTL ? "rtl" : "ltr"}
+      style={{
+        background: 'radial-gradient(1200px 600px at 60% 18%, rgba(214,179,106,.16), transparent 55%), radial-gradient(900px 500px at 20% 80%, rgba(96,165,250,.10), transparent 60%), linear-gradient(180deg, #050506, #0a0a0c)'
+      }}
     >
       {/* Header */}
-      <header className="border-b border-border/50 bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+      <header className="border-b border-white/10 bg-black/35 backdrop-blur-md sticky top-0 z-50">
         <div className="container max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <Link href="/">
-                <Button variant="ghost" size="sm" className="gap-2">
+                <button className="ruzn-btn text-sm flex items-center gap-2">
                   <ArrowLeft className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
                   {text.backToChat}
-                </Button>
+                </button>
               </Link>
               <div>
-                <h1 className="text-xl font-bold text-primary">{text.title}</h1>
-                <p className="text-sm text-muted-foreground">{text.subtitle}</p>
+                <h1 className="text-xl font-extrabold" style={{ color: 'rgba(214,179,106,.95)' }}>{text.title}</h1>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.subtitle}</p>
               </div>
             </div>
             
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => setLanguage(language === "arabic" ? "english" : "arabic")}
-                className="border-primary/30"
+                className="ruzn-btn text-sm"
               >
                 {language === "arabic" ? "EN" : "عربي"}
-              </Button>
-              <Button variant="outline" size="sm" className="gap-2 border-primary/30">
+              </button>
+              <button className="ruzn-btn-gold text-sm flex items-center gap-2">
                 <Download className="w-4 h-4" />
                 {text.exportAll}
-              </Button>
+              </button>
             </div>
           </div>
         </div>
@@ -474,76 +475,73 @@ export default function Admin() {
       <main className="flex-1 container max-w-7xl mx-auto px-4 py-6">
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
-          <Card className="p-6 bg-card border-primary/20">
+          <div className="ruzn-kpi p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-primary/10">
-                <MessageSquare className="w-6 h-6 text-primary" />
+              <div className="p-3 rounded-2xl" style={{ background: 'rgba(214,179,106,.10)', border: '1px solid rgba(214,179,106,.25)' }}>
+                <MessageSquare className="w-6 h-6" style={{ color: 'rgba(214,179,106,.95)' }} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{text.totalConversations}</p>
-                <p className="text-3xl font-bold text-primary">{conversations.length}</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.totalConversations}</p>
+                <p className="ruzn-kpi-value text-3xl">{conversations.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
           
-          <Card className="p-6 bg-card border-primary/20">
+          <div className="ruzn-kpi p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-green-500/10">
-                <Users className="w-6 h-6 text-green-500" />
+              <div className="p-3 rounded-2xl" style={{ background: 'rgba(74,222,128,.10)', border: '1px solid rgba(74,222,128,.25)' }}>
+                <Users className="w-6 h-6" style={{ color: 'rgba(74,222,128,.95)' }} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{text.totalUsers}</p>
-                <p className="text-3xl font-bold text-green-500">{users.length}</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.totalUsers}</p>
+                <p className="text-3xl font-extrabold" style={{ color: 'rgba(74,222,128,.95)' }}>{users.length}</p>
               </div>
             </div>
-          </Card>
+          </div>
           
-          <Card className="p-6 bg-card border-primary/20">
+          <div className="ruzn-kpi p-6">
             <div className="flex items-center gap-4">
-              <div className="p-3 rounded-full bg-red-500/10">
-                <AlertTriangle className="w-6 h-6 text-red-500" />
+              <div className="p-3 rounded-2xl" style={{ background: 'rgba(255,107,107,.10)', border: '1px solid rgba(255,107,107,.25)' }}>
+                <AlertTriangle className="w-6 h-6" style={{ color: 'rgba(255,107,107,.95)' }} />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground">{text.highRiskAlerts}</p>
-                <p className="text-3xl font-bold text-red-500">{highRiskCount}</p>
+                <p className="text-sm" style={{ color: 'rgba(255,255,255,.70)' }}>{text.highRiskAlerts}</p>
+                <p className="text-3xl font-extrabold" style={{ color: 'rgba(255,107,107,.95)' }}>{highRiskCount}</p>
               </div>
             </div>
-          </Card>
+          </div>
         </div>
         
         {/* Tabs */}
         <div className="flex gap-2 mb-6">
-          <Button
-            variant={selectedTab === "conversations" ? "default" : "outline"}
+          <button
             onClick={() => setSelectedTab("conversations")}
-            className={selectedTab === "conversations" ? "glow-gold" : "border-primary/30"}
+            className={`ruzn-tab flex items-center gap-2 px-4 py-2 ${selectedTab === "conversations" ? "active" : ""}`}
           >
-            <MessageSquare className="w-4 h-4 mr-2" />
+            <MessageSquare className="w-4 h-4" />
             {text.conversations}
-          </Button>
-          <Button
-            variant={selectedTab === "users" ? "default" : "outline"}
+          </button>
+          <button
             onClick={() => setSelectedTab("users")}
-            className={selectedTab === "users" ? "glow-gold" : "border-primary/30"}
+            className={`ruzn-tab flex items-center gap-2 px-4 py-2 ${selectedTab === "users" ? "active" : ""}`}
           >
-            <Users className="w-4 h-4 mr-2" />
+            <Users className="w-4 h-4" />
             {text.users}
-          </Button>
+          </button>
           
           {/* Weekly Report Button */}
-          <Button
-            variant="outline"
+          <button
             onClick={() => generateReportMutation.mutate()}
             disabled={generateReportMutation.isPending}
-            className="border-primary/30 ml-auto"
+            className="ruzn-btn-gold flex items-center gap-2 px-4 py-2 rounded-xl ml-auto disabled:opacity-50"
           >
             {generateReportMutation.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <Calendar className="w-4 h-4 mr-2" />
+              <Calendar className="w-4 h-4" />
             )}
             {text.generateReport}
-          </Button>
+          </button>
         </div>
         
         {/* Search */}
