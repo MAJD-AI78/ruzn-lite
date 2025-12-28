@@ -384,3 +384,32 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Create PDF export for case law records
 - [x] Create PDF export utility with RTL support
 - [x] Support RTL layout in PDF output
+
+
+## Phase 14 - Streaming Chat Responses
+
+### Backend Streaming
+- [ ] Update invokeLLM to support streaming mode
+- [ ] Create Server-Sent Events (SSE) endpoint for chat
+- [ ] Handle streaming chunks and send to client
+- [ ] Maintain structured response parsing with streaming
+
+### Frontend Streaming
+- [ ] Update chat UI to handle streaming responses
+- [ ] Show typing animation while streaming
+- [ ] Append text chunks in real-time
+- [ ] Handle stream completion and error states
+
+
+## Phase 14 - Streaming Responses
+
+### Streaming Chat Implementation
+- [x] Create streaming endpoint (/api/chat/stream) with SSE
+- [x] Implement invokeLLMStream generator function in llm.ts
+- [x] Update Home.tsx to use streaming for real-time responses
+- [x] Display streaming content with typing indicator
+- [x] Handle streaming errors with fallback to non-streaming
+- [x] Add streaming tests (streamingChat.test.ts)
+- [x] Support bilingual streaming (Arabic/English)
+- [x] Extract risk score from streamed response
+- [x] Send high-risk notifications for streaming responses

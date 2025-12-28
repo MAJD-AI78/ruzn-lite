@@ -319,6 +319,8 @@ export default function Home() {
   const [isUploading, setIsUploading] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [speakingMessageIndex, setSpeakingMessageIndex] = useState<number | null>(null);
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingContent, setStreamingContent] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
@@ -404,7 +406,7 @@ export default function Home() {
   }, [messages.length]);
   
   const handleSend = async () => {
-    if ((!input.trim() && !uploadedFile) || chatMutation.isPending || analyzeDocumentMutation.isPending) return;
+    if ((!input.trim() && !uploadedFile) || chatMutation.isPending || analyzeDocumentMutation.isPending || isStreaming) return;
     
     const userMessage = input.trim();
     setInput("");
@@ -427,14 +429,75 @@ export default function Home() {
       
       setUploadedFile(null);
     } else {
+      // Add user message
       setMessages(prev => [...prev, { role: "user", content: userMessage }]);
       
-      chatMutation.mutate({
-        message: userMessage,
-        language,
-        feature,
-        history: messages
-      });
+      // Use streaming for chat
+      setIsStreaming(true);
+      setStreamingContent("");
+      
+      try {
+        const response = await fetch('/api/chat/stream', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            message: userMessage,
+            feature,
+            language,
+            history: messages.slice(-10),
+            userId: user?.id
+          })
+        });
+        
+        if (!response.ok) throw new Error('Stream failed');
+        
+        const reader = response.body?.getReader();
+        if (!reader) throw new Error('No reader');
+        
+        const decoder = new TextDecoder();
+        let accumulatedContent = "";
+        
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === 'chunk' && data.content) {
+                  accumulatedContent += data.content;
+                  setStreamingContent(accumulatedContent);
+                } else if (data.type === 'done') {
+                  // Stream complete, add final message
+                  setMessages(prev => [...prev, { role: "assistant", content: accumulatedContent }]);
+                  setStreamingContent("");
+                } else if (data.type === 'error') {
+                  throw new Error(data.error);
+                }
+              } catch (e) {
+                // Skip malformed JSON
+              }
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Streaming error:', error);
+        toast.error(language === 'arabic' ? 'فشل الاتصال بالخادم' : 'Failed to connect to server');
+        // Fallback to non-streaming
+        chatMutation.mutate({
+          message: userMessage,
+          language,
+          feature,
+          history: messages
+        });
+      } finally {
+        setIsStreaming(false);
+        setStreamingContent("");
+      }
     }
   };
   
@@ -1010,7 +1073,28 @@ export default function Home() {
             ))
           )}
           
-          {chatMutation.isPending && (
+          {/* Streaming response display */}
+          {isStreaming && streamingContent && (
+            <div className="flex justify-start">
+              <div className="ruzn-card max-w-[85%] p-4">
+                {feature === "complaints" && (
+                  <div className="mb-2">
+                    {getRiskBadge(streamingContent, language)}
+                  </div>
+                )}
+                <div className="prose prose-invert prose-sm max-w-none">
+                  <Streamdown>{streamingContent}</Streamdown>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  <span>{language === "arabic" ? "جاري الكتابة..." : "Typing..."}</span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Loading indicator for non-streaming requests */}
+          {(chatMutation.isPending || (isStreaming && !streamingContent)) && (
             <div className="flex justify-start">
               <div className="ruzn-card p-4">
                 <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,.70)' }}>
