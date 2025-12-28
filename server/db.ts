@@ -1743,3 +1743,234 @@ export async function seedHistoricalData() {
     return { success: false, message: String(error) };
   }
 }
+
+
+// Complaint Registry functions - for connecting to main database
+
+export interface RegistryComplaint {
+  id?: number;
+  externalId: string; // OSAI-XXXXXX format
+  channel: string;
+  complainantType: string;
+  entity: string;
+  governorate: string;
+  topic: string | null;
+  amountOmr: number | null;
+  text: string;
+  classification: string;
+  riskScore: number;
+  riskLevel: 'low' | 'med' | 'high';
+  routing: string;
+  flags: string[];
+  rationale: string;
+  status: 'new' | 'under_review' | 'investigating' | 'resolved';
+  slaTargetDays: number;
+  assignedTo?: number | null;
+  createdAt?: Date;
+}
+
+// Save a complaint from the registry to the conversations table
+export async function saveRegistryComplaint(complaint: RegistryComplaint, userId: number): Promise<number | null> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot save registry complaint: database not available");
+    return null;
+  }
+
+  try {
+    // Create a message structure similar to chat conversations
+    const messages = JSON.stringify([
+      {
+        role: 'user',
+        content: `[Registry Complaint ${complaint.externalId}]\nChannel: ${complaint.channel}\nComplainant: ${complaint.complainantType}\nEntity: ${complaint.entity}\nGovernorate: ${complaint.governorate}\nTopic: ${complaint.topic || 'N/A'}\nAmount: ${complaint.amountOmr ? `OMR ${complaint.amountOmr}` : 'N/A'}\n\n${complaint.text}`
+      },
+      {
+        role: 'assistant',
+        content: `**Classification:** ${complaint.classification}\n**Risk Score:** ${complaint.riskScore}/100 (${complaint.riskLevel.toUpperCase()})\n**Routing:** ${complaint.routing}\n**Evidence Flags:** ${complaint.flags.join(', ')}\n**Rationale:** ${complaint.rationale}`
+      }
+    ]);
+
+    // Map registry status to conversation status
+    const statusMap: Record<string, 'new' | 'under_review' | 'investigating' | 'resolved'> = {
+      'New': 'new',
+      'Investigating': 'investigating',
+      'Closed': 'resolved'
+    };
+
+    const result = await db.insert(conversations).values({
+      userId,
+      messages,
+      feature: 'complaints',
+      language: 'arabic',
+      riskScore: complaint.riskScore,
+      category: complaint.classification,
+      status: statusMap[complaint.status] || 'new',
+      assignedTo: complaint.assignedTo || null
+    });
+
+    // Log analytics event
+    await logAnalyticsEvent({
+      eventType: 'complaint_submitted',
+      userId,
+      feature: 'complaints',
+      language: 'arabic',
+      metadata: JSON.stringify({
+        externalId: complaint.externalId,
+        entity: complaint.entity,
+        riskScore: complaint.riskScore,
+        classification: complaint.classification
+      })
+    });
+
+    // Get the inserted ID
+    const insertedId = (result as unknown as { insertId: number }).insertId;
+    return insertedId ? Number(insertedId) : null;
+  } catch (error) {
+    console.error("[Database] Failed to save registry complaint:", error);
+    throw error;
+  }
+}
+
+// Get all complaints for the registry view
+export async function getRegistryComplaints(filters?: {
+  status?: string;
+  riskLevel?: string;
+  entity?: string;
+  dateFrom?: Date;
+  dateTo?: Date;
+}) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get registry complaints: database not available");
+    return [];
+  }
+
+  try {
+    // Build conditions array
+    const conditions = [eq(conversations.feature, 'complaints')];
+    
+    if (filters?.status) {
+      const statusMap: Record<string, 'new' | 'under_review' | 'investigating' | 'resolved'> = {
+        'New': 'new',
+        'Investigating': 'investigating',
+        'Closed': 'resolved'
+      };
+      conditions.push(eq(conversations.status, statusMap[filters.status] || 'new'));
+    }
+
+    const results = await db.select().from(conversations)
+      .where(and(...conditions))
+      .orderBy(desc(conversations.createdAt));
+    
+    // Transform to registry format
+    return results.map(conv => {
+      let parsedMessages: Array<{role: string; content: string}> = [];
+      try {
+        parsedMessages = JSON.parse(conv.messages);
+      } catch {
+        parsedMessages = [];
+      }
+      
+      // Extract entity from first message if available
+      const userMessage = parsedMessages.find(m => m.role === 'user')?.content || '';
+      const entityMatch = userMessage.match(/Entity: ([^\n]+)/);
+      const entity = entityMatch ? entityMatch[1] : 'Unknown';
+      
+      return {
+        id: conv.id,
+        entity,
+        classification: conv.category || 'Unknown',
+        riskScore: conv.riskScore || 0,
+        status: conv.status,
+        assignedTo: conv.assignedTo,
+        createdAt: conv.createdAt,
+        messages: parsedMessages
+      };
+    });
+  } catch (error) {
+    console.error("[Database] Failed to get registry complaints:", error);
+    return [];
+  }
+}
+
+// Assign a complaint to a user
+export async function assignComplaint(conversationId: number, assigneeId: number, assignedByUserId: number, assignedByUserName: string) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot assign complaint: database not available");
+    return { success: false };
+  }
+
+  try {
+    await db.update(conversations)
+      .set({ assignedTo: assigneeId })
+      .where(eq(conversations.id, conversationId));
+
+    // Log the assignment in status history
+    await db.insert(statusHistory).values({
+      conversationId,
+      previousStatus: null,
+      newStatus: 'under_review',
+      changedByUserId: assignedByUserId,
+      changedByUserName: assignedByUserName,
+      notes: `Assigned to user ID: ${assigneeId}`
+    });
+
+    return { success: true };
+  } catch (error) {
+    console.error("[Database] Failed to assign complaint:", error);
+    return { success: false };
+  }
+}
+
+// Get complaints assigned to a specific user
+export async function getAssignedComplaints(userId: number) {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get assigned complaints: database not available");
+    return [];
+  }
+
+  try {
+    const results = await db.select()
+      .from(conversations)
+      .where(eq(conversations.assignedTo, userId))
+      .orderBy(desc(conversations.createdAt));
+    
+    return results;
+  } catch (error) {
+    console.error("[Database] Failed to get assigned complaints:", error);
+    return [];
+  }
+}
+
+// Get assignment statistics
+export async function getAssignmentStats() {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get assignment stats: database not available");
+    return { unassigned: 0, assigned: 0, byUser: [] };
+  }
+
+  try {
+    const allComplaints = await db.select().from(conversations).where(eq(conversations.feature, 'complaints'));
+    
+    const unassigned = allComplaints.filter(c => !c.assignedTo).length;
+    const assigned = allComplaints.filter(c => c.assignedTo).length;
+    
+    // Group by assignee
+    const byUserMap = new Map<number, number>();
+    allComplaints.forEach(c => {
+      if (c.assignedTo) {
+        byUserMap.set(c.assignedTo, (byUserMap.get(c.assignedTo) || 0) + 1);
+      }
+    });
+    
+    const byUser = Array.from(byUserMap.entries()).map(([userId, count]) => ({ userId, count }));
+    
+    return { unassigned, assigned, byUser };
+  } catch (error) {
+    console.error("[Database] Failed to get assignment stats:", error);
+    return { unassigned: 0, assigned: 0, byUser: [] };
+  }
+}

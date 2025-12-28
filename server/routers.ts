@@ -15,10 +15,13 @@ import {
   getHistoricalComplaintsByCategoryData, getHistoricalConvictionsData,
   getAvailableMetrics, getAvailableYears,
   searchCaseLaw, getCaseLawById, getCaseLawStats, seedCaseLawDatabase,
-  seedHistoricalData
+  seedHistoricalData,
+  saveRegistryComplaint, getRegistryComplaints, assignComplaint,
+  getAssignedComplaints, getAssignmentStats
 } from "./db";
 import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshStatus, recordRefresh, updateRefreshConfig } from "./scheduledReports";
 import { storagePut } from "./storage";
+import { generateCaseLawPDF, generateComparativeReportPDF } from "./pdfExport";
 
 // System prompts for Ruzn-Lite OSAI - Enhanced with OSAI Knowledge Base
 const SYSTEM_PROMPTS = {
@@ -958,7 +961,127 @@ export const appRouter = router({
         { value: 'public_authority', labelEn: 'Public Authority', labelAr: 'هيئة عامة' },
         { value: 'other', labelEn: 'Other', labelAr: 'أخرى' }
       ];
-    })
+    }),
+
+    // Export case to PDF
+    exportPdf: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        language: z.enum(['ar', 'en'])
+      }))
+      .mutation(async ({ input }) => {
+        const caseData = await getCaseLawById(input.id);
+        if (!caseData) {
+          return { success: false, html: '', error: 'Case not found' };
+        }
+        
+        const isArabic = input.language === 'ar';
+        const entity = isArabic ? (caseData.entityNameArabic || caseData.entityNameEnglish) : caseData.entityNameEnglish;
+        const description = isArabic ? (caseData.detailsArabic || caseData.summaryArabic || caseData.summaryEnglish || '') : (caseData.detailsEnglish || caseData.summaryEnglish || '');
+        const violationLabel = isArabic ? (caseData.violationTypeArabic || caseData.violationType) : (caseData.violationTypeEnglish || caseData.violationType);
+        
+        // Build penalty string
+        const penaltyParts: string[] = [];
+        if (caseData.sentenceYears) penaltyParts.push(isArabic ? `${caseData.sentenceYears} سنة` : `${caseData.sentenceYears} years`);
+        if (caseData.sentenceMonths) penaltyParts.push(isArabic ? `${caseData.sentenceMonths} شهر` : `${caseData.sentenceMonths} months`);
+        if (caseData.fineOMR) penaltyParts.push(isArabic ? `غرامة ${caseData.fineOMR} ر.ع.` : `Fine: ${caseData.fineOMR} OMR`);
+        const penalty = penaltyParts.join(isArabic ? ' و ' : ' and ') || (isArabic ? 'غير محدد' : 'Not specified');
+        
+        const html = generateCaseLawPDF({
+          caseNumber: caseData.caseNumber || `CASE-${caseData.id}`,
+          year: caseData.year,
+          entity: entity,
+          violationType: violationLabel || caseData.violationType,
+          description: description,
+          penalty: penalty,
+          amountInvolved: caseData.amountInvolved || undefined,
+          legalArticles: caseData.legalArticles || undefined,
+          outcome: caseData.outcome || 'convicted'
+        }, input.language);
+        
+        return { success: true, html };
+      })
+  }),
+
+  // Complaint Registry Router
+  registry: router({
+    // Submit a complaint from the registry
+    submitComplaint: protectedProcedure
+      .input(z.object({
+        externalId: z.string(),
+        channel: z.string(),
+        complainantType: z.string(),
+        entity: z.string(),
+        governorate: z.string(),
+        topic: z.string().nullable(),
+        amountOmr: z.number().nullable(),
+        text: z.string(),
+        classification: z.string(),
+        riskScore: z.number(),
+        riskLevel: z.enum(['low', 'med', 'high']),
+        routing: z.string(),
+        flags: z.array(z.string()),
+        rationale: z.string(),
+        status: z.enum(['new', 'under_review', 'investigating', 'resolved']),
+        slaTargetDays: z.number()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await saveRegistryComplaint(input, ctx.user.id);
+        return { success: !!result, id: result };
+      }),
+
+    // Get all complaints for registry view
+    getComplaints: protectedProcedure
+      .input(z.object({
+        status: z.string().optional(),
+        riskLevel: z.string().optional(),
+        entity: z.string().optional()
+      }).optional())
+      .query(async ({ input }) => {
+        const complaints = await getRegistryComplaints(input);
+        return complaints;
+      }),
+
+    // Assign a complaint to a user
+    assignComplaint: protectedProcedure
+      .input(z.object({
+        conversationId: z.number(),
+        assigneeId: z.number()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        const result = await assignComplaint(
+          input.conversationId,
+          input.assigneeId,
+          ctx.user.id,
+          ctx.user.name || 'Unknown'
+        );
+        return result;
+      }),
+
+    // Get complaints assigned to current user
+    getMyAssignments: protectedProcedure
+      .query(async ({ ctx }) => {
+        const complaints = await getAssignedComplaints(ctx.user.id);
+        return complaints;
+      }),
+
+    // Get assignment statistics
+    getAssignmentStats: protectedProcedure
+      .query(async () => {
+        const stats = await getAssignmentStats();
+        return stats;
+      }),
+
+    // Get all users for assignment dropdown
+    getAssignees: protectedProcedure
+      .query(async () => {
+        const users = await getAllUsers();
+        return users.map(u => ({
+          id: u.id,
+          name: u.name || u.email || `User ${u.id}`,
+          role: u.role
+        }));
+      })
   })
 });
 

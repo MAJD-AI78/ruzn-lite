@@ -1,0 +1,1 @@
+ALTER TABLE `analytics_events` MODIFY COLUMN `eventType` enum('chat_message','complaint_analyzed','legislative_query','pdf_export','voice_input','document_upload','document_analysis','complaint_submitted') NOT NULL;

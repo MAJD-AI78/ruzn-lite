@@ -344,3 +344,43 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Add bilingual support (Arabic/English)
 - [x] Implement Minister Dashboard with KPIs and daily report generation
 - [x] Add Governance & Trust Controls section
+
+
+## Phase 13 - Advanced Features
+
+### Connect Registry to Database
+- [x] Create tRPC endpoints for complaint CRUD operations
+- [x] Link ComplaintRegistry to conversations table
+- [x] Sync submitted complaints with Admin Panel
+- [x] Add real-time updates when complaints are added
+
+### Print-Friendly CSS
+- [x] Create @media print stylesheet
+- [x] Style Minister's daily report for clean PDF export
+- [x] Hide navigation and interactive elements in print
+- [x] Ensure proper page breaks and margins
+
+### Complaint Assignment
+- [x] Add assignee field to conversations table
+- [x] Create assignment dropdown in Admin Panel
+- [x] Send notification when complaint is assigned
+- [x] Show assigned complaints per investigator
+
+### Seed Historical Database
+- [x] Trigger seed function for historical_stats
+- [x] Populate historical_complaints_by_entity
+- [x] Populate historical_complaints_by_category
+- [x] Populate historical_convictions
+- [x] Verify data appears in Comparative Analysis charts
+
+### Demo Walkthrough
+- [x] Create DemoWalkthrough component
+- [x] Define 6-step tour for key features
+- [x] Add "Tour" button in header
+- [x] Support Arabic/English languages
+
+### Multi-Language PDF Export
+- [x] Add Arabic font support for PDF generation (Noto Naskh Arabic)
+- [x] Create PDF export for case law records
+- [x] Create PDF export utility with RTL support
+- [x] Support RTL layout in PDF output

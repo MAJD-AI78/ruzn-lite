@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import DemoWalkthrough, { useWalkthrough } from "@/components/DemoWalkthrough";
 import { trpc } from "@/lib/trpc";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
@@ -322,6 +323,7 @@ export default function Home() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
   const { user, isAuthenticated, logout } = useAuth();
+  const { shouldShow: showWalkthrough, setShouldShow: setShowWalkthrough, resetWalkthrough } = useWalkthrough();
   
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
@@ -643,6 +645,14 @@ export default function Home() {
   };
   
   return (
+    <>
+      {/* Demo Walkthrough Modal */}
+      <DemoWalkthrough 
+        isOpen={showWalkthrough} 
+        onClose={() => setShowWalkthrough(false)} 
+        lang={language === 'arabic' ? 'ar' : 'en'}
+      />
+      
     <div 
       className="min-h-screen flex flex-col bg-background"
       dir={isRTL ? "rtl" : "ltr"}
@@ -704,6 +714,16 @@ export default function Home() {
               >
                 <Globe className="w-4 h-4" />
                 {language === "arabic" ? "English" : "العربية"}
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={resetWalkthrough}
+                className="gap-2 ruzn-btn"
+                title={language === 'arabic' ? 'جولة تعريفية' : 'Tour'}
+              >
+                <Sparkles className="w-4 h-4" />
               </Button>
             </div>
           </div>
@@ -1114,5 +1134,6 @@ export default function Home() {
         </div>
       </footer>
     </div>
+    </>
   );
 }

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'wouter';
-import { ArrowRight, ArrowLeft, Printer, RefreshCw, FileJson, FileSpreadsheet, Copy, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Printer, RefreshCw, FileJson, FileSpreadsheet, Copy, ChevronDown, ChevronUp, UserPlus, Users, Bell } from 'lucide-react';
+import { trpc } from '../lib/trpc';
+import { useAuth } from '@/_core/hooks/useAuth';
 
 // Bilingual dictionary
 const I18N = {
@@ -149,8 +151,33 @@ export default function ComplaintRegistry() {
 
   // Preview state
   const [preview, setPreview] = useState<Triage | null>(null);
+  
+  // Assignment state
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [selectedForAssignment, setSelectedForAssignment] = useState<string | null>(null);
+  const [selectedAssignee, setSelectedAssignee] = useState<number | null>(null);
 
   const t = I18N[lang];
+  const { user } = useAuth();
+
+  // tRPC queries and mutations for assignment
+  const { data: assignees } = trpc.registry.getAssignees.useQuery(undefined, {
+    enabled: !!user
+  });
+  const { data: assignmentStats } = trpc.registry.getAssignmentStats.useQuery(undefined, {
+    enabled: !!user
+  });
+  const assignMutation = trpc.registry.assignComplaint.useMutation({
+    onSuccess: () => {
+      showToast(lang === 'ar' ? 'تم تعيين البلاغ بنجاح ✅' : 'Complaint assigned successfully ✅');
+      setShowAssignModal(false);
+      setSelectedForAssignment(null);
+      setSelectedAssignee(null);
+    },
+    onError: () => {
+      showToast(lang === 'ar' ? 'حدث خطأ في التعيين' : 'Error assigning complaint');
+    }
+  });
 
   // Show toast
   const showToast = (msg: string) => {

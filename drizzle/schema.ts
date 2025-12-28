@@ -134,7 +134,7 @@ export type InsertLegislativeDocument = typeof legislativeDocuments.$inferInsert
 export const analyticsEvents = mysqlTable("analytics_events", {
   id: int("id").autoincrement().primaryKey(),
   userId: int("userId"),
-  eventType: mysqlEnum("eventType", ["chat_message", "complaint_analyzed", "legislative_query", "pdf_export", "voice_input", "document_upload", "document_analysis"]).notNull(),
+  eventType: mysqlEnum("eventType", ["chat_message", "complaint_analyzed", "legislative_query", "pdf_export", "voice_input", "document_upload", "document_analysis", "complaint_submitted"]).notNull(),
   feature: mysqlEnum("feature", ["complaints", "legislative"]).notNull(),
   language: mysqlEnum("language", ["arabic", "english"]).notNull(),
   category: varchar("category", { length: 100 }),

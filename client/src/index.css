@@ -362,3 +362,187 @@
     direction: ltr;
   }
 }
+
+
+/* Print-friendly styles for Minister's Daily Report */
+@media print {
+  /* Hide non-essential elements */
+  body {
+    background: white !important;
+    color: black !important;
+    font-size: 12pt !important;
+  }
+
+  /* Hide navigation, buttons, and interactive elements */
+  header, nav, footer,
+  button:not(.print-include),
+  .no-print,
+  [data-no-print],
+  .ruzn-btn,
+  .ruzn-tab,
+  input, textarea, select,
+  .toast,
+  .back-link {
+    display: none !important;
+  }
+
+  /* Reset dark theme colors for print */
+  .ruzn-card,
+  .ruzn-kpi,
+  [class*="bg-"] {
+    background: white !important;
+    border: 1px solid #ccc !important;
+    box-shadow: none !important;
+    color: black !important;
+  }
+
+  /* Ensure text is readable */
+  * {
+    color: black !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Gold accents become dark gold for print */
+  .text-gold-gradient,
+  [class*="text-amber"],
+  [class*="text-yellow"] {
+    background: none !important;
+    -webkit-text-fill-color: #8B7355 !important;
+    color: #8B7355 !important;
+  }
+
+  /* Risk level colors for print */
+  .ruzn-tag-high {
+    background: #ffcccc !important;
+    color: #cc0000 !important;
+    border: 1px solid #cc0000 !important;
+  }
+
+  .ruzn-tag-med {
+    background: #fff3cd !important;
+    color: #856404 !important;
+    border: 1px solid #856404 !important;
+  }
+
+  .ruzn-tag-low {
+    background: #d4edda !important;
+    color: #155724 !important;
+    border: 1px solid #155724 !important;
+  }
+
+  /* KPI boxes for print */
+  .minister-kpi {
+    border: 2px solid #8B7355 !important;
+    padding: 1rem !important;
+    margin: 0.5rem !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Tables for print */
+  table {
+    border-collapse: collapse !important;
+    width: 100% !important;
+  }
+
+  th, td {
+    border: 1px solid #ccc !important;
+    padding: 8px !important;
+    text-align: right !important;
+  }
+
+  th {
+    background: #f5f5f5 !important;
+    font-weight: bold !important;
+  }
+
+  /* Page breaks */
+  .page-break-before {
+    page-break-before: always !important;
+  }
+
+  .page-break-after {
+    page-break-after: always !important;
+  }
+
+  .avoid-break {
+    page-break-inside: avoid !important;
+  }
+
+  /* Minister report header */
+  .minister-report-header {
+    text-align: center !important;
+    border-bottom: 2px solid #8B7355 !important;
+    padding-bottom: 1rem !important;
+    margin-bottom: 1rem !important;
+  }
+
+  .minister-report-header h1 {
+    font-size: 18pt !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .minister-report-header .date {
+    font-size: 12pt !important;
+    color: #666 !important;
+  }
+
+  /* Daily report specific styles */
+  .daily-report {
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .daily-report h2 {
+    font-size: 14pt !important;
+    border-bottom: 1px solid #ccc !important;
+    padding-bottom: 0.5rem !important;
+    margin-top: 1rem !important;
+  }
+
+  /* Charts - hide or show placeholder */
+  canvas {
+    display: none !important;
+  }
+
+  .chart-placeholder {
+    display: block !important;
+    border: 1px dashed #ccc !important;
+    padding: 2rem !important;
+    text-align: center !important;
+    color: #666 !important;
+  }
+
+  /* Ensure proper page margins */
+  @page {
+    margin: 2cm;
+    size: A4;
+  }
+
+  /* Arabic text direction */
+  .rtl {
+    direction: rtl !important;
+    text-align: right !important;
+  }
+
+  /* Print footer with page numbers */
+  .print-footer {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    text-align: center;
+    font-size: 10pt;
+    color: #666;
+    border-top: 1px solid #ccc;
+    padding-top: 0.5rem;
+  }
+}
+
+/* Print button styling */
+.print-report-btn {
+  cursor: pointer;
+}
+
+.print-report-btn:hover {
+  opacity: 0.8;
+}
