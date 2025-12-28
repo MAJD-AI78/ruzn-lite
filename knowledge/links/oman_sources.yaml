@@ -1,0 +1,65 @@
+version: "1.0"
+jurisdiction: "oman"
+default_language: "ar"
+
+taxonomy:
+  source_types: [law, royal_decree, supreme_court_ruling, gazette, regulation, circular, standard, tender, guideline]
+  tags:
+    - administrative_law
+    - evidence
+    - audit
+    - procurement
+    - labor
+    - anti_corruption
+    - finance
+    - public_funds
+    - governance
+    - penalties
+    - procedures
+    - compliance
+    - reporting
+    - appeal
+    - investigation
+    - sanctions
+
+sources:
+  - id: oman_official_gazette_primary
+    title: "Oman Official Gazette (Primary)"
+    source_type: gazette
+    authority_score: 1.0
+    access: public
+    language: bilingual
+    ingestion: snapshot
+    update_frequency: weekly
+    urls:
+      - "https://<OFFICIAL_GAZETTE_URL>/"
+    tags: [governance, compliance, reporting]
+
+  - id: oman_royal_decrees_library
+    title: "Royal Decrees Repository (Official)"
+    source_type: royal_decree
+    authority_score: 1.0
+    access: public
+    language: ar
+    ingestion: snapshot
+    update_frequency: monthly
+    urls:
+      - "https://<OFFICIAL_ROYAL_DECREE_PORTAL>/"
+    tags: [governance, procedures, compliance]
+
+  - id: oman_supreme_court_rulings
+    title: "Supreme Court Rulings (Official/Verified)"
+    source_type: supreme_court_ruling
+    authority_score: 0.95
+    access: public
+    language: ar
+    ingestion: manual_upload
+    update_frequency: monthly
+    urls:
+      - "https://<OFFICIAL_JUDICIARY_PORTAL>/"
+    tags: [evidence, appeal, procedures, administrative_law]
+
+quality_controls:
+  min_authority_score_for_citation: 0.7
+  allow_secondary_for_reasoning_only: true
+  enforce_hash_integrity: true

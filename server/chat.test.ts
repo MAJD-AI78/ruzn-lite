@@ -85,7 +85,7 @@ function createAuthContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] }
 
 describe("chat.send", () => {
   it("processes Arabic complaint and returns structured response", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.send({
@@ -101,7 +101,7 @@ describe("chat.send", () => {
   });
 
   it("processes English complaint correctly", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.send({
@@ -116,7 +116,7 @@ describe("chat.send", () => {
   });
 
   it("handles legislative mode queries", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.send({
@@ -130,7 +130,7 @@ describe("chat.send", () => {
   });
 
   it("includes conversation history in context", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.send({
@@ -149,7 +149,7 @@ describe("chat.send", () => {
 
 describe("chat.health", () => {
   it("returns healthy status", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.health();
@@ -162,7 +162,7 @@ describe("chat.health", () => {
 
 describe("chat.getSamples", () => {
   it("returns sample complaints for Arabic", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.getSamples({ language: "arabic" });
@@ -175,7 +175,7 @@ describe("chat.getSamples", () => {
   });
 
   it("returns sample complaints for English", async () => {
-    const ctx = createPublicContext();
+    const { ctx } = createAuthContext();
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.getSamples({ language: "english" });

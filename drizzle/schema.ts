@@ -266,36 +266,27 @@ export type InsertCaseLaw = typeof caseLaw.$inferInsert;
 
 
 // Knowledge Base - Stores ingested document content for AI retrieval
+// Schema aligned with server/db/knowledge.ts module
 export const knowledgeBase = mysqlTable("knowledge_base", {
   id: int("id").autoincrement().primaryKey(),
-  documentType: mysqlEnum("documentType", [
-    "royal_decree", 
+  // Core content fields (matching KnowledgeEntry interface)
+  title: varchar("title", { length: 500 }).notNull(),
+  titleArabic: varchar("titleArabic", { length: 500 }),
+  content: text("content").notNull(),
+  contentArabic: text("contentArabic"),
+  category: mysqlEnum("category", [
+    "law",
     "regulation", 
     "policy", 
-    "guideline", 
+    "procedure",
     "report",
-    "legal_article",
-    "procedure"
+    "guideline"
   ]).notNull(),
-  titleArabic: varchar("titleArabic", { length: 500 }),
-  titleEnglish: varchar("titleEnglish", { length: 500 }).notNull(),
-  referenceNumber: varchar("referenceNumber", { length: 100 }), // e.g., "111/2011"
-  contentArabic: text("contentArabic"),
-  contentEnglish: text("contentEnglish"),
-  summaryArabic: text("summaryArabic"),
-  summaryEnglish: text("summaryEnglish"),
+  source: varchar("source", { length: 500 }).notNull(),
+  referenceNumber: varchar("referenceNumber", { length: 100 }),
   keywords: text("keywords"), // JSON array of keywords for search
-  category: varchar("category", { length: 200 }), // e.g., "Financial Oversight", "Anti-Corruption"
-  sourceFile: varchar("sourceFile", { length: 300 }), // Original file name
-  sourceFileUrl: varchar("sourceFileUrl", { length: 500 }), // S3 URL for uploaded PDF
-  articleNumber: varchar("articleNumber", { length: 50 }), // For specific articles
-  penalties: text("penalties"), // JSON object with penalty details
+  keywordsArabic: text("keywordsArabic"), // JSON array of Arabic keywords
   effectiveDate: timestamp("effectiveDate"),
-  // Versioning fields
-  version: int("version").default(1).notNull(),
-  isLatest: boolean("isLatest").default(true).notNull(),
-  parentId: int("parentId"), // Reference to original document for version tracking
-  createdBy: int("createdBy"), // User who created/uploaded
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -304,15 +295,15 @@ export type KnowledgeBase = typeof knowledgeBase.$inferSelect;
 export type InsertKnowledgeBase = typeof knowledgeBase.$inferInsert;
 
 // Document version history - tracks all changes to documents
+// Schema aligned with server/db/knowledge.ts DocumentVersion interface
 export const documentVersions = mysqlTable("document_versions", {
   id: int("id").autoincrement().primaryKey(),
-  documentId: int("documentId").notNull(), // Reference to knowledge_base.id
+  knowledgeId: int("knowledgeId").notNull(), // Reference to knowledge_base.id
   version: int("version").notNull(),
-  changeType: mysqlEnum("changeType", ["created", "updated", "restored"]).notNull(),
-  changeSummary: text("changeSummary"), // Description of what changed
-  previousContent: text("previousContent"), // Snapshot of previous content (JSON)
-  changedBy: int("changedBy"), // User who made the change
-  changedByName: varchar("changedByName", { length: 200 }),
+  content: text("content").notNull(), // Snapshot of content at this version
+  contentArabic: text("contentArabic"), // Snapshot of Arabic content
+  changedBy: varchar("changedBy", { length: 200 }).notNull(), // User who made the change
+  changeDescription: text("changeDescription").notNull(), // Description of what changed
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

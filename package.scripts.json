@@ -1,0 +1,21 @@
+{
+  "name": "ruzn-lite-scripts-patch",
+  "description": "Add these scripts to your package.json",
+  "scripts": {
+    "security:audit": "tsx tools/security_audit.ts",
+    "knowledge:pgvector:migrate": "psql \"$KNOWLEDGE_PGVECTOR_URL\" -f server/knowledge/migrations/0001_init_pgvector.sql",
+    "knowledge:pgvector:ingest": "tsx knowledge/scripts/ingest_pgvector.ts"
+  },
+  "devDependencies": {
+    "tsx": "^4.0.0"
+  },
+  "dependencies": {
+    "pg": "^8.11.0",
+    "ioredis": "^5.3.0",
+    "yaml": "^2.3.0",
+    "glob": "^10.3.0",
+    "pdf-parse": "^1.1.1",
+    "mammoth": "^1.6.0",
+    "cheerio": "^1.0.0-rc.12"
+  }
+}

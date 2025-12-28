@@ -73,21 +73,23 @@ export default function KnowledgeBase() {
   });
 
   // Filter entries based on search and type
-  const filteredEntries = allEntries?.filter((entry: KnowledgeEntry) => {
+  // Handle both old format (array) and new format ({ entries, total })
+  const entriesArray = Array.isArray(allEntries) ? allEntries : (allEntries?.entries || []);
+  const filteredEntries = entriesArray.filter((entry: any) => {
     const matchesSearch = !searchQuery || 
-      entry.titleEnglish?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (entry.titleEnglish || entry.title || '')?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       entry.titleArabic?.includes(searchQuery) ||
-      entry.contentEnglish?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (entry.contentEnglish || entry.content || '')?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       entry.contentArabic?.includes(searchQuery) ||
       entry.referenceNumber?.toLowerCase().includes(searchQuery.toLowerCase());
     
-    const matchesType = !selectedType || entry.documentType === selectedType;
+    const matchesType = !selectedType || (entry.documentType || entry.category) === selectedType;
     
     return matchesSearch && matchesType;
-  }) || [];
+  });
 
   // Group entries by category
-  const entriesByCategory = filteredEntries.reduce((acc: Record<string, KnowledgeEntry[]>, entry: KnowledgeEntry) => {
+  const entriesByCategory: Record<string, any[]> = filteredEntries.reduce((acc: Record<string, any[]>, entry: any) => {
     const category = entry.category || "Other";
     if (!acc[category]) acc[category] = [];
     acc[category].push(entry);
@@ -296,8 +298,8 @@ export default function KnowledgeBase() {
             </h2>
             
             <div className="grid gap-4">
-              {entries.map((entry: KnowledgeEntry) => {
-                const config = documentTypeConfig[entry.documentType] || documentTypeConfig.guideline;
+              {entries.map((entry: any) => {
+                const config = documentTypeConfig[entry.documentType || entry.category] || documentTypeConfig.guideline;
                 const isExpanded = expandedIds.has(entry.id);
                 
                 return (
@@ -443,16 +445,14 @@ function UploadForm({ language, onSuccess }: { language: "arabic" | "english"; o
     setIsSubmitting(true);
     try {
       await createMutation.mutateAsync({
-        documentType: formData.documentType as any,
-        titleEnglish: formData.titleEnglish,
+        title: formData.titleEnglish,
         titleArabic: formData.titleArabic || undefined,
-        referenceNumber: formData.referenceNumber || undefined,
-        contentEnglish: formData.contentEnglish,
+        content: formData.contentEnglish,
         contentArabic: formData.contentArabic || undefined,
-        summaryEnglish: formData.summaryEnglish || undefined,
-        summaryArabic: formData.summaryArabic || undefined,
-        keywords: formData.keywords ? formData.keywords.split(',').map(k => k.trim()) : undefined,
-        category: formData.category || undefined
+        category: (formData.category || formData.documentType || 'guideline') as any,
+        source: 'Admin Upload',
+        referenceNumber: formData.referenceNumber || undefined,
+        keywords: formData.keywords ? formData.keywords.split(',').map(k => k.trim()) : undefined
       });
     } finally {
       setIsSubmitting(false);
@@ -633,7 +633,7 @@ function PDFUploadForm({ language, onSuccess }: { language: "arabic" | "english"
           titleEnglish: formData.titleEnglish || undefined,
           titleArabic: formData.titleArabic || undefined,
           referenceNumber: formData.referenceNumber || undefined,
-          category: formData.category || undefined
+          category: (formData.category || 'guideline') as any
         });
       };
       reader.readAsDataURL(selectedFile);
@@ -806,7 +806,7 @@ function VersionHistoryDialog({
           </div>
         ) : history && history.length > 0 ? (
           <div className="space-y-3">
-            {history.map((version: VersionEntry, index: number) => (
+            {history.map((version: any, index: number) => (
               <div 
                 key={version.id}
                 className={`p-4 rounded-lg border ${

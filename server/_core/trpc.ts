@@ -8,7 +8,7 @@ const t = initTRPC.context<TrpcContext>().create({
 });
 
 export const router = t.router;
-export const publicProcedure = t.procedure;
+// All procedures now require authentication
 
 const requireUser = t.middleware(async opts => {
   const { ctx, next } = opts;

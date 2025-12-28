@@ -1,0 +1,172 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUZN-LITE DOCKER COMPOSE
+# ═══════════════════════════════════════════════════════════════════════════════
+# Quick Start:
+#   docker-compose up -d
+#
+# Services:
+#   - app:      Ruzn-Lite application (port 3000)
+#   - postgres: PostgreSQL with pgvector (port 5432)
+#   - mysql:    MySQL database (port 3306)
+#   - redis:    Redis cache (port 6379)
+#
+# For production, use docker-compose.prod.yml
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: '3.8'
+
+services:
+  # ═══════════════════════════════════════════════════════════════════════════
+  # APPLICATION
+  # ═══════════════════════════════════════════════════════════════════════════
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ruzn-lite-app
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      # Deployment mode
+      - PUBLIC_MODE=true
+      - GOV_DEMO_MODE=false
+      - SOVEREIGN_MODE=false
+      # Databases
+      - DATABASE_URL=mysql://ruzn:ruzn_password@mysql:3306/ruzn_lite
+      - KNOWLEDGE_PGVECTOR_URL=postgres://ruzn:ruzn_password@postgres:5432/ruzn_knowledge
+      - REDIS_URL=redis://redis:6379
+      # Knowledge
+      - KNOWLEDGE_BACKEND=pgvector
+      - EMBEDDINGS_BACKEND=openai
+      # LLM
+      - LLM_ENABLED_PROVIDERS=deepseek
+      - DEEPSEEK_API_KEY=${DEEPSEEK_API_KEY}
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      # Auth (generate with: openssl rand -base64 32)
+      - JWT_SECRET=${JWT_SECRET}
+      - SESSION_SECRET=${SESSION_SECRET}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./knowledge/sources:/app/knowledge/sources:ro
+    networks:
+      - ruzn-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # POSTGRESQL WITH PGVECTOR (Knowledge Base)
+  # ═══════════════════════════════════════════════════════════════════════════
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: ruzn-lite-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=ruzn
+      - POSTGRES_PASSWORD=ruzn_password
+      - POSTGRES_DB=ruzn_knowledge
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./server/knowledge/migrations/0001_init_pgvector.sql:/docker-entrypoint-initdb.d/01_init.sql:ro
+    networks:
+      - ruzn-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ruzn -d ruzn_knowledge"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # MYSQL (Primary Application Database)
+  # ═══════════════════════════════════════════════════════════════════════════
+  mysql:
+    image: mysql:8.0
+    container_name: ruzn-lite-mysql
+    restart: unless-stopped
+    ports:
+      - "3306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=root_password
+      - MYSQL_DATABASE=ruzn_lite
+      - MYSQL_USER=ruzn
+      - MYSQL_PASSWORD=ruzn_password
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - ruzn-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "ruzn", "-pruzn_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: --default-authentication-plugin=mysql_native_password
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # REDIS (Rate Limiting, Caching, Sessions)
+  # ═══════════════════════════════════════════════════════════════════════════
+  redis:
+    image: redis:7-alpine
+    container_name: ruzn-lite-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ruzn-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # ═══════════════════════════════════════════════════════════════════════════
+  # LOCAL EMBEDDINGS (For Sovereign Mode)
+  # ═══════════════════════════════════════════════════════════════════════════
+  # Uncomment for sovereign deployments
+  # embeddings:
+  #   image: your-local-embeddings-image:latest
+  #   container_name: ruzn-lite-embeddings
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8088:8088"
+  #   networks:
+  #     - ruzn-network
+  #   healthcheck:
+  #     test: ["CMD", "curl", "-f", "http://localhost:8088/health"]
+  #     interval: 30s
+  #     timeout: 10s
+  #     retries: 3
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# NETWORKS
+# ═══════════════════════════════════════════════════════════════════════════════
+networks:
+  ruzn-network:
+    driver: bridge
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# VOLUMES
+# ═══════════════════════════════════════════════════════════════════════════════
+volumes:
+  postgres_data:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_data:
+    driver: local

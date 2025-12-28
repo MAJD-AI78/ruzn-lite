@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { invokeLLMStream, Message } from './_core/llm';
-import { logAnalyticsEvent, searchKnowledgeBase } from './db';
+import { logAnalyticsEvent } from './db';
+import { searchKnowledgeBase } from './db/knowledge';
 import { notifyOwner } from './_core/notification';
 import { shouldSearchWeb, searchAndScrape, formatSearchResultsForAI } from './webSearch';
 
@@ -93,12 +94,13 @@ export async function handleStreamingChat(req: Request, res: Response) {
     // Search knowledge base first
     let knowledgeContext = '';
     try {
-      const knowledgeResults = await searchKnowledgeBase(message, language, 3);
+      const knowledgeResults = await searchKnowledgeBase(message, { limit: 3, language: language === 'arabic' ? 'arabic' : 'english' });
       if (knowledgeResults.length > 0) {
         knowledgeContext = '\n\n--- OSAI Knowledge Base ---\n';
-        for (const doc of knowledgeResults) {
-          const title = language === 'arabic' ? (doc.titleArabic || doc.titleEnglish) : doc.titleEnglish;
-          const content = language === 'arabic' ? (doc.contentArabic || doc.contentEnglish) : doc.contentEnglish;
+        for (const result of knowledgeResults) {
+          const doc = result.entry;
+          const title = language === 'arabic' ? (doc.titleArabic || doc.title) : doc.title;
+          const content = language === 'arabic' ? (doc.contentArabic || doc.content) : doc.content;
           knowledgeContext += `\n### ${title}\n`;
           if (doc.referenceNumber) knowledgeContext += `Reference: ${doc.referenceNumber}\n`;
           knowledgeContext += `${content?.substring(0, 1500) || ''}\n`;

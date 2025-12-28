@@ -511,3 +511,19 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Add restore to previous version functionality
 - [x] Update Knowledge Base UI with PDF upload form
 - [x] Add version history dialog in document cards
+
+
+## Phase 22 - QA Final Patch (v2.2.1)
+
+### Tasks
+- [ ] Extract and parse ruzn-lite-final-v2.2.1-production-qa.zip
+- [ ] Parse ruzn-lite-final-codebase-v2.2.1-qa.txt
+- [ ] Create master index of all files
+- [ ] Identify files to update vs create
+- [ ] Respect frozen files (AGENTS.md, tools/preflight.ts, .github/workflows/codex-guardrails.yml, .gitignore)
+- [ ] Create tools/security_audit.ts if missing
+- [ ] Fix publicProcedure → protectedProcedure with RBAC
+- [ ] Fix lint/Prettier issues
+- [ ] Pass: pnpm security:audit, pnpm preflight, pnpm lint, pnpm test, pnpm build
+- [ ] Create branch fix/qa-guardrails-pass
+- [ ] Push to GitHub and open PR

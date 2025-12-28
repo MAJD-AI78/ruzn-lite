@@ -1,0 +1,16 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# KNOWLEDGE SOURCES DIRECTORY
+# ═══════════════════════════════════════════════════════════════════════════════
+# Place your PDF and DOCX documents here for ingestion
+#
+# Naming convention:
+#   <source_id>__<description>.pdf
+#
+# Examples:
+#   official_gazette__volume_2024_01.pdf
+#   decree_2024_001__public_funds_protection.pdf
+#   court_ruling__case_12345.pdf
+#
+# Run ingestion:
+#   pnpm knowledge:pgvector:ingest
+# ═══════════════════════════════════════════════════════════════════════════════

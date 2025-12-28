@@ -1,0 +1,9 @@
+# Ignore all documents (user-specific data)
+*.pdf
+*.docx
+*.doc
+*.txt
+
+# Keep .gitkeep files
+!.gitkeep
+!documents/.gitkeep

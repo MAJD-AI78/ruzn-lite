@@ -1,0 +1,14 @@
+# Place Oman legal documents here
+# 
+# Naming convention:
+#   <sourceId>__<description>.pdf
+#
+# Examples:
+#   oman_royal_decrees_library__rd_111_2011.pdf
+#   oman_supreme_court_rulings__case_2023_001.pdf
+#   oman_official_gazette_primary__issue_1450.pdf
+#
+# Source IDs (from oman_sources.yaml):
+#   - oman_official_gazette_primary
+#   - oman_royal_decrees_library
+#   - oman_supreme_court_rulings

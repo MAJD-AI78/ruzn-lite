@@ -46,6 +46,18 @@ vi.mock("./db", () => ({
   logAnalyticsEvent: vi.fn().mockResolvedValue(undefined)
 }));
 
+// Mock db/knowledge module
+vi.mock("./db/knowledge", () => ({
+  searchKnowledgeBase: vi.fn().mockResolvedValue([])
+}));
+
+// Mock webSearch module
+vi.mock("./webSearch", () => ({
+  shouldSearchWeb: vi.fn().mockReturnValue(false),
+  searchAndScrape: vi.fn().mockResolvedValue([]),
+  formatSearchResultsForAI: vi.fn().mockReturnValue("")
+}));
+
 // Mock notification module
 vi.mock("./_core/notification", () => ({
   notifyOwner: vi.fn().mockResolvedValue(true)

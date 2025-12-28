@@ -1,7 +1,7 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
 import { invokeLLM } from "./_core/llm";
 import { transcribeAudio } from "./_core/voiceTranscription";
@@ -18,12 +18,13 @@ import {
   searchCaseLaw, getCaseLawById, getCaseLawStats, seedCaseLawDatabase,
   seedHistoricalData,
   saveRegistryComplaint, getRegistryComplaints, assignComplaint,
-  getAssignedComplaints, getAssignmentStats,
-  searchKnowledgeBase, seedKnowledgeBase, getAllKnowledge,
-  createKnowledgeEntry, deleteKnowledgeEntry,
-  createDocumentVersion, getDocumentVersionHistory,
-  updateKnowledgeEntry, restoreDocumentVersion, createKnowledgeFromPDF
+  getAssignedComplaints, getAssignmentStats
 } from "./db";
+import {
+  searchKnowledgeBase, getAllKnowledge, createKnowledgeEntry,
+  deleteKnowledgeEntry, updateKnowledgeEntry, getVersionHistory,
+  restoreVersion, seedKnowledgeBase
+} from "./db/knowledge";
 import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshStatus, recordRefresh, updateRefreshConfig } from "./scheduledReports";
 import { storagePut } from "./storage";
 import { generateCaseLawPDF, generateComparativeReportPDF } from "./pdfExport";
@@ -214,8 +215,8 @@ Respond in English with precise legal language.`
 export const appRouter = router({
   system: systemRouter,
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
-    logout: publicProcedure.mutation(({ ctx }) => {
+    me: protectedProcedure.query(opts => opts.ctx.user),
+    logout: protectedProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
       return {
@@ -226,7 +227,7 @@ export const appRouter = router({
 
   // Ruzn-Lite AI Chat Router
   chat: router({
-    send: publicProcedure
+    send: protectedProcedure
       .input(z.object({
         message: z.string().min(1),
         language: z.enum(['arabic', 'english']),
@@ -350,7 +351,7 @@ export const appRouter = router({
         }
       }),
     
-    health: publicProcedure.query(() => ({
+    health: protectedProcedure.query(() => ({
       status: 'healthy',
       service: 'Ruzn-Lite',
       version: '2.0'
@@ -429,7 +430,7 @@ export const appRouter = router({
       }),
 
     // Get sample complaints for demo
-    getSamples: publicProcedure
+    getSamples: protectedProcedure
       .input(z.object({
         language: z.enum(['arabic', 'english']).optional().default('arabic'),
         category: z.string().optional()
@@ -632,7 +633,7 @@ export const appRouter = router({
         return summary;
       }),
 
-    getAuditFindings: publicProcedure
+    getAuditFindings: protectedProcedure
       .input(z.object({
         language: z.enum(['arabic', 'english']).optional().default('arabic'),
         severity: z.string().optional(),
@@ -643,7 +644,7 @@ export const appRouter = router({
         return findings;
       }),
 
-    getLegislativeDocs: publicProcedure
+    getLegislativeDocs: protectedProcedure
       .input(z.object({
         language: z.enum(['arabic', 'english']).optional().default('arabic'),
         documentType: z.string().optional()
@@ -797,7 +798,7 @@ export const appRouter = router({
       }),
 
     // Get auto-refresh status
-    getRefreshStatus: publicProcedure.query(() => {
+    getRefreshStatus: protectedProcedure.query(() => {
       return getRefreshStatus();
     }),
 
@@ -832,7 +833,7 @@ export const appRouter = router({
 
   // Dashboard Router (for home page widgets)
   dashboard: router({
-    getStats: publicProcedure.query(async () => {
+    getStats: protectedProcedure.query(async () => {
       const stats = await getDashboardStats();
       return stats;
     })
@@ -841,17 +842,17 @@ export const appRouter = router({
   // Historical Data Router (for comparative analysis)
   historical: router({
     // Get available metrics for comparison
-    getAvailableMetrics: publicProcedure.query(() => {
+    getAvailableMetrics: protectedProcedure.query(() => {
       return getAvailableMetrics();
     }),
 
     // Get available years for comparison
-    getAvailableYears: publicProcedure.query(() => {
+    getAvailableYears: protectedProcedure.query(() => {
       return getAvailableYears();
     }),
 
     // Get historical statistics
-    getStats: publicProcedure
+    getStats: protectedProcedure
       .input(z.object({
         years: z.array(z.number()).optional(),
         metrics: z.array(z.string()).optional()
@@ -862,7 +863,7 @@ export const appRouter = router({
       }),
 
     // Get complaints by entity
-    getComplaintsByEntity: publicProcedure
+    getComplaintsByEntity: protectedProcedure
       .input(z.object({
         years: z.array(z.number()).optional()
       }).optional())
@@ -872,7 +873,7 @@ export const appRouter = router({
       }),
 
     // Get complaints by category
-    getComplaintsByCategory: publicProcedure
+    getComplaintsByCategory: protectedProcedure
       .input(z.object({
         years: z.array(z.number()).optional()
       }).optional())
@@ -882,7 +883,7 @@ export const appRouter = router({
       }),
 
     // Get conviction examples
-    getConvictions: publicProcedure
+    getConvictions: protectedProcedure
       .input(z.object({
         years: z.array(z.number()).optional()
       }).optional())
@@ -905,7 +906,7 @@ export const appRouter = router({
   // Case Law Database Router
   caseLaw: router({
     // Search case law
-    search: publicProcedure
+    search: protectedProcedure
       .input(z.object({
         query: z.string().optional(),
         year: z.number().optional(),
@@ -921,7 +922,7 @@ export const appRouter = router({
       }),
 
     // Get case by ID
-    getById: publicProcedure
+    getById: protectedProcedure
       .input(z.object({ id: z.number() }))
       .query(async ({ input }) => {
         const caseData = await getCaseLawById(input.id);
@@ -929,7 +930,7 @@ export const appRouter = router({
       }),
 
     // Get case law statistics
-    getStats: publicProcedure.query(async () => {
+    getStats: protectedProcedure.query(async () => {
       const stats = await getCaseLawStats();
       return stats;
     }),
@@ -945,7 +946,7 @@ export const appRouter = router({
       }),
 
     // Get violation types for filtering
-    getViolationTypes: publicProcedure.query(() => {
+    getViolationTypes: protectedProcedure.query(() => {
       return [
         { value: 'embezzlement', labelEn: 'Embezzlement', labelAr: 'اختلاس' },
         { value: 'bribery', labelEn: 'Bribery', labelAr: 'رشوة' },
@@ -959,7 +960,7 @@ export const appRouter = router({
     }),
 
     // Get entity types for filtering
-    getEntityTypes: publicProcedure.query(() => {
+    getEntityTypes: protectedProcedure.query(() => {
       return [
         { value: 'ministry', labelEn: 'Ministry', labelAr: 'وزارة' },
         { value: 'government_company', labelEn: 'Government Company', labelAr: 'شركة حكومية' },
@@ -970,7 +971,7 @@ export const appRouter = router({
     }),
 
     // Export case to PDF
-    exportPdf: publicProcedure
+    exportPdf: protectedProcedure
       .input(z.object({
         id: z.number(),
         language: z.enum(['ar', 'en'])
@@ -1093,25 +1094,25 @@ export const appRouter = router({
   // Knowledge Base Router
   knowledge: router({
     // Search knowledge base
-    search: publicProcedure
+    search: protectedProcedure
       .input(z.object({
         query: z.string(),
         language: z.enum(['arabic', 'english']).optional()
       }))
       .query(async ({ input }) => {
-        const results = await searchKnowledgeBase(input.query, input.language || 'english');
+        const results = await searchKnowledgeBase(input.query, { language: input.language || 'english' });
         return results;
       }),
 
     // Get all knowledge entries
-    getAll: publicProcedure
+    getAll: protectedProcedure
       .query(async () => {
         const entries = await getAllKnowledge();
         return entries;
       }),
 
     // Seed knowledge base
-    seed: publicProcedure
+    seed: protectedProcedure
       .mutation(async () => {
         const result = await seedKnowledgeBase();
         return result;
@@ -1120,17 +1121,15 @@ export const appRouter = router({
     // Create new knowledge entry (admin only)
     create: protectedProcedure
       .input(z.object({
-        documentType: z.enum(['royal_decree', 'regulation', 'policy', 'guideline', 'report', 'legal_article', 'procedure']),
-        titleEnglish: z.string().min(1),
+        title: z.string().min(1),
         titleArabic: z.string().optional(),
-        referenceNumber: z.string().optional(),
-        contentEnglish: z.string().min(1),
+        content: z.string().min(1),
         contentArabic: z.string().optional(),
-        summaryEnglish: z.string().optional(),
-        summaryArabic: z.string().optional(),
-        keywords: z.array(z.string()).optional(),
-        category: z.string().optional(),
-        sourceFile: z.string().optional()
+        category: z.enum(['law', 'regulation', 'policy', 'procedure', 'report', 'guideline']),
+        source: z.string().min(1),
+        referenceNumber: z.string().optional(),
+        keywords: z.array(z.string()).default([]),
+        keywordsArabic: z.array(z.string()).optional()
       }))
       .mutation(async ({ input, ctx }) => {
         // Only admins can create entries
@@ -1156,29 +1155,35 @@ export const appRouter = router({
     update: protectedProcedure
       .input(z.object({
         id: z.number(),
-        titleEnglish: z.string().optional(),
+        title: z.string().optional(),
         titleArabic: z.string().optional(),
-        contentEnglish: z.string().optional(),
+        content: z.string().optional(),
         contentArabic: z.string().optional(),
-        summaryEnglish: z.string().optional(),
-        summaryArabic: z.string().optional(),
+        category: z.enum(['law', 'regulation', 'policy', 'procedure', 'report', 'guideline']).optional(),
+        source: z.string().optional(),
+        referenceNumber: z.string().optional(),
         keywords: z.array(z.string()).optional(),
-        category: z.string().optional()
+        keywordsArabic: z.array(z.string()).optional()
       }))
       .mutation(async ({ input, ctx }) => {
         if (ctx.user.role !== 'admin') {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can update documents' });
         }
-        const { id, ...updates } = input;
-        const result = await updateKnowledgeEntry(id, updates, ctx.user.id, ctx.user.name || null);
+        const { id, keywords, keywordsArabic, ...otherUpdates } = input;
+        const updates = {
+          ...otherUpdates,
+          keywords: keywords ? JSON.stringify(keywords) : undefined,
+          keywordsArabic: keywordsArabic ? JSON.stringify(keywordsArabic) : undefined
+        };
+        const result = await updateKnowledgeEntry(id, updates, ctx.user.name || 'admin', 'Updated via admin panel');
         return result;
       }),
 
     // Get version history for a document
-    getVersionHistory: publicProcedure
+    getVersionHistory: protectedProcedure
       .input(z.object({ documentId: z.number() }))
       .query(async ({ input }) => {
-        const history = await getDocumentVersionHistory(input.documentId);
+        const history = await getVersionHistory(input.documentId);
         return history;
       }),
 
@@ -1192,11 +1197,10 @@ export const appRouter = router({
         if (ctx.user.role !== 'admin') {
           throw new TRPCError({ code: 'FORBIDDEN', message: 'Only admins can restore versions' });
         }
-        const result = await restoreDocumentVersion(
+        const result = await restoreVersion(
           input.documentId,
           input.targetVersion,
-          ctx.user.id,
-          ctx.user.name || null
+          ctx.user.name || 'admin'
         );
         return result;
       }),
@@ -1233,21 +1237,28 @@ export const appRouter = router({
           const fileKey = `knowledge-base/${Date.now()}-${input.fileName}`;
           const { url: fileUrl } = await storagePut(fileKey, pdfBuffer, 'application/pdf');
           
-          // Create knowledge entry
-          const result = await createKnowledgeFromPDF({
-            documentType: input.documentType,
-            titleEnglish: input.titleEnglish || parsed.info.title || input.fileName.replace('.pdf', ''),
+          // Map document type to category
+          const categoryMap: Record<string, 'law' | 'regulation' | 'policy' | 'guideline' | 'report' | 'procedure'> = {
+            'royal_decree': 'law',
+            'regulation': 'regulation',
+            'policy': 'policy',
+            'guideline': 'guideline',
+            'report': 'report',
+            'legal_article': 'law',
+            'procedure': 'procedure'
+          };
+          
+          // Create knowledge entry using new schema
+          const result = await createKnowledgeEntry({
+            title: input.titleEnglish || parsed.info.title || input.fileName.replace('.pdf', ''),
             titleArabic: input.titleArabic,
-            referenceNumber: input.referenceNumber,
-            contentEnglish: isArabic ? '' : parsed.text,
+            content: isArabic ? '' : parsed.text,
             contentArabic: isArabic ? parsed.text : '',
-            summaryEnglish: isArabic ? '' : summary,
-            summaryArabic: isArabic ? summary : '',
+            category: categoryMap[input.documentType] || 'guideline',
+            source: fileUrl,
+            referenceNumber: input.referenceNumber,
             keywords,
-            category: input.category,
-            sourceFile: input.fileName,
-            sourceFileUrl: fileUrl,
-            createdBy: ctx.user.id
+            keywordsArabic: isArabic ? keywords : undefined
           });
           
           return {

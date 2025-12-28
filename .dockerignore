@@ -1,0 +1,66 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUZN-LITE .DOCKERIGNORE
+# ═══════════════════════════════════════════════════════════════════════════════
+# Files to exclude from Docker build context
+# ═══════════════════════════════════════════════════════════════════════════════
+
+# Git
+.git
+.gitignore
+
+# Dependencies (will be installed fresh)
+node_modules
+
+# Build artifacts
+dist
+build
+.next
+out
+
+# Environment files (CRITICAL - never include in image)
+.env
+.env.*
+*.pem
+*.key
+
+# Documentation
+docs
+*.md
+!README.md
+
+# Tests
+__tests__
+*.test.ts
+*.spec.ts
+coverage
+.nyc_output
+
+# IDE
+.idea
+.vscode
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+Dockerfile*
+docker-compose*
+.docker
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+
+# Knowledge sources (mounted at runtime)
+knowledge/sources/**/*.pdf
+knowledge/sources/**/*.docx
+
+# Misc
+*.log
+tmp
+temp
+.cache
+.turbo

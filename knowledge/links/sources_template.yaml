@@ -1,0 +1,103 @@
+# ═══════════════════════════════════════════════════════════════════════════════
+# RUZN-LITE KNOWLEDGE SOURCE REGISTRY TEMPLATE
+# ═══════════════════════════════════════════════════════════════════════════════
+# Copy this file to sources.yaml and configure for your jurisdiction
+# ═══════════════════════════════════════════════════════════════════════════════
+
+version: "1.0"
+jurisdiction: "your_jurisdiction"  # e.g., "oman", "uae", "saudi"
+default_language: "ar"              # ar, en, or bilingual
+
+taxonomy:
+  source_types:
+    - law
+    - decree
+    - court_ruling
+    - gazette
+    - regulation
+    - circular
+    - standard
+    - guideline
+    
+  tags:
+    - administrative_law
+    - evidence
+    - audit
+    - procurement
+    - labor
+    - anti_corruption
+    - finance
+    - public_funds
+    - governance
+    - penalties
+    - procedures
+    - compliance
+    - reporting
+    - appeal
+    - investigation
+    - sanctions
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# CONFIGURE YOUR SOURCES BELOW
+# ═══════════════════════════════════════════════════════════════════════════════
+
+sources:
+  # Official Gazette (Primary Source)
+  - id: official_gazette_primary
+    title: "Official Gazette (Primary)"
+    source_type: gazette
+    authority_score: 1.0           # 1.0 = highest authority
+    access: public                 # public | restricted | confidential
+    language: bilingual            # ar | en | bilingual
+    ingestion: snapshot            # snapshot | manual_upload | api
+    update_frequency: weekly       # daily | weekly | monthly | quarterly
+    urls:
+      - "https://your-gazette-url.gov/"
+    tags: [governance, compliance, reporting]
+
+  # Decrees/Laws Repository
+  - id: decrees_library
+    title: "Decrees Repository (Official)"
+    source_type: decree
+    authority_score: 1.0
+    access: public
+    language: ar
+    ingestion: snapshot
+    update_frequency: monthly
+    urls:
+      - "https://your-decrees-portal.gov/"
+    tags: [governance, procedures, compliance]
+
+  # Court Rulings
+  - id: court_rulings
+    title: "Court Rulings (Official)"
+    source_type: court_ruling
+    authority_score: 0.95
+    access: public
+    language: ar
+    ingestion: manual_upload
+    update_frequency: monthly
+    urls:
+      - "https://your-judiciary-portal.gov/"
+    tags: [evidence, appeal, procedures, administrative_law]
+
+  # Internal Regulations
+  - id: internal_regulations
+    title: "Internal Regulations"
+    source_type: regulation
+    authority_score: 0.85
+    access: restricted
+    language: bilingual
+    ingestion: manual_upload
+    update_frequency: quarterly
+    urls: []
+    tags: [procedures, compliance, governance]
+
+# ═══════════════════════════════════════════════════════════════════════════════
+# QUALITY CONTROLS
+# ═══════════════════════════════════════════════════════════════════════════════
+
+quality_controls:
+  min_authority_score_for_citation: 0.7
+  allow_secondary_for_reasoning_only: true
+  enforce_hash_integrity: true
