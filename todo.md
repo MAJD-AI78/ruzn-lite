@@ -333,3 +333,14 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Add refresh status endpoint
 - [x] Admin trigger for manual refresh
 - [x] Weekly interval configuration (168 hours)
+
+
+## Phase 12 - Complaint-Case Registry Page
+
+- [x] Convert POC demo HTML to React component
+- [x] Create /complaint-registry route
+- [x] Add navigation link from Home page
+- [x] Preserve all POC functionality (4 tabs, forms, triage, entity map)
+- [x] Add bilingual support (Arabic/English)
+- [x] Implement Minister Dashboard with KPIs and daily report generation
+- [x] Add Governance & Trust Controls section

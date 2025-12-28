@@ -117,6 +117,7 @@ const UI_TEXT = {
     entityMap: "خريطة الجهات",
     comparativeAnalysis: "التحليل المقارن",
     caseLaw: "السوابق القضائية",
+    complaintRegistry: "سجل البلاغات",
     voiceInput: "إدخال صوتي",
     recording: "جاري التسجيل...",
     attachFile: "إرفاق ملف",
@@ -153,6 +154,7 @@ const UI_TEXT = {
     entityMap: "Entity Map",
     comparativeAnalysis: "Comparative Analysis",
     caseLaw: "Case Law",
+    complaintRegistry: "Complaint Registry",
     voiceInput: "Voice Input",
     recording: "Recording...",
     attachFile: "Attach File",
@@ -778,6 +780,12 @@ export default function Home() {
               <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
                 <Scale className="w-3 h-3" />
                 {text.caseLaw}
+              </button>
+            </Link>
+            <Link href="/complaint-registry">
+              <button className="ruzn-btn text-xs flex items-center gap-1 px-3 py-2 rounded-xl">
+                <FileText className="w-3 h-3" />
+                {text.complaintRegistry}
               </button>
             </Link>
             <Link href="/analytics">

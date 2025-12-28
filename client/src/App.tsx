@@ -13,6 +13,7 @@ import EntityMap from "./pages/EntityMap";
 import Landing from "./pages/Landing";
 import ComparativeAnalysis from "./pages/ComparativeAnalysis";
 import CaseLaw from "./pages/CaseLaw";
+import ComplaintRegistry from "./pages/ComplaintRegistry";
 
 function ProtectedRouter() {
   return (
@@ -24,6 +25,7 @@ function ProtectedRouter() {
       <Route path={"/entity-map"} component={EntityMap} />
       <Route path="/comparative-analysis" component={ComparativeAnalysis} />
             <Route path="/case-law" component={CaseLaw} />
+      <Route path="/complaint-registry" component={ComplaintRegistry} />
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />
