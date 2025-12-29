@@ -22,8 +22,8 @@ import Chart from 'chart.js/auto';
 const UI_TEXT = {
   title: 'التحليل المقارن',
   titleEn: 'Comparative Analysis',
-  subtitle: 'مقارنة بيانات جهاز الرقابة المالية والإدارية للدولة عبر السنوات',
-  subtitleEn: 'Compare OSAI data across years (2021-2024)',
+  subtitle: 'مقارنة بيانات الحوكمة والامتثال عبر السنوات',
+  subtitleEn: 'Compare governance data across years (2021-2024)',
   backToHome: 'العودة للرئيسية',
   selectYears: 'اختر السنوات',
   selectMetrics: 'اختر المقاييس',

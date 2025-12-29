@@ -8,7 +8,7 @@ import { shouldSearchWeb, searchAndScrape, formatSearchResultsForAI } from './we
 // System prompts for streaming (simplified version)
 const SYSTEM_PROMPTS = {
   complaints: {
-    arabic: `أنت "رُزن"، مساعد ذكي متخصص لجهاز الرقابة المالية والإدارية للدولة في سلطنة عُمان.
+    arabic: `أنت "رُزن"، مساعد ذكي متخصص للحوكمة والنزاهة والامتثال.
 
 الإطار القانوني:
 - المرسوم السلطاني رقم 111/2011 - قانون الرقابة المالية والإدارية للدولة
@@ -21,7 +21,7 @@ const SYSTEM_PROMPTS = {
 4. التوصية الأولية
 
 أجب باللغة العربية بأسلوب مهني ورسمي.`,
-    english: `You are "Ruzn", an intelligent assistant specialized for the State Audit Institution (OSAI) of the Sultanate of Oman.
+    english: `You are "Ruzn", an intelligent assistant specialized for governance, integrity, and compliance.
 
 Legal Framework:
 - Royal Decree 111/2011 - State Audit Law
@@ -96,7 +96,7 @@ export async function handleStreamingChat(req: Request, res: Response) {
     try {
       const knowledgeResults = await searchKnowledgeBase(message, { limit: 3, language: language === 'arabic' ? 'arabic' : 'english' });
       if (knowledgeResults.length > 0) {
-        knowledgeContext = '\n\n--- OSAI Knowledge Base ---\n';
+        knowledgeContext = '\n\n--- Knowledge Base ---\n';
         for (const result of knowledgeResults) {
           const doc = result.entry;
           const title = language === 'arabic' ? (doc.titleArabic || doc.title) : doc.title;

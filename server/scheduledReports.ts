@@ -174,7 +174,7 @@ function formatReportAsHtml(report: any): string {
   <div class="container">
     <div class="header">
       <div class="logo">رُزن</div>
-      <div class="subtitle">التقرير الأسبوعي لجهاز الرقابة المالية والإدارية للدولة</div>
+      <div class="subtitle">التقرير الأسبوعي للحوكمة والنزاهة</div>
     </div>
     
     <div class="period">
@@ -271,7 +271,7 @@ function formatReportAsText(report: any): string {
   let text = `
 ═══════════════════════════════════════════════════════════════
                     رُزن - التقرير الأسبوعي
-           جهاز الرقابة المالية والإدارية للدولة
+           الحوكمة والنزاهة والامتثال
 ═══════════════════════════════════════════════════════════════
 
 الفترة: ${startDate} - ${endDate}

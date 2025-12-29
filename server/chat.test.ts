@@ -59,7 +59,7 @@ function createAuthContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] }
     id: 1,
     openId: "sample-user",
     email: "sample@example.com",
-    name: "OSAI Staff Member",
+    name: "Staff Member",
     loginMethod: "manus",
     role: "user",
     createdAt: new Date(),
@@ -120,7 +120,7 @@ describe("chat.send", () => {
     const caller = appRouter.createCaller(ctx);
 
     const result = await caller.chat.send({
-      message: "What are the powers of the State Audit Institution?",
+      message: "What are the powers of the regulatory authority?",
       language: "english",
       feature: "legislative",
       history: []
@@ -199,7 +199,7 @@ describe("chat.exportPdf (protected)", () => {
       language: "arabic"
     });
 
-    expect(result.userName).toBe("OSAI Staff Member");
+    expect(result.userName).toBe("Staff Member");
     expect(result.feature).toBe("complaints");
     expect(result.language).toBe("arabic");
     expect(result.title).toBe("تقرير محادثة رُزن");
@@ -220,7 +220,7 @@ describe("chat.exportPdf (protected)", () => {
     });
 
     expect(result.title).toBe("Ruzn Conversation Report");
-    expect(result.subtitle).toBe("State Audit Institution");
+    expect(result.subtitle).toBe("Governance, Integrity, and Compliance");
   });
 });
 
@@ -262,8 +262,8 @@ function createAdminContext(): { ctx: TrpcContext; clearedCookies: CookieCall[] 
   const user: AuthenticatedUser = {
     id: 1,
     openId: "admin-user",
-    email: "admin@osai.gov.om",
-    name: "OSAI Admin",
+    email: "admin@ruzn.ai",
+    name: "Ruzn Admin",
     loginMethod: "manus",
     role: "admin",
     createdAt: new Date(),

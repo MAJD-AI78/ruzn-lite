@@ -186,7 +186,7 @@ export default function ComplaintRegistry() {
   };
 
   // Generate unique ID
-  const uid = () => "OSAI-" + Math.floor(100000 + Math.random() * 900000);
+  const uid = () => "RUZN-" + Math.floor(100000 + Math.random() * 900000);
 
   // Count keyword hits
   const countHits = (text: string, arr: string[]) => {

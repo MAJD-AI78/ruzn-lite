@@ -217,7 +217,7 @@ export function generateCaseLawPDF(caseData: {
     amount: 'المبلغ المتورط',
     legalArticles: 'المواد القانونية',
     outcome: 'النتيجة',
-    footer: 'جهاز الرقابة المالية والإدارية للدولة - سلطنة عُمان'
+    footer: 'الحوكمة والنزاهة والامتثال'
   } : {
     title: 'Case Record',
     caseNumber: 'Case Number',
@@ -229,7 +229,7 @@ export function generateCaseLawPDF(caseData: {
     amount: 'Amount Involved',
     legalArticles: 'Legal Articles',
     outcome: 'Outcome',
-    footer: 'State Audit Institution - Sultanate of Oman'
+    footer: 'Governance, Integrity, and Compliance'
   };
 
   const content: PDFSection[] = [
@@ -271,7 +271,7 @@ export function generateComparativeReportPDF(data: {
   
   const labels = isArabic ? {
     title: 'تقرير التحليل المقارن',
-    subtitle: 'جهاز الرقابة المالية والإدارية للدولة',
+    subtitle: 'الحوكمة والنزاهة والامتثال',
     yearRange: 'الفترة الزمنية',
     overview: 'نظرة عامة',
     complaints: 'البلاغات',
@@ -282,7 +282,7 @@ export function generateComparativeReportPDF(data: {
     footer: 'تم إنشاء هذا التقرير بواسطة رُزن - منصة الذكاء التشغيلي'
   } : {
     title: 'Comparative Analysis Report',
-    subtitle: 'State Audit Institution',
+    subtitle: 'Governance, Integrity, and Compliance',
     yearRange: 'Time Period',
     overview: 'Overview',
     complaints: 'Complaints',

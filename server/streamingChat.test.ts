@@ -152,7 +152,7 @@ describe("handleStreamingChat", () => {
 
   it("handles legislative mode queries", async () => {
     const req = createMockRequest({
-      message: "What are the powers of OSAI?",
+      message: "What are the powers of the regulatory authority?",
       feature: "legislative",
       language: "english"
     });

@@ -30,10 +30,10 @@ import { storagePut } from "./storage";
 import { generateCaseLawPDF, generateComparativeReportPDF } from "./pdfExport";
 import { parsePDF, extractSummary, extractKeywords, isArabicText } from "./pdfParser";
 
-// System prompts for Ruzn-Lite OSAI - Enhanced with OSAI Knowledge Base
+// System prompts for Ruzn-Lite - Enhanced with Governance Knowledge Base
 const SYSTEM_PROMPTS = {
   complaints: {
-    arabic: `أنت "رُزن"، مساعد ذكي متخصص لجهاز الرقابة المالية والإدارية للدولة في سلطنة عُمان.
+    arabic: `أنت "رُزن"، مساعد ذكي متخصص للحوكمة والنزاهة والامتثال.
 
 الإطار القانوني:
 - المرسوم السلطاني رقم 111/2011 - قانون الرقابة المالية والإدارية للدولة
@@ -81,7 +81,7 @@ const SYSTEM_PROMPTS = {
 5. **التوصية الأولية**: [توصيتك]
 
 أجب باللغة العربية بأسلوب مهني ورسمي.`,
-    english: `You are "Ruzn", an intelligent assistant specialized for the State Audit Institution (OSAI) of the Sultanate of Oman.
+    english: `You are "Ruzn", an intelligent assistant specialized for governance, integrity, and compliance.
 
 Legal Framework:
 - Royal Decree 111/2011 - State Audit Law
@@ -403,7 +403,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const { messages, feature, language } = input;
-        const userName = ctx.user.name || 'OSAI Staff';
+        const userName = ctx.user.name || 'Staff';
         const timestamp = new Date().toISOString();
         
         // Log PDF export event
@@ -424,8 +424,8 @@ export const appRouter = router({
           messages,
           title: language === 'arabic' ? 'تقرير محادثة رُزن' : 'Ruzn Conversation Report',
           subtitle: language === 'arabic' 
-            ? 'ديوان الرقابة المالية والإدارية للدولة' 
-            : 'State Audit Institution'
+            ? 'الحوكمة والنزاهة والامتثال' 
+            : 'Governance, Integrity, and Compliance'
         };
       }),
 
@@ -454,8 +454,8 @@ export const appRouter = router({
             audioUrl,
             language: language === 'arabic' ? 'ar' : 'en',
             prompt: language === 'arabic' 
-              ? 'شكوى مقدمة لديوان الرقابة المالية والإدارية للدولة'
-              : 'Complaint submitted to the State Audit Institution'
+              ? 'شكوى مقدمة للجهات الرقابية'
+              : 'Complaint submitted for governance review'
           });
           
           // Check if result has text (success case)

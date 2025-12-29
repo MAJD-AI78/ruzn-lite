@@ -4,14 +4,14 @@ import { shouldSearchWeb, formatSearchResultsForAI } from './webSearch';
 describe('Web Search Module', () => {
   describe('shouldSearchWeb', () => {
     it('detects English search triggers', () => {
-      expect(shouldSearchWeb('search for information about OSAI')).toBe(true);
+      expect(shouldSearchWeb('search for information about governance')).toBe(true);
       expect(shouldSearchWeb('what is the latest news about Oman?')).toBe(true);
       expect(shouldSearchWeb('find me the website for government services')).toBe(true);
-      expect(shouldSearchWeb('who is the current chairman of OSAI?')).toBe(true);
+      expect(shouldSearchWeb('who is the current chairman?')).toBe(true);
     });
 
     it('detects Arabic search triggers', () => {
-      expect(shouldSearchWeb('ابحث عن معلومات حول جهاز الرقابة')).toBe(true);
+      expect(shouldSearchWeb('ابحث عن معلومات حول الحوكمة')).toBe(true);
       expect(shouldSearchWeb('ما هو آخر أخبار عمان؟')).toBe(true);
       expect(shouldSearchWeb('من هو رئيس الجهاز؟')).toBe(true);
     });

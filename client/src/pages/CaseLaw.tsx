@@ -15,7 +15,7 @@ type Language = "arabic" | "english";
 const UI_TEXT = {
   arabic: {
     title: "قاعدة بيانات السوابق القضائية",
-    subtitle: "أرشيف قابل للبحث لقضايا الإدانة في جهاز الرقابة المالية",
+    subtitle: "أرشيف قابل للبحث لقضايا الإدانة والمخالفات",
     back: "العودة",
     search: "بحث في القضايا...",
     filterBy: "تصفية حسب",
@@ -50,7 +50,7 @@ const UI_TEXT = {
   },
   english: {
     title: "Case Law Database",
-    subtitle: "Searchable archive of OSAI conviction cases",
+    subtitle: "Searchable archive of governance conviction cases",
     back: "Back",
     search: "Search cases...",
     filterBy: "Filter by",

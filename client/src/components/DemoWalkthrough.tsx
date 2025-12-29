@@ -17,8 +17,8 @@ const WALKTHROUGH_STEPS: WalkthroughStep[] = [
     id: 'welcome',
     titleAr: 'مرحباً بك في رُزن',
     titleEn: 'Welcome to Ruzn',
-    descriptionAr: 'منصة ذكاء تشغيلي لجهاز الرقابة المالية والإدارية للدولة. دعنا نأخذك في جولة سريعة لاكتشاف الميزات الرئيسية.',
-    descriptionEn: 'An operational intelligence platform for the State Audit Institution. Let us take you on a quick tour to discover the key features.',
+    descriptionAr: 'منصة ذكاء تشغيلي للحوكمة والنزاهة والامتثال. دعنا نأخذك في جولة سريعة لاكتشاف الميزات الرئيسية.',
+    descriptionEn: 'An operational intelligence platform for governance, integrity, and compliance. Let us take you on a quick tour to discover the key features.',
     icon: <MessageSquare className="w-8 h-8" />,
     position: 'center'
   },

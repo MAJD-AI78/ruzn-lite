@@ -24,7 +24,7 @@ type Language = "arabic" | "english";
 const UI_TEXT = {
   arabic: {
     title: "لوحة التحليلات",
-    subtitle: "إحصائيات وتحليلات جهاز الرقابة المالية والإدارية",
+    subtitle: "إحصائيات وتحليلات الحوكمة والامتثال",
     totalComplaints: "إجمالي الشكاوى المحللة",
     avgRiskScore: "متوسط درجة الخطورة",
     highRiskCount: "شكاوى عالية الخطورة",
@@ -53,7 +53,7 @@ const UI_TEXT = {
   },
   english: {
     title: "Analytics Dashboard",
-    subtitle: "State Audit Institution Statistics",
+    subtitle: "Governance and Compliance Statistics",
     totalComplaints: "Total Complaints Analyzed",
     avgRiskScore: "Average Risk Score",
     highRiskCount: "High Risk Complaints",

@@ -470,14 +470,14 @@ function getHardcodedSamples(language?: string, category?: string) {
     { id: 42, textArabic: "عدم توثيق القرارات الإدارية بشكل صحيح", textEnglish: "Failure to properly document administrative decisions", category: "administrative_negligence", expectedRiskScore: 42, ministry: "وزارة العدل" },
 
     // General Complaints (8 samples)
-    { id: 43, textArabic: "استفسار عن إجراءات تقديم شكوى رسمية", textEnglish: "Inquiry about procedures for filing an official complaint", category: "general", expectedRiskScore: 15, ministry: "جهاز الرقابة المالية" },
+    { id: 43, textArabic: "استفسار عن إجراءات تقديم شكوى رسمية", textEnglish: "Inquiry about procedures for filing an official complaint", category: "general", expectedRiskScore: 15, ministry: "الجهات الرقابية" },
     { id: 44, textArabic: "ملاحظات عامة حول تحسين الخدمات الحكومية", textEnglish: "General observations about improving government services", category: "general", expectedRiskScore: 10, ministry: "عام" },
-    { id: 45, textArabic: "طلب معلومات عن صلاحيات جهاز الرقابة المالية", textEnglish: "Request for information about State Audit Institution powers", category: "general", expectedRiskScore: 5, ministry: "جهاز الرقابة المالية" },
-    { id: 46, textArabic: "اقتراح لتطوير آلية استقبال الشكاوى", textEnglish: "Suggestion to improve the complaint reception mechanism", category: "general", expectedRiskScore: 8, ministry: "جهاز الرقابة المالية" },
-    { id: 47, textArabic: "استفسار عن نتيجة شكوى سابقة", textEnglish: "Inquiry about the result of a previous complaint", category: "general", expectedRiskScore: 12, ministry: "جهاز الرقابة المالية" },
-    { id: 48, textArabic: "طلب نسخة من تقرير الرقابة السنوي", textEnglish: "Request for a copy of the annual audit report", category: "general", expectedRiskScore: 5, ministry: "جهاز الرقابة المالية" },
-    { id: 49, textArabic: "شكر وتقدير لجهود جهاز الرقابة المالية", textEnglish: "Thanks and appreciation for the State Audit Institution's efforts", category: "general", expectedRiskScore: 0, ministry: "جهاز الرقابة المالية" },
-    { id: 50, textArabic: "استفسار عن التعاون مع المنظمات الدولية للرقابة", textEnglish: "Inquiry about cooperation with international audit organizations", category: "general", expectedRiskScore: 5, ministry: "جهاز الرقابة المالية" }
+    { id: 45, textArabic: "طلب معلومات عن صلاحيات الجهات الرقابية", textEnglish: "Request for information about regulatory authority powers", category: "general", expectedRiskScore: 5, ministry: "الجهات الرقابية" },
+    { id: 46, textArabic: "اقتراح لتطوير آلية استقبال الشكاوى", textEnglish: "Suggestion to improve the complaint reception mechanism", category: "general", expectedRiskScore: 8, ministry: "الجهات الرقابية" },
+    { id: 47, textArabic: "استفسار عن نتيجة شكوى سابقة", textEnglish: "Inquiry about the result of a previous complaint", category: "general", expectedRiskScore: 12, ministry: "الجهات الرقابية" },
+    { id: 48, textArabic: "طلب نسخة من تقرير الرقابة السنوي", textEnglish: "Request for a copy of the annual audit report", category: "general", expectedRiskScore: 5, ministry: "الجهات الرقابية" },
+    { id: 49, textArabic: "شكر وتقدير لجهود الجهات الرقابية", textEnglish: "Thanks and appreciation for the regulatory authority's efforts", category: "general", expectedRiskScore: 0, ministry: "الجهات الرقابية" },
+    { id: 50, textArabic: "استفسار عن التعاون مع المنظمات الدولية للرقابة", textEnglish: "Inquiry about cooperation with international audit organizations", category: "general", expectedRiskScore: 5, ministry: "الجهات الرقابية" }
   ];
 
   let filtered = samples;
@@ -520,7 +520,7 @@ function getHardcodedAuditFindings(language?: string) {
 // Hardcoded legislative documents for demo
 function getHardcodedLegislativeDocuments(language?: string) {
   const documents = [
-    { id: 1, titleArabic: "قانون الرقابة المالية والإدارية للدولة", titleEnglish: "State Financial and Administrative Audit Law", documentType: "royal_decree" as const, documentNumber: "111/2011", year: 2011, summaryArabic: "ينظم عمل جهاز الرقابة المالية والإدارية للدولة وصلاحياته", summaryEnglish: "Regulates the work and powers of the State Audit Institution", keyProvisions: ["صلاحيات الرقابة", "استقلالية الديوان", "التقارير السنوية"] },
+    { id: 1, titleArabic: "قانون الرقابة المالية والإدارية للدولة", titleEnglish: "State Financial and Administrative Audit Law", documentType: "royal_decree" as const, documentNumber: "111/2011", year: 2011, summaryArabic: "ينظم عمل الجهات الرقابية وصلاحياتها", summaryEnglish: "Regulates the work and powers of the regulatory authority", keyProvisions: ["صلاحيات الرقابة", "استقلالية الديوان", "التقارير السنوية"] },
     { id: 2, titleArabic: "قانون المناقصات", titleEnglish: "Tender Law", documentType: "royal_decree" as const, documentNumber: "36/2008", year: 2008, summaryArabic: "ينظم إجراءات المناقصات والمشتريات الحكومية", summaryEnglish: "Regulates government tender and procurement procedures", keyProvisions: ["إجراءات الطرح", "لجان المناقصات", "الاستثناءات"] },
     { id: 3, titleArabic: "قانون حماية المال العام", titleEnglish: "Public Funds Protection Law", documentType: "royal_decree" as const, documentNumber: "112/2011", year: 2011, summaryArabic: "يحدد العقوبات على جرائم المال العام", summaryEnglish: "Defines penalties for public fund crimes", keyProvisions: ["تعريف المال العام", "العقوبات", "الإجراءات"] },
     { id: 4, titleArabic: "لائحة تنظيم العمل الإداري", titleEnglish: "Administrative Work Regulation", documentType: "ministerial_decision" as const, documentNumber: "45/2020", year: 2020, summaryArabic: "تنظم الإجراءات الإدارية في الجهات الحكومية", summaryEnglish: "Regulates administrative procedures in government entities", keyProvisions: ["التفويض", "التوثيق", "المتابعة"] },
@@ -981,46 +981,46 @@ export async function getHistoricalConvictionsData(years?: number[]) {
   }
 }
 
-// Hardcoded historical stats from OSAI Annual Reports 2021-2024
+// Hardcoded historical stats from Annual Reports 2021-2024
 function getHardcodedHistoricalStats(years?: number[], metrics?: string[]) {
   const allStats = [
     // Direct Added Value (Collection & Recovery) - OMR Million
-    { year: 2021, metric: "directAddedValue", value: null, valueDecimal: "76.5", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "directAddedValue", value: null, valueDecimal: "97.8", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2022" },
-    { year: 2023, metric: "directAddedValue", value: null, valueDecimal: "177.7", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2023" },
-    { year: 2024, metric: "directAddedValue", value: null, valueDecimal: "25.0", unit: "OMR Million", category: "financial", source: "OSAI Annual Report 2024" },
+    { year: 2021, metric: "directAddedValue", value: null, valueDecimal: "76.5", unit: "OMR Million", category: "financial", source: "Annual Report 2021" },
+    { year: 2022, metric: "directAddedValue", value: null, valueDecimal: "97.8", unit: "OMR Million", category: "financial", source: "Annual Report 2022" },
+    { year: 2023, metric: "directAddedValue", value: null, valueDecimal: "177.7", unit: "OMR Million", category: "financial", source: "Annual Report 2023" },
+    { year: 2024, metric: "directAddedValue", value: null, valueDecimal: "25.0", unit: "OMR Million", category: "financial", source: "Annual Report 2024" },
     
     // Legal Cases Addressed
-    { year: 2021, metric: "legalCases", value: 101, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "legalCases", value: 113, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2022" },
-    { year: 2023, metric: "legalCases", value: 115, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2023" },
-    { year: 2024, metric: "legalCases", value: 72, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2024" },
+    { year: 2021, metric: "legalCases", value: 101, valueDecimal: null, unit: "Cases", category: "legal", source: "Annual Report 2021" },
+    { year: 2022, metric: "legalCases", value: 113, valueDecimal: null, unit: "Cases", category: "legal", source: "Annual Report 2022" },
+    { year: 2023, metric: "legalCases", value: 115, valueDecimal: null, unit: "Cases", category: "legal", source: "Annual Report 2023" },
+    { year: 2024, metric: "legalCases", value: 72, valueDecimal: null, unit: "Cases", category: "legal", source: "Annual Report 2024" },
     
     // Referred to Public Prosecution
-    { year: 2022, metric: "referredToProsecution", value: 14, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2022" },
-    { year: 2023, metric: "referredToProsecution", value: 28, valueDecimal: null, unit: "Cases", category: "legal", source: "OSAI Annual Report 2023" },
+    { year: 2022, metric: "referredToProsecution", value: 14, valueDecimal: null, unit: "Cases", category: "legal", source: "Annual Report 2022" },
+    { year: 2023, metric: "referredToProsecution", value: 28, valueDecimal: null, unit: "Cases", category: "legal", source: "Annual Report 2023" },
     
     // Total Audits Completed
-    { year: 2021, metric: "auditsCompleted", value: 192, valueDecimal: null, unit: "Audits", category: "operations", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "auditsCompleted", value: 181, valueDecimal: null, unit: "Audits", category: "operations", source: "OSAI Annual Report 2022" },
+    { year: 2021, metric: "auditsCompleted", value: 192, valueDecimal: null, unit: "Audits", category: "operations", source: "Annual Report 2021" },
+    { year: 2022, metric: "auditsCompleted", value: 181, valueDecimal: null, unit: "Audits", category: "operations", source: "Annual Report 2022" },
     
     // Audit Reports Issued
-    { year: 2021, metric: "reportsIssued", value: 208, valueDecimal: null, unit: "Reports", category: "operations", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "reportsIssued", value: 147, valueDecimal: null, unit: "Reports", category: "operations", source: "OSAI Annual Report 2022" },
+    { year: 2021, metric: "reportsIssued", value: 208, valueDecimal: null, unit: "Reports", category: "operations", source: "Annual Report 2021" },
+    { year: 2022, metric: "reportsIssued", value: 147, valueDecimal: null, unit: "Reports", category: "operations", source: "Annual Report 2022" },
     
     // Total Complaints Received
-    { year: 2021, metric: "complaints", value: 505, valueDecimal: null, unit: "Complaints", category: "complaints", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "complaints", value: 587, valueDecimal: null, unit: "Complaints", category: "complaints", source: "OSAI Annual Report 2022" },
+    { year: 2021, metric: "complaints", value: 505, valueDecimal: null, unit: "Complaints", category: "complaints", source: "Annual Report 2021" },
+    { year: 2022, metric: "complaints", value: 587, valueDecimal: null, unit: "Complaints", category: "complaints", source: "Annual Report 2022" },
     
     // Maximum Imprisonment Sentence (Years)
-    { year: 2021, metric: "maxImprisonment", value: 3, valueDecimal: null, unit: "Years", category: "penalties", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "maxImprisonment", value: 10, valueDecimal: null, unit: "Years", category: "penalties", source: "OSAI Annual Report 2022" },
-    { year: 2023, metric: "maxImprisonment", value: 10, valueDecimal: null, unit: "Years", category: "penalties", source: "OSAI Annual Report 2023" },
+    { year: 2021, metric: "maxImprisonment", value: 3, valueDecimal: null, unit: "Years", category: "penalties", source: "Annual Report 2021" },
+    { year: 2022, metric: "maxImprisonment", value: 10, valueDecimal: null, unit: "Years", category: "penalties", source: "Annual Report 2022" },
+    { year: 2023, metric: "maxImprisonment", value: 10, valueDecimal: null, unit: "Years", category: "penalties", source: "Annual Report 2023" },
     
     // Maximum Fine Imposed (OMR)
-    { year: 2021, metric: "maxFine", value: 21000, valueDecimal: null, unit: "OMR", category: "penalties", source: "OSAI Annual Report 2021" },
-    { year: 2022, metric: "maxFine", value: 78000, valueDecimal: null, unit: "OMR", category: "penalties", source: "OSAI Annual Report 2022" },
-    { year: 2023, metric: "maxFine", value: 63000, valueDecimal: null, unit: "OMR", category: "penalties", source: "OSAI Annual Report 2023" },
+    { year: 2021, metric: "maxFine", value: 21000, valueDecimal: null, unit: "OMR", category: "penalties", source: "Annual Report 2021" },
+    { year: 2022, metric: "maxFine", value: 78000, valueDecimal: null, unit: "OMR", category: "penalties", source: "Annual Report 2022" },
+    { year: 2023, metric: "maxFine", value: 63000, valueDecimal: null, unit: "OMR", category: "penalties", source: "Annual Report 2023" },
   ];
   
   let filtered = allStats;
@@ -1750,7 +1750,7 @@ export async function seedHistoricalData() {
 
 export interface RegistryComplaint {
   id?: number;
-  externalId: string; // OSAI-XXXXXX format
+  externalId: string; // RUZN-XXXXXX format
   channel: string;
   complainantType: string;
   entity: string;

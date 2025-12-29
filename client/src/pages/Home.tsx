@@ -67,7 +67,7 @@ interface UploadedFile {
   preview?: string;
 }
 
-// Sample queries based on real OSAI cases and laws
+// Sample queries based on governance and compliance cases
 const PRESET_QUERIES = {
   complaints: {
     arabic: [
@@ -83,12 +83,12 @@ const PRESET_QUERIES = {
   },
   legislative: {
     arabic: [
-      "ما هي صلاحيات جهاز الرقابة المالية وفقاً للمرسوم 111/2011؟",
+      "ما هي صلاحيات الجهات الرقابية وفقاً للتشريعات المعمول بها؟",
       "ما هي عقوبة استغلال المنصب حسب المادة 7 من قانون حماية المال العام؟",
       "ما هو واجب الإبلاغ عن المخالفات وفقاً للمادة 5؟"
     ],
     english: [
-      "What are OSAI's powers under Royal Decree 111/2011?",
+      "What are the regulatory authority's powers under applicable legislation?",
       "What is the penalty for abuse of position under Article 7 of the Public Funds Law?",
       "What is the duty to report violations under Article 5?"
     ]
@@ -98,7 +98,7 @@ const PRESET_QUERIES = {
 const UI_TEXT = {
   arabic: {
     title: "رُزن",
-    subtitle: "مساعدك الذكي لجهاز الرقابة المالية والإدارية للدولة",
+    subtitle: "مساعدك الذكي للحوكمة والنزاهة والامتثال",
     complaints: "تصنيف الشكاوى",
     legislative: "الاستشارات القانونية",
     placeholder: "اكتب شكواك أو استفسارك هنا...",
@@ -136,7 +136,7 @@ const UI_TEXT = {
   },
   english: {
     title: "Ruzn",
-    subtitle: "Your Intelligent Assistant for the State Audit Institution",
+    subtitle: "Your Intelligent Assistant for Governance, Integrity, and Compliance",
     complaints: "Complaints Triage",
     legislative: "Legal Intelligence",
     placeholder: "Type your complaint or inquiry here...",
@@ -803,7 +803,7 @@ export default function Home() {
                 <div className="flex items-center gap-2">
                   <span className="text-xs sm:text-sm flex items-center gap-1" style={{ color: 'rgba(214,179,106,.95)' }}>
                     <User className="w-4 h-4" />
-                    <span className="hidden sm:inline">{user?.name || 'OSAI Staff'}</span>
+                    <span className="hidden sm:inline">{user?.name || 'Staff'}</span>
                   </span>
                   <Button
                     variant="ghost"

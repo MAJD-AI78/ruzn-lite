@@ -165,7 +165,7 @@ export type DemoTrend = typeof demoTrends.$inferSelect;
 export type InsertDemoTrend = typeof demoTrends.$inferInsert;
 
 
-// Historical OSAI statistics for comparative analysis (2021-2024)
+// Historical statistics for comparative analysis (2021-2024)
 export const historicalStats = mysqlTable("historical_stats", {
   id: int("id").autoincrement().primaryKey(),
   year: int("year").notNull(),
@@ -232,7 +232,7 @@ export type HistoricalConviction = typeof historicalConvictions.$inferSelect;
 export type InsertHistoricalConviction = typeof historicalConvictions.$inferInsert;
 
 
-// Case law database for searchable archive of OSAI convictions
+// Case law database for searchable archive of convictions
 export const caseLaw = mysqlTable("case_law", {
   id: int("id").autoincrement().primaryKey(),
   caseNumber: varchar("caseNumber", { length: 50 }),
