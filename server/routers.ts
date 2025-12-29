@@ -1154,26 +1154,28 @@ export const appRouter = router({
         offset: z.number().min(0).optional().default(0)
       }).optional())
       .query(async ({ input }) => {
-        const options = input || {};
+        const options = input ?? { category: undefined, sortBy: 'date' as const, sortOrder: 'desc' as const, limit: 50, offset: 0 };
         const entries = await getAllKnowledge({
           category: options.category,
-          limit: options.limit,
-          offset: options.offset
+          limit: options.limit ?? 50,
+          offset: options.offset ?? 0
         });
         
         // Apply sorting
         let sorted = Array.isArray(entries) ? entries : (entries.entries || []);
-        if (options.sortBy === 'title') {
+        const sortBy = options.sortBy ?? 'date';
+        const sortOrder = options.sortOrder ?? 'desc';
+        if (sortBy === 'title') {
           sorted = [...sorted].sort((a: any, b: any) => {
             const titleA = (a.title || '').toLowerCase();
             const titleB = (b.title || '').toLowerCase();
-            return options.sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
+            return sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
           });
-        } else if (options.sortBy === 'date') {
+        } else if (sortBy === 'date') {
           sorted = [...sorted].sort((a: any, b: any) => {
             const dateA = new Date(a.effectiveDate || a.updatedAt || a.createdAt || 0).getTime();
             const dateB = new Date(b.effectiveDate || b.updatedAt || b.createdAt || 0).getTime();
-            return options.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
           });
         }
         
@@ -1421,6 +1423,7 @@ export const appRouter = router({
           
           // Insert into database
           const db = await import('./db').then(m => m.getDb());
+          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
           const { userDocuments } = await import('../drizzle/schema');
           
           const [result] = await db.insert(userDocuments).values({
@@ -1466,14 +1469,16 @@ export const appRouter = router({
         offset: z.number().min(0).default(0)
       }).optional())
       .query(async ({ input, ctx }) => {
-        const options = input || {};
+        const options = input ?? { category: undefined, limit: 50, offset: 0 };
         const db = await import('./db').then(m => m.getDb());
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         const { userDocuments } = await import('../drizzle/schema');
         const { eq, and, desc } = await import('drizzle-orm');
         
         const conditions = [eq(userDocuments.userId, ctx.user.id)];
-        if (options.category) {
-          conditions.push(eq(userDocuments.category, options.category));
+        const category = options.category;
+        if (category) {
+          conditions.push(eq(userDocuments.category, category));
         }
         
         const documents = await db
@@ -1481,8 +1486,8 @@ export const appRouter = router({
           .from(userDocuments)
           .where(and(...conditions))
           .orderBy(desc(userDocuments.createdAt))
-          .limit(options.limit || 50)
-          .offset(options.offset || 0);
+          .limit(options.limit ?? 50)
+          .offset(options.offset ?? 0);
         
         // Get total count
         const { sql } = await import('drizzle-orm');
@@ -1502,6 +1507,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         const { userDocuments } = await import('../drizzle/schema');
         const { eq, and, or, like } = await import('drizzle-orm');
         
@@ -1533,6 +1539,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         const { userDocuments } = await import('../drizzle/schema');
         const { eq, and } = await import('drizzle-orm');
         
@@ -1577,6 +1584,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         const { userDocuments } = await import('../drizzle/schema');
         const { eq } = await import('drizzle-orm');
         
@@ -1617,6 +1625,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
+        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
         const { userDocuments } = await import('../drizzle/schema');
         const { eq } = await import('drizzle-orm');
         
