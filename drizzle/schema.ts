@@ -451,3 +451,38 @@ export const legalSearches = mysqlTable("legal_searches", {
 
 export type LegalSearch = typeof legalSearches.$inferSelect;
 export type InsertLegalSearch = typeof legalSearches.$inferInsert;
+
+
+// Access request system - for secure demo access control
+export const accessRequests = mysqlTable("access_requests", {
+  id: int("id").autoincrement().primaryKey(),
+  email: varchar("email", { length: 320 }).notNull(),
+  name: varchar("name", { length: 200 }).notNull(),
+  organization: varchar("organization", { length: 300 }),
+  reason: text("reason"),
+  status: mysqlEnum("status", ["pending", "approved", "denied"]).default("pending").notNull(),
+  reviewedBy: int("reviewedBy"), // Admin user ID who reviewed
+  reviewedAt: timestamp("reviewedAt"),
+  reviewNotes: text("reviewNotes"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type AccessRequest = typeof accessRequests.$inferSelect;
+export type InsertAccessRequest = typeof accessRequests.$inferInsert;
+
+// Temporary access codes - generated upon approval
+export const accessCodes = mysqlTable("access_codes", {
+  id: int("id").autoincrement().primaryKey(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  requestId: int("requestId").notNull(), // Links to access_requests
+  email: varchar("email", { length: 320 }).notNull(),
+  expiresAt: timestamp("expiresAt").notNull(),
+  usedAt: timestamp("usedAt"),
+  isUsed: boolean("isUsed").default(false).notNull(),
+  createdBy: int("createdBy"), // Admin user ID who generated
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AccessCode = typeof accessCodes.$inferSelect;
+export type InsertAccessCode = typeof accessCodes.$inferInsert;

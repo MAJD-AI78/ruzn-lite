@@ -2,7 +2,9 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { trpc } from "@/lib/trpc";
 import {
   Shield,
   Brain,
@@ -269,29 +271,71 @@ export default function Landing({ onAccessGranted }: LandingProps) {
   const [language, setLanguage] = useState<Language>("arabic");
   const [accessCode, setAccessCode] = useState("");
   const [isVerifying, setIsVerifying] = useState(false);
+  
+  // Request access form state
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [requestName, setRequestName] = useState("");
+  const [requestEmail, setRequestEmail] = useState("");
+  const [requestOrg, setRequestOrg] = useState("");
+  const [requestReason, setRequestReason] = useState("");
 
   const isRTL = language === "arabic";
   const text = UI_TEXT[language];
 
-  // Access code from environment or hardcoded for demo
-  // NOTE: requested: do not change password request flow
-  const VALID_ACCESS_CODE = "RUZN2024";
-
-  const handleAccessSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsVerifying(true);
-
-    setTimeout(() => {
-      if (accessCode.toUpperCase() === VALID_ACCESS_CODE) {
+  // Server-side validation mutation
+  const validateCodeMutation = trpc.access.validateCode.useMutation({
+    onSuccess: (data) => {
+      if (data.valid) {
         toast.success(text.accessSection.success);
-        // Store access in session
         sessionStorage.setItem("ruzn_access", "granted");
         onAccessGranted();
       } else {
-        toast.error(text.accessSection.error);
+        toast.error(data.message || text.accessSection.error);
       }
       setIsVerifying(false);
-    }, 500);
+    },
+    onError: (error) => {
+      toast.error(error.message || text.accessSection.error);
+      setIsVerifying(false);
+    }
+  });
+
+  // Request access mutation
+  const requestAccessMutation = trpc.access.requestAccess.useMutation({
+    onSuccess: (data) => {
+      toast.success(language === "arabic" 
+        ? "تم إرسال طلبك بنجاح. سيتم إعلامك عند الموافقة."
+        : "Your request has been submitted. You will be notified once approved.");
+      setShowRequestForm(false);
+      setRequestName("");
+      setRequestEmail("");
+      setRequestOrg("");
+      setRequestReason("");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    }
+  });
+
+  const handleAccessSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!accessCode.trim()) return;
+    setIsVerifying(true);
+    validateCodeMutation.mutate({ code: accessCode.trim().toUpperCase() });
+  };
+
+  const handleRequestAccess = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestName.trim() || !requestEmail.trim()) {
+      toast.error(language === "arabic" ? "يرجى إدخال الاسم والبريد الإلكتروني" : "Please enter name and email");
+      return;
+    }
+    requestAccessMutation.mutate({
+      name: requestName.trim(),
+      email: requestEmail.trim(),
+      organization: requestOrg.trim() || undefined,
+      reason: requestReason.trim() || undefined
+    });
   };
 
   const bgStyle = useMemo(
@@ -437,7 +481,7 @@ export default function Landing({ onAccessGranted }: LandingProps) {
             ))}
           </div>
 
-          {/* Access Code Form — DO NOT CHANGE FLOW */}
+          {/* Access Code Form - Server-side validated */}
           <Card className="max-w-md mx-auto p-6 ruzn-glass border-[rgba(214,179,106,.25)]">
             <div className="flex items-center gap-2 mb-4 justify-center">
               <Lock className="w-5 h-5 text-[rgba(214,179,106,.95)]" />
@@ -448,23 +492,94 @@ export default function Landing({ onAccessGranted }: LandingProps) {
             <p className="text-sm text-white/70 mb-4">
               {text.accessSection.subtitle}
             </p>
-            <form onSubmit={handleAccessSubmit} className="flex gap-2">
-              <Input
-                type="password"
-                value={accessCode}
-                onChange={(e) => setAccessCode(e.target.value)}
-                placeholder={text.accessSection.placeholder}
-                className="flex-1 bg-black/30 border-white/15 text-white placeholder:text-white/40 focus-visible:ring-[rgba(214,179,106,.35)]"
-              />
-              <Button
-                type="submit"
-                disabled={isVerifying || !accessCode}
-                className="gap-2 bg-[rgba(214,179,106,.18)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] hover:bg-[rgba(214,179,106,.26)]"
-              >
-                {text.accessSection.button}
-                <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
-              </Button>
-            </form>
+            
+            {!showRequestForm ? (
+              <>
+                <form onSubmit={handleAccessSubmit} className="flex gap-2">
+                  <Input
+                    type="password"
+                    value={accessCode}
+                    onChange={(e) => setAccessCode(e.target.value)}
+                    placeholder={text.accessSection.placeholder}
+                    className="flex-1 bg-black/30 border-white/15 text-white placeholder:text-white/40 focus-visible:ring-[rgba(214,179,106,.35)]"
+                  />
+                  <Button
+                    type="submit"
+                    disabled={isVerifying || !accessCode}
+                    className="gap-2 bg-[rgba(214,179,106,.18)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] hover:bg-[rgba(214,179,106,.26)]"
+                  >
+                    {text.accessSection.button}
+                    <ArrowRight className={`w-4 h-4 ${isRTL ? "rotate-180" : ""}`} />
+                  </Button>
+                </form>
+                <div className="mt-4 pt-4 border-t border-white/10 text-center">
+                  <p className="text-sm text-white/50 mb-2">
+                    {language === "arabic" ? "ليس لديك رمز وصول؟" : "Don't have an access code?"}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowRequestForm(true)}
+                    className="text-sm bg-transparent border-white/20 text-white/70 hover:bg-white/5 hover:text-white"
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    {language === "arabic" ? "طلب صلاحية الوصول" : "Request Access"}
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <form onSubmit={handleRequestAccess} className="space-y-3">
+                <Input
+                  type="text"
+                  value={requestName}
+                  onChange={(e) => setRequestName(e.target.value)}
+                  placeholder={language === "arabic" ? "الاسم الكامل *" : "Full Name *"}
+                  required
+                  className="bg-black/30 border-white/15 text-white placeholder:text-white/40"
+                />
+                <Input
+                  type="email"
+                  value={requestEmail}
+                  onChange={(e) => setRequestEmail(e.target.value)}
+                  placeholder={language === "arabic" ? "البريد الإلكتروني *" : "Email Address *"}
+                  required
+                  className="bg-black/30 border-white/15 text-white placeholder:text-white/40"
+                />
+                <Input
+                  type="text"
+                  value={requestOrg}
+                  onChange={(e) => setRequestOrg(e.target.value)}
+                  placeholder={language === "arabic" ? "المؤسسة / الجهة" : "Organization (optional)"}
+                  className="bg-black/30 border-white/15 text-white placeholder:text-white/40"
+                />
+                <Textarea
+                  value={requestReason}
+                  onChange={(e) => setRequestReason(e.target.value)}
+                  placeholder={language === "arabic" ? "سبب طلب الوصول" : "Reason for access (optional)"}
+                  rows={2}
+                  className="bg-black/30 border-white/15 text-white placeholder:text-white/40 resize-none"
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setShowRequestForm(false)}
+                    className="flex-1 bg-transparent border-white/20 text-white/70 hover:bg-white/5"
+                  >
+                    {language === "arabic" ? "رجوع" : "Back"}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={requestAccessMutation.isPending || !requestName || !requestEmail}
+                    className="flex-1 gap-2 bg-[rgba(214,179,106,.18)] border border-[rgba(214,179,106,.35)] text-[rgba(214,179,106,.95)] hover:bg-[rgba(214,179,106,.26)]"
+                  >
+                    {requestAccessMutation.isPending 
+                      ? (language === "arabic" ? "جاري الإرسال..." : "Submitting...")
+                      : (language === "arabic" ? "إرسال الطلب" : "Submit Request")}
+                  </Button>
+                </div>
+              </form>
+            )}
           </Card>
         </div>
       </section>

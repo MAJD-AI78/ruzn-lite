@@ -1,0 +1,9 @@
+{
+  "query": "CREATE TABLE IF NOT EXISTS access_requests (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  name VARCHAR(200) NOT NULL,\n  organization VARCHAR(300),\n  reason TEXT,\n  status ENUM('pending', 'approved', 'denied') DEFAULT 'pending' NOT NULL,\n  reviewedBy INT,\n  reviewedAt TIMESTAMP,\n  reviewNotes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_email (email),\n  INDEX idx_status (status),\n  INDEX idx_created_at (createdAt)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS access_requests (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  name VARCHAR(200) NOT NULL,\n  organization VARCHAR(300),\n  reason TEXT,\n  status ENUM('pending', 'approved', 'denied') DEFAULT 'pending' NOT NULL,\n  reviewedBy INT,\n  reviewedAt TIMESTAMP,\n  reviewNotes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_email (email),\n  INDEX idx_status (status),\n  INDEX idx_created_at (createdAt)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2343
+}

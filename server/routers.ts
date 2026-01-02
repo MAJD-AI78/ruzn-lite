@@ -29,6 +29,11 @@ import { sendWeeklyReportToRecipients, getReportHtml, getReportText, getRefreshS
 import { storagePut } from "./storage";
 import { generateCaseLawPDF, generateComparativeReportPDF } from "./pdfExport";
 import { parsePDF, extractSummary, extractKeywords, isArabicText } from "./pdfParser";
+import { notifyOwner } from "./_core/notification";
+import { getDb } from "./db";
+import { accessRequests, accessCodes } from "../drizzle/schema";
+import { eq, and, desc, gt } from "drizzle-orm";
+import { publicProcedure } from "./_core/trpc";
 
 // EREBUS Protocol Integration (Acuterium Technologies)
 import { calculateAdvancedRiskScore, initializeEREBUSProtocols } from "./protocols";
@@ -1708,7 +1713,338 @@ export const appRouter = router({
         
         return { success: true };
       })
+  }),
+
+  // Access Control Router - Secure demo access with email approval
+  access: router({
+    // Public endpoint - Request access to the platform
+    requestAccess: publicProcedure
+      .input(z.object({
+        email: z.string().email(),
+        name: z.string().min(2).max(200),
+        organization: z.string().max(300).optional(),
+        reason: z.string().max(1000).optional()
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        // Check if email already has a pending request
+        const existing = await db
+          .select()
+          .from(accessRequests)
+          .where(and(
+            eq(accessRequests.email, input.email),
+            eq(accessRequests.status, 'pending')
+          ))
+          .limit(1);
+        
+        if (existing.length > 0) {
+          return { 
+            success: true, 
+            message: 'Your request is already pending approval. You will receive an email once reviewed.',
+            requestId: existing[0].id
+          };
+        }
+        
+        // Insert new access request
+        const result = await db.insert(accessRequests).values({
+          email: input.email,
+          name: input.name,
+          organization: input.organization || null,
+          reason: input.reason || null,
+          status: 'pending'
+        });
+        
+        const requestId = Number(result[0].insertId);
+        
+        // Send notification to chairman for approval
+        const notificationSent = await notifyOwner({
+          title: '🔐 New Ruzn Platform Access Request',
+          content: `
+**New Access Request Received**
+
+**Requester Details:**
+- Name: ${input.name}
+- Email: ${input.email}
+- Organization: ${input.organization || 'Not specified'}
+- Reason: ${input.reason || 'Not specified'}
+
+**Request ID:** ${requestId}
+**Submitted:** ${new Date().toISOString()}
+
+**Action Required:**
+Please review this request in the Admin Panel and approve or deny access.
+
+To approve: Go to Admin Panel → Access Requests → Approve
+To deny: Go to Admin Panel → Access Requests → Deny
+
+---
+Ruzn - Sovereign AI for Governance, Integrity, and Compliance
+          `.trim()
+        });
+        
+        console.log(`[Access] New request from ${input.email} (ID: ${requestId}), notification sent: ${notificationSent}`);
+        
+        return { 
+          success: true, 
+          message: 'Your access request has been submitted. You will receive an email once approved.',
+          requestId
+        };
+      }),
+    
+    // Public endpoint - Validate access code
+    validateCode: publicProcedure
+      .input(z.object({
+        code: z.string().min(6).max(20)
+      }))
+      .mutation(async ({ input }) => {
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        const now = new Date();
+        
+        // Find valid, unused code that hasn't expired
+        const validCode = await db
+          .select()
+          .from(accessCodes)
+          .where(and(
+            eq(accessCodes.code, input.code),
+            eq(accessCodes.isUsed, false),
+            gt(accessCodes.expiresAt, now)
+          ))
+          .limit(1);
+        
+        if (validCode.length === 0) {
+          return { 
+            valid: false, 
+            message: 'Invalid or expired access code. Please request a new one.' 
+          };
+        }
+        
+        // Mark code as used
+        await db
+          .update(accessCodes)
+          .set({ isUsed: true, usedAt: now })
+          .where(eq(accessCodes.id, validCode[0].id));
+        
+        console.log(`[Access] Code ${input.code} validated for ${validCode[0].email}`);
+        
+        return { 
+          valid: true, 
+          message: 'Access granted. Welcome to Ruzn.',
+          email: validCode[0].email
+        };
+      }),
+    
+    // Admin endpoint - List all access requests
+    listRequests: protectedProcedure
+      .input(z.object({
+        status: z.enum(['all', 'pending', 'approved', 'denied']).optional().default('all'),
+        limit: z.number().min(1).max(100).optional().default(50)
+      }))
+      .query(async ({ ctx, input }) => {
+        // Check admin role
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        let query = db.select().from(accessRequests);
+        
+        if (input.status !== 'all') {
+          query = query.where(eq(accessRequests.status, input.status)) as typeof query;
+        }
+        
+        const requests = await query
+          .orderBy(desc(accessRequests.createdAt))
+          .limit(input.limit);
+        
+        return requests;
+      }),
+    
+    // Admin endpoint - Approve request and generate code
+    approveRequest: protectedProcedure
+      .input(z.object({
+        requestId: z.number(),
+        expirationHours: z.number().min(1).max(168).optional().default(24),
+        notes: z.string().max(500).optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Check admin role
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        // Get the request
+        const request = await db
+          .select()
+          .from(accessRequests)
+          .where(eq(accessRequests.id, input.requestId))
+          .limit(1);
+        
+        if (request.length === 0) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Access request not found' });
+        }
+        
+        if (request[0].status !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `Request already ${request[0].status}` });
+        }
+        
+        // Generate unique access code
+        const code = generateAccessCode();
+        const expiresAt = new Date(Date.now() + input.expirationHours * 60 * 60 * 1000);
+        
+        // Update request status
+        await db
+          .update(accessRequests)
+          .set({
+            status: 'approved',
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            reviewNotes: input.notes || null
+          })
+          .where(eq(accessRequests.id, input.requestId));
+        
+        // Create access code
+        await db.insert(accessCodes).values({
+          code,
+          requestId: input.requestId,
+          email: request[0].email,
+          expiresAt,
+          isUsed: false,
+          createdBy: ctx.user.id
+        });
+        
+        // Send notification about approval (to owner for record)
+        await notifyOwner({
+          title: '✅ Access Request Approved',
+          content: `
+**Access Approved**
+
+**User:** ${request[0].name} (${request[0].email})
+**Organization:** ${request[0].organization || 'Not specified'}
+**Approved by:** ${ctx.user.name}
+**Access Code:** ${code}
+**Expires:** ${expiresAt.toISOString()}
+
+The user should receive their access code via the platform.
+          `.trim()
+        });
+        
+        console.log(`[Access] Request ${input.requestId} approved by ${ctx.user.name}, code: ${code}`);
+        
+        return { 
+          success: true, 
+          code,
+          email: request[0].email,
+          expiresAt: expiresAt.toISOString(),
+          message: `Access approved. Code ${code} generated for ${request[0].email}` 
+        };
+      }),
+    
+    // Admin endpoint - Deny request
+    denyRequest: protectedProcedure
+      .input(z.object({
+        requestId: z.number(),
+        reason: z.string().max(500).optional()
+      }))
+      .mutation(async ({ ctx, input }) => {
+        // Check admin role
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        // Get the request
+        const request = await db
+          .select()
+          .from(accessRequests)
+          .where(eq(accessRequests.id, input.requestId))
+          .limit(1);
+        
+        if (request.length === 0) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Access request not found' });
+        }
+        
+        if (request[0].status !== 'pending') {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: `Request already ${request[0].status}` });
+        }
+        
+        // Update request status
+        await db
+          .update(accessRequests)
+          .set({
+            status: 'denied',
+            reviewedBy: ctx.user.id,
+            reviewedAt: new Date(),
+            reviewNotes: input.reason || null
+          })
+          .where(eq(accessRequests.id, input.requestId));
+        
+        console.log(`[Access] Request ${input.requestId} denied by ${ctx.user.name}`);
+        
+        return { 
+          success: true, 
+          message: `Access request denied for ${request[0].email}` 
+        };
+      }),
+    
+    // Admin endpoint - Get access statistics
+    getStats: protectedProcedure
+      .query(async ({ ctx }) => {
+        // Check admin role
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        const allRequests = await db.select().from(accessRequests);
+        const allCodes = await db.select().from(accessCodes);
+        
+        const pending = allRequests.filter(r => r.status === 'pending').length;
+        const approved = allRequests.filter(r => r.status === 'approved').length;
+        const denied = allRequests.filter(r => r.status === 'denied').length;
+        const codesUsed = allCodes.filter(c => c.isUsed).length;
+        const codesActive = allCodes.filter(c => !c.isUsed && new Date(c.expiresAt) > new Date()).length;
+        
+        return {
+          requests: { total: allRequests.length, pending, approved, denied },
+          codes: { total: allCodes.length, used: codesUsed, active: codesActive }
+        };
+      })
   })
 });
+
+// Helper function to generate secure access codes
+function generateAccessCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Removed confusing chars (0, O, 1, I)
+  let code = 'RZN-';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
 
 export type AppRouter = typeof appRouter;

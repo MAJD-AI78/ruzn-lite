@@ -553,3 +553,39 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [x] Implement access control (users can only see their own docs)
 - [ ] Add document management UI (view, delete, download)
 - [x] Support PDF and text file uploads
+
+
+## Phase 19 - Secure Access Code System (Critical Security Fix)
+
+### Database Tables
+- [ ] Create access_requests table (email, name, organization, status, created_at)
+- [ ] Create access_codes table (code, email, expires_at, used, created_by)
+
+### Server Endpoints
+- [ ] Create access.requestAccess endpoint (public - submits request)
+- [ ] Create access.validateCode endpoint (public - validates temporary code)
+- [ ] Create access.approveRequest endpoint (admin - approves and generates code)
+- [ ] Create access.denyRequest endpoint (admin - denies request)
+- [ ] Create access.listRequests endpoint (admin - view all requests)
+
+### Email Notifications
+- [ ] Send email to chairman@celebrity-global.com on new access request
+- [ ] Include requester details (name, email, organization, reason)
+- [ ] Include approve/deny action links
+
+### Temporary Code Generation
+- [ ] Generate unique 8-character alphanumeric codes
+- [ ] Set 24-hour expiration by default
+- [ ] Send code to approved user's email
+- [ ] Track code usage (single use)
+
+### Client Updates
+- [ ] Remove hardcoded RUZN2024 from Landing.tsx
+- [ ] Create access request form (name, email, organization, reason)
+- [ ] Create code validation form
+- [ ] Show pending approval message after request submission
+
+### Remove Manus Branding
+- [ ] Identify all Manus references in UI
+- [ ] Replace or remove Manus branding from authentication flow
+- [ ] Ensure clean Ruzn-only branding throughout
