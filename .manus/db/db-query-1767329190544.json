@@ -1,0 +1,9 @@
+{
+  "query": "-- Add EREBUS enhanced fields to conversations table\nALTER TABLE conversations\nADD COLUMN advancedRiskScore JSON COMMENT 'EREBUSFORMULA651 detailed risk assessment output',\nADD COLUMN protocolMetadata JSON COMMENT 'Protocol execution metadata (id, time, consciousness)',\nADD COLUMN complianceFlags JSON COMMENT 'Detected compliance violations and flags';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute -- Add EREBUS enhanced fields to conversations table\nALTER TABLE conversations\nADD COLUMN advancedRiskScore JSON COMMENT 'EREBUSFORMULA651 detailed risk assessment output',\nADD COLUMN protocolMetadata JSON COMMENT 'Protocol execution metadata (id, time, consciousness)',\nADD COLUMN complianceFlags JSON COMMENT 'Detected compliance violations and flags';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 4269
+}

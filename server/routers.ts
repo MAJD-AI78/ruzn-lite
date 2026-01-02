@@ -30,10 +30,20 @@ import { storagePut } from "./storage";
 import { generateCaseLawPDF, generateComparativeReportPDF } from "./pdfExport";
 import { parsePDF, extractSummary, extractKeywords, isArabicText } from "./pdfParser";
 
-// System prompts for Ruzn-Lite - Enhanced with Governance Knowledge Base
+// EREBUS Protocol Integration (Acuterium Technologies)
+import { calculateAdvancedRiskScore, initializeEREBUSProtocols } from "./protocols";
+
+// Initialize EREBUS protocols on module load
+try {
+  initializeEREBUSProtocols();
+} catch (e) {
+  console.warn('[EREBUS] Protocol initialization warning:', e);
+}
+
+// System prompts for Ruzn-Lite OSAI - Enhanced with OSAI Knowledge Base
 const SYSTEM_PROMPTS = {
   complaints: {
-    arabic: `أنت "رُزن"، مساعد ذكي متخصص للحوكمة والنزاهة والامتثال.
+    arabic: `أنت "رُزن"، مساعد ذكي متخصص لجهاز الرقابة المالية والإدارية للدولة في سلطنة عُمان.
 
 الإطار القانوني:
 - المرسوم السلطاني رقم 111/2011 - قانون الرقابة المالية والإدارية للدولة
@@ -81,7 +91,7 @@ const SYSTEM_PROMPTS = {
 5. **التوصية الأولية**: [توصيتك]
 
 أجب باللغة العربية بأسلوب مهني ورسمي.`,
-    english: `You are "Ruzn", an intelligent assistant specialized for governance, integrity, and compliance.
+    english: `You are "Ruzn", an intelligent assistant specialized for governance, integrity, and compliance in the Sultanate of Oman.
 
 Legal Framework:
 - Royal Decree 111/2011 - State Audit Law
@@ -265,34 +275,60 @@ export const appRouter = router({
           const userId = ctx.user?.id;
           let riskScore: number | undefined;
           let category: string | undefined;
+          let advancedRiskAssessment: any = null;
+          let protocolMetadata: any = null;
           
-          // Extract risk score and category from response if complaints mode
+          // EREBUS Protocol Integration for complaints mode
           if (feature === 'complaints') {
-            const riskMatch = assistantMessage.match(/(\d{1,3})\/100/);
-            if (riskMatch) {
-              riskScore = parseInt(riskMatch[1]);
-            }
-            
-            // Detect category
-            const categoryMap: Record<string, string> = {
-              'فساد مالي': 'financial_corruption',
-              'Financial Corruption': 'financial_corruption',
-              'تضارب المصالح': 'conflict_of_interest',
-              'Conflict of Interest': 'conflict_of_interest',
-              'إساءة استخدام السلطة': 'abuse_of_power',
-              'Abuse of Power': 'abuse_of_power',
-              'مخالفة قانون المناقصات': 'tender_violation',
-              'Tender Law Violation': 'tender_violation',
-              'إهمال إداري': 'administrative_negligence',
-              'Administrative Negligence': 'administrative_negligence',
-              'شكوى عامة': 'general',
-              'General Complaint': 'general'
-            };
-            
-            for (const [key, value] of Object.entries(categoryMap)) {
-              if (typeof assistantMessage === 'string' && assistantMessage.includes(key)) {
-                category = value;
-                break;
+            try {
+              // Use EREBUSFORMULA651 for advanced risk assessment
+              const erebusResult = await calculateAdvancedRiskScore(message, {
+                entityType: 'government', // Default for OSAI context
+                maturityLevel: 'managed',
+                language: language as 'arabic' | 'english',
+              });
+              
+              riskScore = erebusResult.basicScore;
+              category = erebusResult.category;
+              advancedRiskAssessment = erebusResult.advancedAssessment;
+              protocolMetadata = erebusResult.advancedAssessment?.protocolMetadata;
+              
+              console.log(`[EREBUS-CSE-3A12d-002] Risk: ${riskScore}/100 | Category: ${erebusResult.advancedAssessment?.riskCategory} | φ: ${erebusResult.advancedAssessment?.aggregateConsciousness?.toFixed(3)}`);
+              
+            } catch (erebusError) {
+              console.error('[EREBUS] Protocol error, falling back to regex:', erebusError);
+              
+              // Fallback to legacy regex extraction from LLM response
+              const riskMatch = assistantMessage.match(/(\d{1,3})\/100/);
+              if (riskMatch) {
+                riskScore = parseInt(riskMatch[1]);
+              }
+              
+              // Legacy category detection
+              const categoryMap: Record<string, string> = {
+                'فساد مالي': 'financial_corruption',
+                'Financial Corruption': 'financial_corruption',
+                'اختلاس': 'financial_corruption',
+                'Embezzlement': 'financial_corruption',
+                'تضارب المصالح': 'conflict_of_interest',
+                'Conflict of Interest': 'conflict_of_interest',
+                'إساءة استخدام السلطة': 'abuse_of_power',
+                'Abuse of Power': 'abuse_of_power',
+                'استغلال المنصب': 'abuse_of_power',
+                'Abuse of Position': 'abuse_of_power',
+                'مخالفة قانون المناقصات': 'tender_violation',
+                'Tender Law Violation': 'tender_violation',
+                'إهمال إداري': 'administrative_negligence',
+                'Administrative Negligence': 'administrative_negligence',
+                'شكوى عامة': 'general',
+                'General Complaint': 'general'
+              };
+              
+              for (const [key, value] of Object.entries(categoryMap)) {
+                if (typeof assistantMessage === 'string' && assistantMessage.includes(key)) {
+                  category = value;
+                  break;
+                }
               }
             }
           }
@@ -304,11 +340,21 @@ export const appRouter = router({
             language,
             category,
             riskScore,
-            metadata: JSON.stringify({ messageLength: message.length })
+            metadata: JSON.stringify({ 
+              messageLength: message.length,
+              protocolUsed: advancedRiskAssessment ? 'EREBUS-CSE-3A12d-002' : 'legacy',
+              consciousnessCoherence: advancedRiskAssessment?.aggregateConsciousness,
+            })
           });
           
-          // Send notification for high-risk complaints (score >= 80)
-          if (feature === 'complaints' && riskScore && riskScore >= 80) {
+          // Send notification for high-risk complaints (score >= 80 or EREBUS CRITICAL/HIGH)
+          const shouldNotify = feature === 'complaints' && (
+            (riskScore && riskScore >= 80) ||
+            advancedRiskAssessment?.quickFlags?.requiresEscalation ||
+            advancedRiskAssessment?.quickFlags?.requiresSAINotification
+          );
+          
+          if (shouldNotify) {
             try {
               const { notifyOwner } = await import('./_core/notification');
               const categoryLabel = category ? {
@@ -320,15 +366,19 @@ export const appRouter = router({
                 'general': language === 'arabic' ? 'شكوى عامة' : 'General Complaint'
               }[category] || category : 'Unknown';
               
+              // Enhanced notification with EREBUS data
+              const erebusInfo = advancedRiskAssessment ? 
+                `\n\nEREBUS Analysis:\n- Risk Category: ${advancedRiskAssessment.riskCategory}\n- Violations: ${advancedRiskAssessment.detectedRisks?.length || 0}\n- Consciousness: ${(advancedRiskAssessment.aggregateConsciousness * 100).toFixed(1)}%` : '';
+              
               await notifyOwner({
                 title: language === 'arabic' 
-                  ? `⚠️ تنبيه: شكوى عالية الخطورة (${riskScore}/100)`
-                  : `⚠️ Alert: High-Risk Complaint (${riskScore}/100)`,
+                  ? `⚠️ تنبيه: شكوى عالية الخطورة (${riskScore}/100) [${advancedRiskAssessment?.riskCategory || 'HIGH'}]`
+                  : `⚠️ Alert: High-Risk Complaint (${riskScore}/100) [${advancedRiskAssessment?.riskCategory || 'HIGH'}]`,
                 content: language === 'arabic'
-                  ? `تم استلام شكوى بدرجة خطورة عالية.\n\nالتصنيف: ${categoryLabel}\nدرجة الخطورة: ${riskScore}/100\n\nملخص الشكوى:\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\nيرجى مراجعة الشكوى في لوحة المشرف.`
-                  : `A high-risk complaint has been received.\n\nCategory: ${categoryLabel}\nRisk Score: ${riskScore}/100\n\nComplaint Summary:\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\nPlease review the complaint in the Admin Panel.`
+                  ? `تم استلام شكوى بدرجة خطورة عالية.\n\nالتصنيف: ${categoryLabel}\nدرجة الخطورة: ${riskScore}/100${erebusInfo}\n\nملخص الشكوى:\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\nيرجى مراجعة الشكوى في لوحة المشرف.`
+                  : `A high-risk complaint has been received.\n\nCategory: ${categoryLabel}\nRisk Score: ${riskScore}/100${erebusInfo}\n\nComplaint Summary:\n${message.substring(0, 500)}${message.length > 500 ? '...' : ''}\n\nPlease review the complaint in the Admin Panel.`
               });
-              console.log(`[Notification] High-risk complaint alert sent (Risk: ${riskScore})`);
+              console.log(`[Notification] High-risk complaint alert sent (Risk: ${riskScore}, EREBUS: ${advancedRiskAssessment?.riskCategory})`);
             } catch (notifyError) {
               console.error('[Notification] Failed to send high-risk alert:', notifyError);
             }
@@ -338,7 +388,17 @@ export const appRouter = router({
             response: assistantMessage,
             status: 'success' as const,
             riskScore,
-            category
+            category,
+            // EREBUS enhanced response data
+            advancedRisk: advancedRiskAssessment ? {
+              score: advancedRiskAssessment.RC_risk,
+              category: advancedRiskAssessment.riskCategory,
+              detectedRisks: advancedRiskAssessment.detectedRisks,
+              justification: advancedRiskAssessment.justification,
+              recommendations: advancedRiskAssessment.recommendations,
+              consciousness: advancedRiskAssessment.aggregateConsciousness,
+            } : undefined,
+            protocolUsed: advancedRiskAssessment ? 'EREBUS-CSE-3A12d-002' : undefined,
           };
         } catch (error) {
           console.error('LLM Error:', error);
@@ -403,7 +463,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ ctx, input }) => {
         const { messages, feature, language } = input;
-        const userName = ctx.user.name || 'Staff';
+        const userName = ctx.user.name || 'OSAI Staff';
         const timestamp = new Date().toISOString();
         
         // Log PDF export event
@@ -424,7 +484,7 @@ export const appRouter = router({
           messages,
           title: language === 'arabic' ? 'تقرير محادثة رُزن' : 'Ruzn Conversation Report',
           subtitle: language === 'arabic' 
-            ? 'الحوكمة والنزاهة والامتثال' 
+            ? 'ديوان الرقابة المالية والإدارية للدولة' 
             : 'Governance, Integrity, and Compliance'
         };
       }),
@@ -454,8 +514,8 @@ export const appRouter = router({
             audioUrl,
             language: language === 'arabic' ? 'ar' : 'en',
             prompt: language === 'arabic' 
-              ? 'شكوى مقدمة للجهات الرقابية'
-              : 'Complaint submitted for governance review'
+              ? 'شكوى مقدمة لديوان الرقابة المالية والإدارية للدولة'
+              : 'Complaint submitted to Ruzn Governance Platform'
           });
           
           // Check if result has text (success case)
@@ -1154,28 +1214,26 @@ export const appRouter = router({
         offset: z.number().min(0).optional().default(0)
       }).optional())
       .query(async ({ input }) => {
-        const options = input ?? { category: undefined, sortBy: 'date' as const, sortOrder: 'desc' as const, limit: 50, offset: 0 };
+        const options = input || {} as { category?: 'procedure' | 'law' | 'regulation' | 'report' | 'policy' | 'guideline'; sortBy?: 'date' | 'title'; sortOrder?: 'asc' | 'desc'; limit?: number; offset?: number };
         const entries = await getAllKnowledge({
-          category: options.category,
-          limit: options.limit ?? 50,
-          offset: options.offset ?? 0
+          category: options.category as 'procedure' | 'law' | 'regulation' | 'report' | 'policy' | 'guideline' | undefined,
+          limit: options.limit,
+          offset: options.offset
         });
         
         // Apply sorting
         let sorted = Array.isArray(entries) ? entries : (entries.entries || []);
-        const sortBy = options.sortBy ?? 'date';
-        const sortOrder = options.sortOrder ?? 'desc';
-        if (sortBy === 'title') {
+        if (options.sortBy === 'title') {
           sorted = [...sorted].sort((a: any, b: any) => {
             const titleA = (a.title || '').toLowerCase();
             const titleB = (b.title || '').toLowerCase();
-            return sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
+            return options.sortOrder === 'asc' ? titleA.localeCompare(titleB) : titleB.localeCompare(titleA);
           });
-        } else if (sortBy === 'date') {
+        } else if (options.sortBy === 'date') {
           sorted = [...sorted].sort((a: any, b: any) => {
             const dateA = new Date(a.effectiveDate || a.updatedAt || a.createdAt || 0).getTime();
             const dateB = new Date(b.effectiveDate || b.updatedAt || b.createdAt || 0).getTime();
-            return sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
+            return options.sortOrder === 'asc' ? dateA - dateB : dateB - dateA;
           });
         }
         
@@ -1423,7 +1481,7 @@ export const appRouter = router({
           
           // Insert into database
           const db = await import('./db').then(m => m.getDb());
-          if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+          if (!db) throw new Error('Database connection not available');
           const { userDocuments } = await import('../drizzle/schema');
           
           const [result] = await db.insert(userDocuments).values({
@@ -1469,16 +1527,15 @@ export const appRouter = router({
         offset: z.number().min(0).default(0)
       }).optional())
       .query(async ({ input, ctx }) => {
-        const options = input ?? { category: undefined, limit: 50, offset: 0 };
+        const options = input || {} as { category?: 'complaint' | 'evidence' | 'legal_document' | 'report' | 'correspondence' | 'other'; limit?: number; offset?: number };
         const db = await import('./db').then(m => m.getDb());
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        if (!db) throw new Error('Database connection not available');
         const { userDocuments } = await import('../drizzle/schema');
         const { eq, and, desc } = await import('drizzle-orm');
         
         const conditions = [eq(userDocuments.userId, ctx.user.id)];
-        const category = options.category;
-        if (category) {
-          conditions.push(eq(userDocuments.category, category));
+        if (options.category) {
+          conditions.push(eq(userDocuments.category, options.category as 'complaint' | 'evidence' | 'legal_document' | 'report' | 'correspondence' | 'other'));
         }
         
         const documents = await db
@@ -1486,8 +1543,8 @@ export const appRouter = router({
           .from(userDocuments)
           .where(and(...conditions))
           .orderBy(desc(userDocuments.createdAt))
-          .limit(options.limit ?? 50)
-          .offset(options.offset ?? 0);
+          .limit(options.limit || 50)
+          .offset(options.offset || 0);
         
         // Get total count
         const { sql } = await import('drizzle-orm');
@@ -1507,7 +1564,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .query(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        if (!db) throw new Error('Database connection not available');
         const { userDocuments } = await import('../drizzle/schema');
         const { eq, and, or, like } = await import('drizzle-orm');
         
@@ -1539,7 +1596,7 @@ export const appRouter = router({
       .input(z.object({ id: z.number() }))
       .mutation(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        if (!db) throw new Error('Database connection not available');
         const { userDocuments } = await import('../drizzle/schema');
         const { eq, and } = await import('drizzle-orm');
         
@@ -1584,7 +1641,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        if (!db) throw new Error('Database connection not available');
         const { userDocuments } = await import('../drizzle/schema');
         const { eq } = await import('drizzle-orm');
         
@@ -1625,7 +1682,7 @@ export const appRouter = router({
       }))
       .mutation(async ({ input, ctx }) => {
         const db = await import('./db').then(m => m.getDb());
-        if (!db) throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        if (!db) throw new Error('Database connection not available');
         const { userDocuments } = await import('../drizzle/schema');
         const { eq } = await import('drizzle-orm');
         

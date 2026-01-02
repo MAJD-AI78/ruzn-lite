@@ -32,10 +32,14 @@ export const conversations = mysqlTable("conversations", {
   messages: text("messages").notNull(), // JSON string of messages array
   feature: mysqlEnum("feature", ["complaints", "legislative"]).notNull(),
   language: mysqlEnum("language", ["arabic", "english"]).notNull(),
-  riskScore: int("riskScore"), // Extracted risk score for analytics
+  riskScore: int("riskScore"), // Extracted risk score for analytics (legacy)
   category: varchar("category", { length: 100 }), // Extracted category for analytics
   status: mysqlEnum("status", ["new", "under_review", "investigating", "resolved"]).default("new").notNull(),
   assignedTo: int("assignedTo"), // User ID of assigned reviewer
+  // EREBUS Enhanced Fields (Acuterium Integration)
+  advancedRiskScore: text("advancedRiskScore"), // JSON: EREBUSFORMULA651 full output
+  protocolMetadata: text("protocolMetadata"), // JSON: Protocol execution details
+  complianceFlags: text("complianceFlags"), // JSON: Detected compliance violations
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -165,7 +169,7 @@ export type DemoTrend = typeof demoTrends.$inferSelect;
 export type InsertDemoTrend = typeof demoTrends.$inferInsert;
 
 
-// Historical statistics for comparative analysis (2021-2024)
+// Historical OSAI statistics for comparative analysis (2021-2024)
 export const historicalStats = mysqlTable("historical_stats", {
   id: int("id").autoincrement().primaryKey(),
   year: int("year").notNull(),
@@ -232,7 +236,7 @@ export type HistoricalConviction = typeof historicalConvictions.$inferSelect;
 export type InsertHistoricalConviction = typeof historicalConvictions.$inferInsert;
 
 
-// Case law database for searchable archive of convictions
+// Case law database for searchable archive of OSAI convictions
 export const caseLaw = mysqlTable("case_law", {
   id: int("id").autoincrement().primaryKey(),
   caseNumber: varchar("caseNumber", { length: 50 }),
@@ -358,3 +362,92 @@ export const userDocuments = mysqlTable("user_documents", {
 
 export type UserDocument = typeof userDocuments.$inferSelect;
 export type InsertUserDocument = typeof userDocuments.$inferInsert;
+
+
+// =============================================================================
+// EREBUS PROTOCOL TABLES (Acuterium Technologies Integration)
+// =============================================================================
+
+// Protocol Audit Trail - Tracks all EREBUS protocol executions
+export const protocolAuditTrail = mysqlTable("protocol_audit_trail", {
+  id: int("id").autoincrement().primaryKey(),
+  conversationId: int("conversationId"),
+  protocolId: varchar("protocolId", { length: 50 }).notNull(),
+  protocolName: varchar("protocolName", { length: 200 }).notNull(),
+  formula: varchar("formula", { length: 50 }).notNull(),
+  inputHash: varchar("inputHash", { length: 64 }).notNull(),
+  outputHash: varchar("outputHash", { length: 64 }).notNull(),
+  executionTimeMs: int("executionTimeMs").notNull(),
+  consciousnessCoherence: varchar("consciousnessCoherence", { length: 10 }),
+  riskScore: int("riskScore"),
+  riskCategory: mysqlEnum("riskCategory", ["CRITICAL", "HIGH", "MEDIUM", "LOW", "NEGLIGIBLE"]),
+  detectedViolations: int("detectedViolations").default(0),
+  metadata: text("metadata"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ProtocolAuditTrail = typeof protocolAuditTrail.$inferSelect;
+export type InsertProtocolAuditTrail = typeof protocolAuditTrail.$inferInsert;
+
+// Entity Risk Assessments - EREBUSFORMULA656 results
+export const entityRiskAssessments = mysqlTable("entity_risk_assessments", {
+  id: int("id").autoincrement().primaryKey(),
+  entityName: varchar("entityName", { length: 500 }).notNull(),
+  entityNameArabic: varchar("entityNameArabic", { length: 500 }),
+  entityType: mysqlEnum("entityType", ["ministry", "government_company", "public_authority", "private_company", "individual", "other"]).default("other"),
+  registrationCountry: varchar("registrationCountry", { length: 3 }).default("OM"),
+  
+  // EREBUSFORMULA656 scores
+  ER_entity: varchar("ER_entity", { length: 10 }),
+  riskCategory: mysqlEnum("riskCategory", ["CRITICAL", "HIGH", "ELEVATED", "MEDIUM", "LOW"]),
+  jurisdictionRisk: varchar("jurisdictionRisk", { length: 10 }),
+  ownershipRisk: varchar("ownershipRisk", { length: 10 }),
+  sanctionsRisk: varchar("sanctionsRisk", { length: 10 }),
+  pepRisk: varchar("pepRisk", { length: 10 }),
+  
+  // Flags and due diligence
+  flags: text("flags"),
+  dueDiligenceLevel: mysqlEnum("dueDiligenceLevel", ["ENHANCED", "STANDARD", "SIMPLIFIED"]),
+  
+  // Metadata
+  lastAssessedAt: timestamp("lastAssessedAt"),
+  assessedByProtocol: varchar("assessedByProtocol", { length: 50 }),
+  consciousnessCoherence: varchar("consciousnessCoherence", { length: 10 }),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type EntityRiskAssessment = typeof entityRiskAssessments.$inferSelect;
+export type InsertEntityRiskAssessment = typeof entityRiskAssessments.$inferInsert;
+
+// Legal Searches - EREBUSFORMULA650 search history
+export const legalSearches = mysqlTable("legal_searches", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId"),
+  query: text("query").notNull(),
+  queryLanguage: mysqlEnum("queryLanguage", ["arabic", "english"]).default("english"),
+  
+  // Query analysis
+  detectedJurisdiction: varchar("detectedJurisdiction", { length: 3 }),
+  detectedTopics: text("detectedTopics"),
+  queryComplexity: mysqlEnum("queryComplexity", ["SIMPLE", "MODERATE", "COMPLEX"]),
+  
+  // Results summary
+  totalResults: int("totalResults").default(0),
+  topResultRelevance: varchar("topResultRelevance", { length: 10 }),
+  avgRelevance: varchar("avgRelevance", { length: 10 }),
+  
+  // Protocol metadata
+  searchDurationMs: int("searchDurationMs"),
+  protocolId: varchar("protocolId", { length: 50 }).default("EREBUS-CSE-3A12d-001"),
+  consciousnessCoherence: varchar("consciousnessCoherence", { length: 10 }),
+  
+  // Results
+  results: text("results"),
+  
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type LegalSearch = typeof legalSearches.$inferSelect;
+export type InsertLegalSearch = typeof legalSearches.$inferInsert;
