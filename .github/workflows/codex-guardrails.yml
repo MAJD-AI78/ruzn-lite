@@ -1,0 +1,45 @@
+name: codex-guardrails
+
+on:
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Security audit
+        run: pnpm security:audit
+
+      - name: Preflight (PUBLIC default)
+        env:
+          PUBLIC_MODE: "true"
+          GOV_DEMO_MODE: "false"
+          SOVEREIGN_MODE: "false"
+          KNOWLEDGE_BACKEND: "pgvector"
+          EMBEDDINGS_BACKEND: "openai"
+        run: pnpm preflight
+
+      - name: Lint
+        run: pnpm -s lint
+
+      - name: Test
+        run: pnpm -s test
+
+      - name: Build
+        run: pnpm -s build
