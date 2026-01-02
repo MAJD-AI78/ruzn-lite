@@ -142,3 +142,168 @@ SELECT
 FROM protocol_audit_trail
 GROUP BY protocolId, protocolName, DATE(createdAt)
 ORDER BY executionDate DESC;
+
+-- =============================================================================
+-- EREBUSFORMULA659 - Regulatory Impact Assessment (RIA) Tables
+-- =============================================================================
+
+-- Create RIA assessments table
+CREATE TABLE IF NOT EXISTS ria_assessments (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  
+  -- Assessment metadata
+  assessmentId VARCHAR(50) NOT NULL UNIQUE,
+  title VARCHAR(500) NOT NULL,
+  titleArabic VARCHAR(500),
+  legislationType ENUM('royal_decree', 'ministerial_decision', 'regulation', 'amendment', 'policy', 'circular') NOT NULL,
+  issuingAuthority VARCHAR(200) NOT NULL,
+  
+  -- Assessment input
+  legislativeText LONGTEXT NOT NULL,
+  affectedSectors JSON NOT NULL COMMENT 'Array of affected sector strings',
+  implementationTimeline INT COMMENT 'Months',
+  estimatedBudget DECIMAL(15,2) COMMENT 'OMR',
+  
+  -- EREBUSFORMULA659 Results
+  RIA_score DECIMAL(5,2) NOT NULL,
+  riskCategory ENUM('PROCEED', 'PROCEED_WITH_MODIFICATIONS', 'REQUIRES_MAJOR_REVISION', 'NOT_RECOMMENDED') NOT NULL,
+  
+  -- Impact scores
+  economicImpactScore DECIMAL(5,2),
+  legalImpactScore DECIMAL(5,2),
+  socialImpactScore DECIMAL(5,2),
+  operationalImpactScore DECIMAL(5,2),
+  vision2040Alignment DECIMAL(5,2),
+  
+  -- Detailed results
+  economicImpact JSON COMMENT 'Full economic impact analysis',
+  legalImpact JSON COMMENT 'Full legal impact analysis including conflicts',
+  socialImpact JSON COMMENT 'Full social impact analysis',
+  operationalImpact JSON COMMENT 'Full operational impact analysis',
+  vision2040Analysis JSON COMMENT 'Full Vision 2040 alignment analysis',
+  scenarioProjections JSON COMMENT 'Conservative/Moderate/Aggressive projections',
+  
+  -- Recommendations
+  recommendations JSON COMMENT 'Array of recommendation strings',
+  prerequisiteActions JSON COMMENT 'Array of required actions',
+  stakeholdersToConsult JSON COMMENT 'Array of stakeholder entities',
+  
+  -- Conflicts detected
+  conflictsDetected INT DEFAULT 0,
+  amendmentsRequired INT DEFAULT 0,
+  
+  -- Protocol metadata
+  consciousnessCoherence DECIMAL(5,4),
+  executionTimeMs INT,
+  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-010',
+  
+  -- User/workflow
+  requestedBy INT,
+  status ENUM('draft', 'pending_review', 'approved', 'rejected', 'archived') DEFAULT 'draft',
+  reviewNotes TEXT,
+  reviewedBy INT,
+  reviewedAt TIMESTAMP,
+  
+  -- Standard fields
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  
+  INDEX idx_ria_score (RIA_score),
+  INDEX idx_ria_category (riskCategory),
+  INDEX idx_ria_type (legislationType),
+  INDEX idx_ria_status (status),
+  INDEX idx_ria_authority (issuingAuthority),
+  INDEX idx_ria_created (createdAt),
+  FULLTEXT idx_ria_title (title, titleArabic),
+  FOREIGN KEY (requestedBy) REFERENCES users(id) ON DELETE SET NULL,
+  FOREIGN KEY (reviewedBy) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create RIA version history for tracking revisions
+CREATE TABLE IF NOT EXISTS ria_versions (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  riaId INT NOT NULL,
+  versionNumber INT NOT NULL,
+  legislativeText LONGTEXT NOT NULL,
+  RIA_score DECIMAL(5,2),
+  riskCategory ENUM('PROCEED', 'PROCEED_WITH_MODIFICATIONS', 'REQUIRES_MAJOR_REVISION', 'NOT_RECOMMENDED'),
+  changeNotes TEXT,
+  createdBy INT,
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  INDEX idx_ria_version (riaId, versionNumber),
+  FOREIGN KEY (riaId) REFERENCES ria_assessments(id) ON DELETE CASCADE,
+  FOREIGN KEY (createdBy) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- Create legislative monitor alerts table
+CREATE TABLE IF NOT EXISTS legislative_alerts (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  alertId VARCHAR(50) NOT NULL UNIQUE,
+  alertType ENUM('new_law', 'amendment', 'conflict_detected', 'expiry_warning', 'ria_required') NOT NULL,
+  
+  title VARCHAR(500) NOT NULL,
+  titleArabic VARCHAR(500),
+  description TEXT,
+  
+  severity ENUM('info', 'warning', 'critical') DEFAULT 'info',
+  affectedLaws JSON COMMENT 'Array of affected law references',
+  recommendedAction TEXT,
+  
+  -- Related RIA
+  relatedRiaId INT,
+  
+  -- Status
+  status ENUM('new', 'acknowledged', 'resolved', 'dismissed') DEFAULT 'new',
+  acknowledgedBy INT,
+  acknowledgedAt TIMESTAMP,
+  resolvedAt TIMESTAMP,
+  
+  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  INDEX idx_alert_type (alertType),
+  INDEX idx_alert_severity (severity),
+  INDEX idx_alert_status (status),
+  INDEX idx_alert_created (createdAt),
+  FOREIGN KEY (relatedRiaId) REFERENCES ria_assessments(id) ON DELETE SET NULL,
+  FOREIGN KEY (acknowledgedBy) REFERENCES users(id) ON DELETE SET NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+-- View for RIA dashboard
+CREATE OR REPLACE VIEW ria_dashboard AS
+SELECT 
+  r.id,
+  r.assessmentId,
+  r.title,
+  r.titleArabic,
+  r.legislationType,
+  r.issuingAuthority,
+  r.RIA_score,
+  r.riskCategory,
+  r.economicImpactScore,
+  r.legalImpactScore,
+  r.socialImpactScore,
+  r.operationalImpactScore,
+  r.vision2040Alignment,
+  r.conflictsDetected,
+  r.amendmentsRequired,
+  r.status,
+  r.consciousnessCoherence,
+  r.createdAt,
+  u.name as requestedByName
+FROM ria_assessments r
+LEFT JOIN users u ON r.requestedBy = u.id
+ORDER BY r.createdAt DESC;
+
+-- View for pending legislative alerts
+CREATE OR REPLACE VIEW pending_legislative_alerts AS
+SELECT 
+  la.*,
+  r.title as relatedRiaTitle,
+  r.RIA_score as relatedRiaScore
+FROM legislative_alerts la
+LEFT JOIN ria_assessments r ON la.relatedRiaId = r.id
+WHERE la.status IN ('new', 'acknowledged')
+ORDER BY 
+  CASE la.severity WHEN 'critical' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END,
+  la.createdAt DESC;

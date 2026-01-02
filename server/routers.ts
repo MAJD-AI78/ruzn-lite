@@ -1,5 +1,6 @@
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
+import { ENV } from "./_core/env";
 import { systemRouter } from "./_core/systemRouter";
 import { protectedProcedure, router } from "./_core/trpc";
 import { TRPCError } from "@trpc/server";
@@ -1941,9 +1942,56 @@ Ruzn - Sovereign AI for Governance, Integrity, and Compliance
 **Access Code:** ${code}
 **Expires:** ${expiresAt.toISOString()}
 
-The user should receive their access code via the platform.
+Email sent to user with access code.
           `.trim()
         });
+        
+        // Send email to the approved user with their access code
+        try {
+          const emailEndpoint = `${ENV.forgeApiUrl}email.v1.EmailService/SendEmail`;
+          const emailResponse = await fetch(emailEndpoint, {
+            method: 'POST',
+            headers: {
+              'accept': 'application/json',
+              'authorization': `Bearer ${ENV.forgeApiKey}`,
+              'content-type': 'application/json',
+              'connect-protocol-version': '1',
+            },
+            body: JSON.stringify({
+              to: request[0].email,
+              subject: 'رُزن - Your Access Code | رمز الوصول الخاص بك',
+              html: `
+<!DOCTYPE html>
+<html dir="rtl">
+<head><meta charset="UTF-8"></head>
+<body style="font-family: Arial, sans-serif; background-color: #0d0d0d; color: #ffffff; padding: 40px;">
+  <div style="max-width: 600px; margin: 0 auto; background-color: #1a1a1a; border-radius: 12px; padding: 40px; border: 1px solid #c9a227;">
+    <h1 style="color: #c9a227; text-align: center; margin-bottom: 30px;">رُزن | Ruzn</h1>
+    <p style="text-align: center; color: #888;">ذكاء سيادي للحوكمة والنزاهة والامتثال</p>
+    <hr style="border: none; border-top: 1px solid #333; margin: 30px 0;">
+    <h2 style="color: #c9a227;">مرحباً ${request[0].name}!</h2>
+    <p>تمت الموافقة على طلب الوصول الخاص بك. استخدم الرمز التالي للدخول إلى المنصة:</p>
+    <div style="background-color: #0d0d0d; border: 2px solid #c9a227; border-radius: 8px; padding: 20px; text-align: center; margin: 30px 0;">
+      <code style="font-size: 24px; color: #c9a227; letter-spacing: 2px;">${code}</code>
+    </div>
+    <p style="color: #ff6b6b;">⚠️ هذا الرمز صالح حتى: ${expiresAt.toLocaleString('ar-OM')}</p>
+    <p style="color: #888; font-size: 12px; margin-top: 30px; text-align: center;">هذه رسالة آلية من منصة رُزن. لا ترد على هذا البريد.</p>
+  </div>
+</body>
+</html>
+              `.trim()
+            })
+          });
+          
+          if (emailResponse.ok) {
+            console.log(`[Access] Email sent to ${request[0].email} with access code`);
+          } else {
+            console.warn(`[Access] Failed to send email to ${request[0].email}:`, await emailResponse.text());
+          }
+        } catch (emailError) {
+          console.warn(`[Access] Email delivery error for ${request[0].email}:`, emailError);
+          // Don't fail the approval if email fails - owner already notified
+        }
         
         console.log(`[Access] Request ${input.requestId} approved by ${ctx.user.name}, code: ${code}`);
         
@@ -2005,6 +2053,30 @@ The user should receive their access code via the platform.
           success: true, 
           message: `Access request denied for ${request[0].email}` 
         };
+      }),
+    
+    // Admin endpoint - List access codes
+    listCodes: protectedProcedure
+      .input(z.object({
+        limit: z.number().min(1).max(100).optional().default(50)
+      }))
+      .query(async ({ ctx, input }) => {
+        if (ctx.user.role !== 'admin') {
+          throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+        }
+        
+        const db = await getDb();
+        if (!db) {
+          throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Database not available' });
+        }
+        
+        const codes = await db
+          .select()
+          .from(accessCodes)
+          .orderBy(desc(accessCodes.createdAt))
+          .limit(input.limit);
+        
+        return codes;
       }),
     
     // Admin endpoint - Get access statistics

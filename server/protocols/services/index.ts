@@ -6,6 +6,7 @@
  * @module protocols/services
  */
 
+// Risk Scoring Service (EREBUSFORMULA651)
 export {
   assessRisk,
   quickRiskCheck,
@@ -15,3 +16,15 @@ export {
   type RiskAssessmentInput,
   type RiskAssessmentResult,
 } from './riskScoring';
+
+// Regulatory Impact Assessment Service (EREBUSFORMULA659)
+export {
+  performRIAAssessment,
+  quickRIAScan,
+  compareLegislativeVersions,
+  generateRIAReport,
+  simulateLegislativeMonitor,
+  type RIAAssessmentRequest,
+  type RIAQuickScan,
+  type LegislativeMonitorAlert,
+} from './riaService';

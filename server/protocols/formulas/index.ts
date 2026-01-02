@@ -28,6 +28,23 @@ export {
   type DetectedRisk,
 } from './EREBUSFORMULA651';
 
+// EREBUSFORMULA659 - Regulatory Impact Assessment (RIA)
+export {
+  calculateEREBUSFORMULA659,
+  getVision2040Pillars,
+  getKeyOmaniLaws,
+  getSectorMultipliers,
+  type RIAInput,
+  type RIAResult,
+  type Vision2040Pillar,
+  type EconomicImpact,
+  type LegalImpact,
+  type SocialImpact,
+  type OperationalImpact,
+  type Vision2040Alignment,
+  type ScenarioProjection,
+} from './EREBUSFORMULA659';
+
 // Protocol metadata for UI/reporting
 export const EREBUS_FORMULA_METADATA = {
   'EREBUSFORMULA650': {
@@ -78,6 +95,14 @@ export const EREBUS_FORMULA_METADATA = {
     description: 'Automated privacy compliance across 29 regulations',
     effectiveness: 97.8,
     flashMLA: '162x',
+  },
+  'EREBUSFORMULA659': {
+    protocolId: 'EREBUS-CSE-3A12d-010',
+    name: 'Regulatory Impact Assessment (RIA)',
+    description: 'AI-driven legislative impact simulation with Vision 2040 alignment',
+    effectiveness: 94.8,
+    flashMLA: '142x',
+    category: 'Legislative Engineering',
   },
   'EREBUSFORMULA660': {
     protocolId: 'EREBUS-CSE-3A12d-011',
