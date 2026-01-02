@@ -589,3 +589,25 @@ The uploaded HTML file is a **comprehensive offline complaints management POC** 
 - [ ] Identify all Manus references in UI
 - [ ] Replace or remove Manus branding from authentication flow
 - [ ] Ensure clean Ruzn-only branding throughout
+
+
+## Phase 20 - RIA Layer & Admin Access Management (December 29, 2025)
+
+### RIA Layer Integration
+- [ ] Extract ruzn-acuterium-v3.1.zip
+- [ ] Add EREBUSFORMULA659.ts (Regulatory Impact Assessment)
+- [ ] Add riaService.ts
+- [ ] Replace protocol index files
+- [ ] Run database migration for RIA tables
+- [ ] Verify EREBUSFORMULA659 initializes correctly
+
+### Admin Access Management UI
+- [ ] Create AccessManagement.tsx page
+- [ ] Add pending requests list with approve/deny buttons
+- [ ] Add access statistics dashboard
+- [ ] Add route in App.tsx
+
+### Email Delivery to Approved Users
+- [ ] Update approveRequest endpoint to send email to user
+- [ ] Include generated access code in email
+- [ ] Add email template for access approval
