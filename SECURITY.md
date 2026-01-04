@@ -2,7 +2,7 @@
 
 ## 🔐 Security Overview
 
-Ruzn-Lite is designed for government audit institutions handling sensitive data. Security is our top priority.
+Ruzn-Lite is designed for legal institutions handling sensitive data. Security is our top priority.
 
 ---
 
@@ -25,7 +25,7 @@ If you discover a security vulnerability, please **DO NOT** create a public GitH
 
 ### Private Disclosure Process
 
-1. **Email**: Send details to `security@acuterium.tech` (replace with your actual security email)
+1. **Email**: Send details to `security@acuterium.ai` (replace with your actual security email)
 2. **Subject**: `[SECURITY] Ruzn-Lite: Brief description`
 3. **Include**:
    - Description of the vulnerability
@@ -257,7 +257,7 @@ console.log(`API Key: ${process.env.API_KEY}`);
 
 ## 📞 Contact
 
-- **Security Email**: security@acuterium.tech
+- **Security Email**: security@acuterium.ai
 - **Response Time**: 24-72 hours
 - **PGP Key**: Available upon request
 
