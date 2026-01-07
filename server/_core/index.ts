@@ -9,6 +9,41 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 
+// Parse allowed origins from environment variable (comma-separated)
+function getAllowedOrigins(): string[] {
+  const corsOrigins = process.env.CORS_ORIGINS || "";
+  const origins = corsOrigins
+    .split(",")
+    .map(o => o.trim())
+    .filter(o => o.length > 0);
+  
+  // Always allow localhost for development
+  if (process.env.NODE_ENV === "development") {
+    origins.push("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173");
+  }
+  
+  return origins;
+}
+
+function isOriginAllowed(origin: string | undefined): boolean {
+  if (!origin) return false;
+  const allowedOrigins = getAllowedOrigins();
+  
+  // If no origins configured, allow all in development
+  if (allowedOrigins.length === 0 && process.env.NODE_ENV === "development") {
+    return true;
+  }
+  
+  return allowedOrigins.some(allowed => {
+    // Support wildcard subdomains (e.g., *.vercel.app)
+    if (allowed.startsWith("*.")) {
+      const domain = allowed.slice(2);
+      return origin.endsWith(domain) || origin.endsWith("." + domain);
+    }
+    return origin === allowed;
+  });
+}
+
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
     const server = net.createServer();
@@ -59,6 +94,38 @@ async function startServer() {
     next();
   });
   
+  // CORS middleware for split deployment (Vercel frontend + Railway backend)
+  app.use((req, res, next) => {
+    const origin = req.headers.origin;
+    
+    // Check if the origin is allowed
+    if (isOriginAllowed(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin!);
+      res.setHeader('Access-Control-Allow-Credentials', 'true');
+      res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
+      res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
+      res.setHeader('Access-Control-Max-Age', '86400'); // 24 hours preflight cache
+    }
+    
+    // Handle preflight requests
+    if (req.method === 'OPTIONS') {
+      res.status(204).end();
+      return;
+    }
+    
+    next();
+  });
+  
+  // Health check endpoint for Railway/deployment monitoring
+  app.get('/api/health', (req, res) => {
+    res.json({
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      version: process.env.npm_package_version || '1.0.0',
+      environment: process.env.NODE_ENV || 'development'
+    });
+  });
+  
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -75,10 +142,19 @@ async function startServer() {
       createContext,
     })
   );
-  // development mode uses Vite, production mode uses static files
-  if (process.env.NODE_ENV === "development") {
+  
+  // API-only mode (for split deployment with separate frontend)
+  const apiOnlyMode = process.env.API_ONLY === "true";
+  
+  if (apiOnlyMode) {
+    // In API-only mode, don't serve static files
+    // The frontend is hosted separately (e.g., on Vercel)
+    console.log("Running in API-only mode - frontend is served separately");
+  } else if (process.env.NODE_ENV === "development") {
+    // Development mode uses Vite dev server
     await setupVite(app, server);
   } else {
+    // Production monolithic mode serves static files
     serveStatic(app);
   }
 

@@ -286,16 +286,30 @@ curl -X POST http://localhost:3000/api/knowledge.search \
 
 ## 📦 Deployment
 
-### Docker
+### Option 1: Split Deployment (Recommended for POC)
+
+**Frontend on Vercel + Backend on Railway** - Best for POC/demos with minimal cost.
+
+See the [Deployment Guide](docs/DEPLOYMENT_VERCEL_RAILWAY.md) for step-by-step instructions.
+
+```bash
+# Frontend build (for Vercel)
+pnpm build:frontend
+
+# Backend build (for Railway)
+pnpm build:backend
+```
+
+### Option 2: Docker (Self-hosted)
 
 ```bash
 docker-compose up -d
 ```
 
-### Manual
+### Option 3: Manual (Monolithic)
 
 ```bash
-# Build
+# Build everything
 pnpm build
 
 # Production

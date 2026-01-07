@@ -5,6 +5,7 @@ import PullToRefreshIndicator from "@/components/PullToRefreshIndicator";
 import { usePullToRefresh } from "@/hooks/usePullToRefresh";
 import { useHapticFeedback } from "@/hooks/useHapticFeedback";
 import { trpc } from "@/lib/trpc";
+import { getApiUrl } from "@/lib/api";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { getLoginUrl } from "@/const";
 import { Button } from "@/components/ui/button";
@@ -469,9 +470,10 @@ export default function Home() {
       setStreamingContent("");
       
       try {
-        const response = await fetch('/api/chat/stream', {
+        const response = await fetch(getApiUrl('/api/chat/stream'), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
           body: JSON.stringify({
             message: userMessage,
             feature,
