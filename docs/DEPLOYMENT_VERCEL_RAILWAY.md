@@ -117,7 +117,7 @@ Vercel should auto-detect settings from `vercel.json`, but verify:
 
 - **Framework Preset**: Vite
 - **Root Directory**: `./` (leave empty)
-- **Build Command**: `pnpm vite build`
+- **Build Command**: `pnpm build:frontend`
 - **Output Directory**: `dist/public`
 - **Install Command**: `pnpm install --frozen-lockfile`
 

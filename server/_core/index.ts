@@ -17,8 +17,10 @@ function getAllowedOrigins(): string[] {
     .map(o => o.trim())
     .filter(o => o.length > 0);
   
-  // Always allow localhost for development
-  if (process.env.NODE_ENV === "development") {
+  // Allow localhost only in genuine development mode
+  // Check both NODE_ENV and that we're not in a production-like environment
+  const isDevelopment = process.env.NODE_ENV === "development" && !process.env.RAILWAY_ENVIRONMENT && !process.env.VERCEL;
+  if (isDevelopment) {
     origins.push("http://localhost:3000", "http://localhost:5173", "http://127.0.0.1:3000", "http://127.0.0.1:5173");
   }
   
@@ -29,7 +31,7 @@ function isOriginAllowed(origin: string | undefined): boolean {
   if (!origin) return false;
   const allowedOrigins = getAllowedOrigins();
   
-  // If no origins configured, allow all in development
+  // If no origins configured, allow all in development only
   if (allowedOrigins.length === 0 && process.env.NODE_ENV === "development") {
     return true;
   }
@@ -38,7 +40,8 @@ function isOriginAllowed(origin: string | undefined): boolean {
     // Support wildcard subdomains (e.g., *.vercel.app)
     if (allowed.startsWith("*.")) {
       const domain = allowed.slice(2);
-      return origin.endsWith(domain) || origin.endsWith("." + domain);
+      // Must match exactly ".domain" to prevent "evilvercel.app" from matching "*.vercel.app"
+      return origin.endsWith("." + domain);
     }
     return origin === allowed;
   });
@@ -98,9 +101,9 @@ async function startServer() {
   app.use((req, res, next) => {
     const origin = req.headers.origin;
     
-    // Check if the origin is allowed
-    if (isOriginAllowed(origin)) {
-      res.setHeader('Access-Control-Allow-Origin', origin!);
+    // Check if the origin is allowed (origin must be defined if isOriginAllowed returns true)
+    if (origin && isOriginAllowed(origin)) {
+      res.setHeader('Access-Control-Allow-Origin', origin);
       res.setHeader('Access-Control-Allow-Credentials', 'true');
       res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS, PATCH');
       res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin');
