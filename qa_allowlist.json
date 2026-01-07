@@ -1,0 +1,17 @@
+{
+  "allowed_hosts": [
+    "localhost",
+    "127.0.0.1",
+    "api.openai.com",
+    "fonts.googleapis.com",
+    "fonts.gstatic.com",
+    "ruzn.ai",
+    "www.ruzn.ai",
+    "ruzn.io",
+    "www.ruzn.io"
+  ],
+  "allowed_host_suffixes": [
+    ".vercel.app",
+    ".railway.app"
+  ]
+}

@@ -1,0 +1,31 @@
+name: qa-audit
+
+on:
+  push:
+    branches: [ "**" ]
+  pull_request:
+
+jobs:
+  qa-audit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Run QA audit
+        run: |
+          python3 tools/qa_audit.py --root .
+
+      - name: Upload QA reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-audit-reports
+          path: |
+            QA_AUDIT_REPORT.json
+            QA_AUDIT_REPORT.md

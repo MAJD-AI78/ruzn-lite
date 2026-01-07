@@ -1,0 +1,9 @@
+{
+  "critical_literals": [
+    "manus.im",
+    "api.manus.im",
+    "forge.manus.im",
+    "vite-plugin-manus-runtime",
+    "globaldomaingroup"
+  ]
+}
