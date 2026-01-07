@@ -1,6 +1,6 @@
 =================================================================================
 RUZN-LITE CODEBASE
-Generated: 2026-01-06 16:45:35 UTC
+Generated: 2026-01-07 13:55:17 UTC
 =================================================================================
 
 ================================================================================
@@ -267,6 +267,159 @@ temp/
 *.sqlite
 *.sqlite3
 
+
+================================================================================
+FILE: .manus/db/db-query-1766953438100.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS `user_documents` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `title` varchar(500) NOT NULL,\n  `titleArabic` varchar(500),\n  `description` text,\n  `descriptionArabic` text,\n  `fileName` varchar(255) NOT NULL,\n  `fileType` enum('pdf','doc','docx','txt','image') NOT NULL,\n  `fileSize` int NOT NULL,\n  `fileUrl` varchar(1000) NOT NULL,\n  `fileKey` varchar(500) NOT NULL,\n  `extractedContent` text,\n  `extractedContentArabic` text,\n  `category` enum('complaint','evidence','legal_document','report','correspondence','other') NOT NULL DEFAULT 'other',\n  `tags` text,\n  `isPrivate` boolean NOT NULL DEFAULT true,\n  `sharedWith` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY(`id`),\n  INDEX `user_documents_userId_idx` (`userId`),\n  INDEX `user_documents_category_idx` (`category`)\n);",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS `user_documents` (\n  `id` int AUTO_INCREMENT NOT NULL,\n  `userId` int NOT NULL,\n  `title` varchar(500) NOT NULL,\n  `titleArabic` varchar(500),\n  `description` text,\n  `descriptionArabic` text,\n  `fileName` varchar(255) NOT NULL,\n  `fileType` enum('pdf','doc','docx','txt','image') NOT NULL,\n  `fileSize` int NOT NULL,\n  `fileUrl` varchar(1000) NOT NULL,\n  `fileKey` varchar(500) NOT NULL,\n  `extractedContent` text,\n  `extractedContentArabic` text,\n  `category` enum('complaint','evidence','legal_document','report','correspondence','other') NOT NULL DEFAULT 'other',\n  `tags` text,\n  `isPrivate` boolean NOT NULL DEFAULT true,\n  `sharedWith` text,\n  `createdAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,\n  `updatedAt` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  PRIMARY KEY(`id`),\n  INDEX `user_documents_userId_idx` (`userId`),\n  INDEX `user_documents_category_idx` (`category`)\n);",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1713
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767329190544.json
+================================================================================
+
+{
+  "query": "-- Add EREBUS enhanced fields to conversations table\nALTER TABLE conversations\nADD COLUMN advancedRiskScore JSON COMMENT 'EREBUSFORMULA651 detailed risk assessment output',\nADD COLUMN protocolMetadata JSON COMMENT 'Protocol execution metadata (id, time, consciousness)',\nADD COLUMN complianceFlags JSON COMMENT 'Detected compliance violations and flags';",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute -- Add EREBUS enhanced fields to conversations table\nALTER TABLE conversations\nADD COLUMN advancedRiskScore JSON COMMENT 'EREBUSFORMULA651 detailed risk assessment output',\nADD COLUMN protocolMetadata JSON COMMENT 'Protocol execution metadata (id, time, consciousness)',\nADD COLUMN complianceFlags JSON COMMENT 'Detected compliance violations and flags';",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 4269
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767329204760.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS protocol_audit_trail (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  conversationId INT,\n  protocolId VARCHAR(50) NOT NULL COMMENT 'e.g., EREBUS-CSE-3A12d-002',\n  protocolName VARCHAR(200) NOT NULL,\n  formula VARCHAR(50) NOT NULL COMMENT 'e.g., EREBUSFORMULA651',\n  inputHash VARCHAR(64) NOT NULL COMMENT 'SHA-256 hash of input for integrity',\n  outputHash VARCHAR(64) NOT NULL COMMENT 'SHA-256 hash of output for integrity',\n  executionTimeMs INT NOT NULL COMMENT 'Protocol execution time in milliseconds',\n  consciousnessCoherence DECIMAL(5,4) COMMENT 'Aggregate phi value (0-1)',\n  riskScore INT COMMENT 'Calculated risk score (0-100)',\n  riskCategory ENUM('CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'NEGLIGIBLE'),\n  detectedViolations INT DEFAULT 0 COMMENT 'Count of detected violations',\n  metadata JSON COMMENT 'Additional protocol-specific metadata',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_protocol_conversation (conversationId),\n  INDEX idx_protocol_id (protocolId),\n  INDEX idx_risk_category (riskCategory),\n  INDEX idx_created_at (createdAt),\n  FOREIGN KEY (conversationId) REFERENCES conversations(id) ON DELETE SET NULL\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS protocol_audit_trail (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  conversationId INT,\n  protocolId VARCHAR(50) NOT NULL COMMENT 'e.g., EREBUS-CSE-3A12d-002',\n  protocolName VARCHAR(200) NOT NULL,\n  formula VARCHAR(50) NOT NULL COMMENT 'e.g., EREBUSFORMULA651',\n  inputHash VARCHAR(64) NOT NULL COMMENT 'SHA-256 hash of input for integrity',\n  outputHash VARCHAR(64) NOT NULL COMMENT 'SHA-256 hash of output for integrity',\n  executionTimeMs INT NOT NULL COMMENT 'Protocol execution time in milliseconds',\n  consciousnessCoherence DECIMAL(5,4) COMMENT 'Aggregate phi value (0-1)',\n  riskScore INT COMMENT 'Calculated risk score (0-100)',\n  riskCategory ENUM('CRITICAL', 'HIGH', 'MEDIUM', 'LOW', 'NEGLIGIBLE'),\n  detectedViolations INT DEFAULT 0 COMMENT 'Count of detected violations',\n  metadata JSON COMMENT 'Additional protocol-specific metadata',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_protocol_conversation (conversationId),\n  INDEX idx_protocol_id (protocolId),\n  INDEX idx_risk_category (riskCategory),\n  INDEX idx_created_at (createdAt),\n  FOREIGN KEY (conversationId) REFERENCES conversations(id) ON DELETE SET NULL\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1807
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767329215453.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS entity_risk_assessments (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  entityName VARCHAR(500) NOT NULL,\n  entityNameArabic VARCHAR(500),\n  entityType ENUM('ministry', 'government_company', 'public_authority', 'private_company', 'individual', 'other') DEFAULT 'other',\n  registrationCountry VARCHAR(3) DEFAULT 'OM' COMMENT 'ISO 3166-1 alpha-2/3 code',\n  ER_entity DECIMAL(5,2) COMMENT 'Entity Risk composite score (0-100)',\n  riskCategory ENUM('CRITICAL', 'HIGH', 'ELEVATED', 'MEDIUM', 'LOW'),\n  jurisdictionRisk DECIMAL(5,2),\n  ownershipRisk DECIMAL(5,2),\n  sanctionsRisk DECIMAL(5,2),\n  pepRisk DECIMAL(5,2),\n  flags JSON COMMENT 'Array of risk flags (SANCTIONS, PEP, etc.)',\n  dueDiligenceLevel ENUM('ENHANCED', 'STANDARD', 'SIMPLIFIED'),\n  lastAssessedAt TIMESTAMP,\n  assessedByProtocol VARCHAR(50),\n  consciousnessCoherence DECIMAL(5,4),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_entity_name (entityName(100)),\n  INDEX idx_risk_category (riskCategory),\n  INDEX idx_entity_type (entityType),\n  INDEX idx_due_diligence (dueDiligenceLevel)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS entity_risk_assessments (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  entityName VARCHAR(500) NOT NULL,\n  entityNameArabic VARCHAR(500),\n  entityType ENUM('ministry', 'government_company', 'public_authority', 'private_company', 'individual', 'other') DEFAULT 'other',\n  registrationCountry VARCHAR(3) DEFAULT 'OM' COMMENT 'ISO 3166-1 alpha-2/3 code',\n  ER_entity DECIMAL(5,2) COMMENT 'Entity Risk composite score (0-100)',\n  riskCategory ENUM('CRITICAL', 'HIGH', 'ELEVATED', 'MEDIUM', 'LOW'),\n  jurisdictionRisk DECIMAL(5,2),\n  ownershipRisk DECIMAL(5,2),\n  sanctionsRisk DECIMAL(5,2),\n  pepRisk DECIMAL(5,2),\n  flags JSON COMMENT 'Array of risk flags (SANCTIONS, PEP, etc.)',\n  dueDiligenceLevel ENUM('ENHANCED', 'STANDARD', 'SIMPLIFIED'),\n  lastAssessedAt TIMESTAMP,\n  assessedByProtocol VARCHAR(50),\n  consciousnessCoherence DECIMAL(5,4),\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_entity_name (entityName(100)),\n  INDEX idx_risk_category (riskCategory),\n  INDEX idx_entity_type (entityType),\n  INDEX idx_due_diligence (dueDiligenceLevel)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1721
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767329234059.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS legal_searches (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId INT,\n  query TEXT NOT NULL,\n  queryLanguage ENUM('arabic', 'english') DEFAULT 'english',\n  detectedJurisdiction VARCHAR(3),\n  detectedTopics JSON COMMENT 'Array of detected legal topics',\n  queryComplexity ENUM('SIMPLE', 'MODERATE', 'COMPLEX'),\n  totalResults INT DEFAULT 0,\n  topResultRelevance DECIMAL(5,4) COMMENT 'Highest R_legal score',\n  avgRelevance DECIMAL(5,4) COMMENT 'Average R_legal score',\n  searchDurationMs INT,\n  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-001',\n  consciousnessCoherence DECIMAL(5,4),\n  results JSON COMMENT 'Array of top results with R_legal scores',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_user (userId),\n  INDEX idx_jurisdiction (detectedJurisdiction),\n  INDEX idx_created_at (createdAt),\n  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS legal_searches (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId INT,\n  query TEXT NOT NULL,\n  queryLanguage ENUM('arabic', 'english') DEFAULT 'english',\n  detectedJurisdiction VARCHAR(3),\n  detectedTopics JSON COMMENT 'Array of detected legal topics',\n  queryComplexity ENUM('SIMPLE', 'MODERATE', 'COMPLEX'),\n  totalResults INT DEFAULT 0,\n  topResultRelevance DECIMAL(5,4) COMMENT 'Highest R_legal score',\n  avgRelevance DECIMAL(5,4) COMMENT 'Average R_legal score',\n  searchDurationMs INT,\n  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-001',\n  consciousnessCoherence DECIMAL(5,4),\n  results JSON COMMENT 'Array of top results with R_legal scores',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_user (userId),\n  INDEX idx_jurisdiction (detectedJurisdiction),\n  INDEX idx_created_at (createdAt),\n  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1794
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767330586936.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS access_requests (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  name VARCHAR(200) NOT NULL,\n  organization VARCHAR(300),\n  reason TEXT,\n  status ENUM('pending', 'approved', 'denied') DEFAULT 'pending' NOT NULL,\n  reviewedBy INT,\n  reviewedAt TIMESTAMP,\n  reviewNotes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_email (email),\n  INDEX idx_status (status),\n  INDEX idx_created_at (createdAt)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS access_requests (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  email VARCHAR(320) NOT NULL,\n  name VARCHAR(200) NOT NULL,\n  organization VARCHAR(300),\n  reason TEXT,\n  status ENUM('pending', 'approved', 'denied') DEFAULT 'pending' NOT NULL,\n  reviewedBy INT,\n  reviewedAt TIMESTAMP,\n  reviewNotes TEXT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_email (email),\n  INDEX idx_status (status),\n  INDEX idx_created_at (createdAt)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2343
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767330597101.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS access_codes (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  code VARCHAR(20) NOT NULL UNIQUE,\n  requestId INT NOT NULL,\n  email VARCHAR(320) NOT NULL,\n  expiresAt TIMESTAMP NOT NULL,\n  usedAt TIMESTAMP,\n  isUsed BOOLEAN DEFAULT FALSE NOT NULL,\n  createdBy INT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_code (code),\n  INDEX idx_email (email),\n  INDEX idx_request_id (requestId),\n  INDEX idx_expires_at (expiresAt)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS access_codes (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  code VARCHAR(20) NOT NULL UNIQUE,\n  requestId INT NOT NULL,\n  email VARCHAR(320) NOT NULL,\n  expiresAt TIMESTAMP NOT NULL,\n  usedAt TIMESTAMP,\n  isUsed BOOLEAN DEFAULT FALSE NOT NULL,\n  createdBy INT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,\n  INDEX idx_code (code),\n  INDEX idx_email (email),\n  INDEX idx_request_id (requestId),\n  INDEX idx_expires_at (expiresAt)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1727
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767332153872.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS ria_assessments (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  assessmentId VARCHAR(50) NOT NULL UNIQUE,\n  title VARCHAR(500) NOT NULL,\n  titleArabic VARCHAR(500),\n  legislationType ENUM('royal_decree', 'ministerial_decision', 'regulation', 'amendment', 'policy', 'circular') NOT NULL,\n  issuingAuthority VARCHAR(200) NOT NULL,\n  legislativeText LONGTEXT NOT NULL,\n  affectedSectors JSON NOT NULL,\n  implementationTimeline INT,\n  estimatedBudget DECIMAL(15,2),\n  RIA_score DECIMAL(5,2) NOT NULL,\n  riskCategory ENUM('PROCEED', 'PROCEED_WITH_MODIFICATIONS', 'REQUIRES_MAJOR_REVISION', 'NOT_RECOMMENDED') NOT NULL,\n  economicImpactScore DECIMAL(5,2),\n  legalImpactScore DECIMAL(5,2),\n  socialImpactScore DECIMAL(5,2),\n  operationalImpactScore DECIMAL(5,2),\n  vision2040Alignment DECIMAL(5,2),\n  economicImpact JSON,\n  legalImpact JSON,\n  socialImpact JSON,\n  operationalImpact JSON,\n  vision2040Analysis JSON,\n  scenarioProjections JSON,\n  recommendations JSON,\n  prerequisiteActions JSON,\n  stakeholdersToConsult JSON,\n  conflictsDetected INT DEFAULT 0,\n  amendmentsRequired INT DEFAULT 0,\n  consciousnessCoherence DECIMAL(5,4),\n  executionTimeMs INT,\n  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-010',\n  requestedBy INT,\n  status ENUM('draft', 'pending_review', 'approved', 'rejected', 'archived') DEFAULT 'draft',\n  reviewNotes TEXT,\n  reviewedBy INT,\n  reviewedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_ria_score (RIA_score),\n  INDEX idx_ria_category (riskCategory),\n  INDEX idx_ria_type (legislationType),\n  INDEX idx_ria_status (status)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS ria_assessments (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  assessmentId VARCHAR(50) NOT NULL UNIQUE,\n  title VARCHAR(500) NOT NULL,\n  titleArabic VARCHAR(500),\n  legislationType ENUM('royal_decree', 'ministerial_decision', 'regulation', 'amendment', 'policy', 'circular') NOT NULL,\n  issuingAuthority VARCHAR(200) NOT NULL,\n  legislativeText LONGTEXT NOT NULL,\n  affectedSectors JSON NOT NULL,\n  implementationTimeline INT,\n  estimatedBudget DECIMAL(15,2),\n  RIA_score DECIMAL(5,2) NOT NULL,\n  riskCategory ENUM('PROCEED', 'PROCEED_WITH_MODIFICATIONS', 'REQUIRES_MAJOR_REVISION', 'NOT_RECOMMENDED') NOT NULL,\n  economicImpactScore DECIMAL(5,2),\n  legalImpactScore DECIMAL(5,2),\n  socialImpactScore DECIMAL(5,2),\n  operationalImpactScore DECIMAL(5,2),\n  vision2040Alignment DECIMAL(5,2),\n  economicImpact JSON,\n  legalImpact JSON,\n  socialImpact JSON,\n  operationalImpact JSON,\n  vision2040Analysis JSON,\n  scenarioProjections JSON,\n  recommendations JSON,\n  prerequisiteActions JSON,\n  stakeholdersToConsult JSON,\n  conflictsDetected INT DEFAULT 0,\n  amendmentsRequired INT DEFAULT 0,\n  consciousnessCoherence DECIMAL(5,4),\n  executionTimeMs INT,\n  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-010',\n  requestedBy INT,\n  status ENUM('draft', 'pending_review', 'approved', 'rejected', 'archived') DEFAULT 'draft',\n  reviewNotes TEXT,\n  reviewedBy INT,\n  reviewedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,\n  INDEX idx_ria_score (RIA_score),\n  INDEX idx_ria_category (riskCategory),\n  INDEX idx_ria_type (legislationType),\n  INDEX idx_ria_status (status)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 2558
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767332170139.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS ria_versions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  riaId INT NOT NULL,\n  versionNumber INT NOT NULL,\n  legislativeText LONGTEXT NOT NULL,\n  RIA_score DECIMAL(5,2),\n  riskCategory ENUM('PROCEED', 'PROCEED_WITH_MODIFICATIONS', 'REQUIRES_MAJOR_REVISION', 'NOT_RECOMMENDED'),\n  changeNotes TEXT,\n  createdBy INT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_ria_version (riaId, versionNumber),\n  FOREIGN KEY (riaId) REFERENCES ria_assessments(id) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS ria_versions (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  riaId INT NOT NULL,\n  versionNumber INT NOT NULL,\n  legislativeText LONGTEXT NOT NULL,\n  RIA_score DECIMAL(5,2),\n  riskCategory ENUM('PROCEED', 'PROCEED_WITH_MODIFICATIONS', 'REQUIRES_MAJOR_REVISION', 'NOT_RECOMMENDED'),\n  changeNotes TEXT,\n  createdBy INT,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_ria_version (riaId, versionNumber),\n  FOREIGN KEY (riaId) REFERENCES ria_assessments(id) ON DELETE CASCADE\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1797
+}
+
+================================================================================
+FILE: .manus/db/db-query-1767332180204.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS legislative_alerts (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  alertId VARCHAR(50) NOT NULL UNIQUE,\n  alertType ENUM('new_law', 'amendment', 'conflict_detected', 'expiry_warning', 'ria_required') NOT NULL,\n  title VARCHAR(500) NOT NULL,\n  titleArabic VARCHAR(500),\n  description TEXT,\n  severity ENUM('info', 'warning', 'critical') DEFAULT 'info',\n  affectedLaws JSON,\n  recommendedAction TEXT,\n  relatedRiaId INT,\n  status ENUM('new', 'acknowledged', 'resolved', 'dismissed') DEFAULT 'new',\n  acknowledgedBy INT,\n  acknowledgedAt TIMESTAMP NULL,\n  resolvedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_alert_type (alertType),\n  INDEX idx_alert_severity (severity),\n  INDEX idx_alert_status (status)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS legislative_alerts (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  alertId VARCHAR(50) NOT NULL UNIQUE,\n  alertType ENUM('new_law', 'amendment', 'conflict_detected', 'expiry_warning', 'ria_required') NOT NULL,\n  title VARCHAR(500) NOT NULL,\n  titleArabic VARCHAR(500),\n  description TEXT,\n  severity ENUM('info', 'warning', 'critical') DEFAULT 'info',\n  affectedLaws JSON,\n  recommendedAction TEXT,\n  relatedRiaId INT,\n  status ENUM('new', 'acknowledged', 'resolved', 'dismissed') DEFAULT 'new',\n  acknowledgedBy INT,\n  acknowledgedAt TIMESTAMP NULL,\n  resolvedAt TIMESTAMP NULL,\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_alert_type (alertType),\n  INDEX idx_alert_severity (severity),\n  INDEX idx_alert_status (status)\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1625
+}
+
+================================================================================
+FILE: .manus/db/db-query-error-1767329225451.json
+================================================================================
+
+{
+  "query": "CREATE TABLE IF NOT EXISTS legal_searches (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId INT,\n  query TEXT NOT NULL,\n  queryLanguage ENUM('arabic', 'english') DEFAULT 'english',\n  detectedJurisdiction VARCHAR(3),\n  detectedTopics JSON COMMENT 'Array of detected legal topics',\n  queryComplexity ENUM('SIMPLE', 'MODERATE', 'COMPLEX'),\n  totalResults INT DEFAULT 0,\n  topResultRelevance DECIMAL(5,4) COMMENT 'Highest R_legal score',\n  avgRelevance DECIMAL(5,4) COMMENT 'Average R_legal score',\n  searchDurationMs INT,\n  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-001',\n  consciousnessCoherence DECIMAL(5,4),\n  results JSON COMMENT 'Array of top results with R_legal scores',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_user (userId),\n  INDEX idx_jurisdiction (detectedJurisdiction),\n  INDEX idx_created_at (createdAt),\n  FULLTEXT idx_query_fulltext (query),\n  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 3N5Z4DAebFnKbSF.root --database 6FY9uoSsEh78DFP8uFQGEK --execute CREATE TABLE IF NOT EXISTS legal_searches (\n  id INT AUTO_INCREMENT PRIMARY KEY,\n  userId INT,\n  query TEXT NOT NULL,\n  queryLanguage ENUM('arabic', 'english') DEFAULT 'english',\n  detectedJurisdiction VARCHAR(3),\n  detectedTopics JSON COMMENT 'Array of detected legal topics',\n  queryComplexity ENUM('SIMPLE', 'MODERATE', 'COMPLEX'),\n  totalResults INT DEFAULT 0,\n  topResultRelevance DECIMAL(5,4) COMMENT 'Highest R_legal score',\n  avgRelevance DECIMAL(5,4) COMMENT 'Average R_legal score',\n  searchDurationMs INT,\n  protocolId VARCHAR(50) DEFAULT 'EREBUS-CSE-3A12d-001',\n  consciousnessCoherence DECIMAL(5,4),\n  results JSON COMMENT 'Array of top results with R_legal scores',\n  createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,\n  INDEX idx_user (userId),\n  INDEX idx_jurisdiction (detectedJurisdiction),\n  INDEX idx_created_at (createdAt),\n  FULLTEXT idx_query_fulltext (query),\n  FOREIGN KEY (userId) REFERENCES users(id) ON DELETE SET NULL\n) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;",
+  "returncode": 1,
+  "logs": [
+    "ERROR 8200 (HY000) at line 1: Unsupported FULLTEXT index"
+  ]
+}
 
 ================================================================================
 FILE: .prettierignore
