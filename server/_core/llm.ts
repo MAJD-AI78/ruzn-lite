@@ -209,10 +209,12 @@ const normalizeToolChoice = (
   return toolChoice;
 };
 
-const resolveApiUrl = () =>
-  ENV.forgeApiUrl && ENV.forgeApiUrl.trim().length > 0
-    ? `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`
-    : "https://forge.manus.im/v1/chat/completions";
+const resolveApiUrl = () => {
+  if (!ENV.forgeApiUrl || ENV.forgeApiUrl.trim().length === 0) {
+    throw new Error("BUILT_IN_FORGE_API_URL is not configured");
+  }
+  return `${ENV.forgeApiUrl.replace(/\/$/, "")}/v1/chat/completions`;
+};
 
 const assertApiKey = () => {
   if (!ENV.forgeApiKey) {
@@ -292,7 +294,7 @@ export async function* invokeLLMStream(params: InvokeParams): AsyncGenerator<Str
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model: "gpt-4o-mini",
     messages: messages.map(normalizeMessage),
     stream: true,
   };
@@ -384,7 +386,7 @@ export async function invokeLLM(params: InvokeParams): Promise<InvokeResult> {
   } = params;
 
   const payload: Record<string, unknown> = {
-    model: "gemini-2.5-flash",
+    model: "gpt-4o-mini",
     messages: messages.map(normalizeMessage),
   };
 
