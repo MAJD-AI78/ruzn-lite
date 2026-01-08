@@ -8,6 +8,7 @@ import { handleStreamingChat } from "../streamingChat";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { getDb } from "../db";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -29,6 +30,14 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 }
 
 async function startServer() {
+  // Initialize database first
+  const db = await getDb();
+  if (db) {
+    console.log("[Database] Connection established successfully");
+  } else {
+    console.warn("[Database] Running without database connection");
+  }
+
   const app = express();
   const server = createServer(app);
   
@@ -53,7 +62,7 @@ async function startServer() {
       "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
       "font-src 'self' https://fonts.gstatic.com; " +
       "img-src 'self' data: blob: https:; " +
-      "connect-src 'self' https://api.manus.im https://forge.manus.im wss: https:; " +
+      "connect-src 'self' wss: https:; " +
       "frame-ancestors 'self';"
     );
     next();
@@ -62,6 +71,30 @@ async function startServer() {
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
+  
+  // Health check endpoint
+  app.get("/api/health", (req, res) => {
+    res.status(200).json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+  
+  // Database initialization check endpoint
+  app.get("/api/init", async (req, res) => {
+    const db = await getDb();
+    if (db) {
+      res.status(200).json({ 
+        status: "ok", 
+        database: "connected",
+        timestamp: new Date().toISOString() 
+      });
+    } else {
+      res.status(503).json({ 
+        status: "degraded", 
+        database: "disconnected",
+        timestamp: new Date().toISOString() 
+      });
+    }
+  });
+  
   // OAuth callback under /api/oauth/callback
   registerOAuthRoutes(app);
   // Streaming chat endpoint (SSE)
