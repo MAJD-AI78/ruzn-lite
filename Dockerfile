@@ -40,6 +40,13 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
+# Vite needs these at build time for client-side env vars
+ARG VITE_OAUTH_PORTAL_URL
+ARG VITE_APP_ID
+ENV VITE_OAUTH_PORTAL_URL=$VITE_OAUTH_PORTAL_URL
+ENV VITE_APP_ID=$VITE_APP_ID
+
+
 # Build the application
 RUN pnpm build
 
